@@ -129,7 +129,7 @@ trait GeneralFunctionTrait{
         $userImage = $this->getUserImage($user_name);
         $user = new User;
         $user->name       = $user_name;
-        $user->email      = $login_email;
+        $user->email      = strtolower($login_email);
         $user->password   = Hash::make($default_password);
         $user->user_image = $userImage;
         $user->save();

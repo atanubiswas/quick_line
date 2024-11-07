@@ -63,15 +63,20 @@ Route::group(['prefix' => 'admin'], function () {
     Route::get('logout', [AuthController::class, 'logout'])->name('admin.logout');
     
     /*============= DASHBOARD CONTROLLER ==================*/
-    Route::middleware(['role:Admin,Centre', '2fa'])->group(function () {
+    Route::middleware(['role:Admin,Centre,Quality Controller,Doctor,Manager', '2fa'])->group(function () {
        Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('admin.dashboard');
     });
    
    /*================= USER CONTROLLER ===================*/
-    Route::middleware(['role:Admin', '2fa'])->group(function(){
+    Route::middleware(['role:Admin,Manager', '2fa'])->group(function(){
         Route::get('/add-user', [UserController::class, 'addUser'])->name('admin.addUser');
         Route::post('/insert-user', [UserController::class,'insertUser']);
         Route::get('/view-user', [UserController::class, 'viewUser'])->name('admin.viewUser');
+        Route::post('/change-user-status', [UserController::class,'changeStatus']);
+    });
+    Route::middleware(['role:Admin,Centre,Quality Controller,Doctor,Manager', '2fa'])->group(function () {
+        Route::get('/change-password', [UserController::class, 'changePassword'])->name('admin.changePassword');
+        Route::post('/update-password', [UserController::class, 'updatePassword'])->name('admin.updatePassword');
     });
 
    /*================= ROLE CONTROLLER ===================*/
@@ -80,7 +85,7 @@ Route::group(['prefix' => 'admin'], function () {
    });
    
    /*============== LABORATORY CONTROLLER =================*/
-   Route::middleware(['role:Admin', '2fa'])->group(function () {
+   Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
        Route::get('/add-laboratory', [LaboratoryController::class, 'addLab'])->name('admin.addLab');
        Route::post('/insert-laboratory', [LaboratoryController::class, 'insertLab']);
        Route::post('/change-laboratory-status', [LaboratoryController::class, 'changeLabStatus']);
@@ -90,19 +95,19 @@ Route::group(['prefix' => 'admin'], function () {
        Route::get('/view-laboratory', [LaboratoryController::class, 'viewLab'])->name('admin.viewLab');
    });
 
+      /*================ DOCTOR CONTROLLER ====================*/
+      Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
+        Route::get('/add-doctor', [DoctorController::class, 'addDoctor'])->name('admin.addDoctor');
+        Route::post('/insert-doctor', [DoctorController::class, 'insertDoctor']);
+        Route::get('/view-doctor', [DoctorController::class, 'viewDoctor'])->name('admin.viewDoctor');
+        Route::post('/change-doctor-status', [DoctorController::class, 'changeDocStatus']);
+        Route::post('/get-edit-doctor-data', [DoctorController::class, 'getEditDocData']);
+        Route::post('/update-doctor', [DoctorController::class, 'updateDoc']);
+    });
+
    /*============== TIMELINE CONTROLLER =================*/
-   Route::middleware(['role:Admin', '2fa'])->group(function () {
+   Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
         Route::post('/get-lab-timeline', [TimeLineController::class,'getLabTimeline']);
-   });
-   
-   
-   /*============== COLLECTORLABASSOCIATIONCONTROLLER ===============*/
-   Route::middleware(['role:collector', '2fa'])->group(function () {
-        Route::post('/apply-by-collector', [CollectorLabAssociationController::class, 'applyByCollector']);
-   });
-   Route::middleware(['role:laboratory', '2fa'])->group(function () {
-        Route::get('/view-applied-collector', [CollectorLabAssociationController::class, 'viewAppliedCollector'])->name('admin.appliedCollector');
-        Route::post('/approve-collector', [CollectorLabAssociationController::class, 'approveCollector'])->name('admin.approveCollector');
    });
    
    /*============== DOCUMENT CONTROLLER =================*/
@@ -120,16 +125,6 @@ Route::group(['prefix' => 'admin'], function () {
    Route::middleware(['role:supar_admin', '2fa'])->group(function () {
        Route::get('/add-notification', [NotificationController::class, 'addNotification'])->name('admin.addNotification');
        Route::post('/insert-notification', [NotificationController::class, 'insertNotification']);
-   });
-   
-   /*================ DOCTOR CONTROLLER ====================*/
-   Route::middleware(['role:supar_admin', '2fa'])->group(function () {
-       Route::get('/add-doctor', [DoctorController::class, 'addDoctor'])->name('admin.addDoctor');
-       Route::post('/insert-doctor', [DoctorController::class, 'insertDoctor']);
-       Route::get('/view-doctor', [DoctorController::class, 'viewDoctor'])->name('admin.viewDoctor');
-       Route::post('/change-doctor-status', [DoctorController::class, 'changeDocStatus']);
-       Route::post('/get-edit-doctor-data', [DoctorController::class, 'getEditDocData']);
-       Route::post('/update-doctor', [DoctorController::class, 'updateDoc']);
    });
    
    /*================ COLLECTOR CONTROLLER ====================*/

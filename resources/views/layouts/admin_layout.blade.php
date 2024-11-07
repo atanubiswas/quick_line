@@ -262,7 +262,7 @@
             }
         ?>
             Swal.fire({
-                title: 'Oops!',
+                title: 'Error!',
                 html: "<?= $msg ?>",
                 icon: 'error',
                 confirmButtonText: 'Close',

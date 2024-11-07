@@ -17,15 +17,15 @@ use App\Traits\GeneralFunctionTrait;
 class DoctorController extends Controller
 {
     use GeneralFunctionTrait;
-    private $roleId = 5;
+    private $roleId = 4;
     private $pageName = "Doctor";
     
     /**
-     * 
-     * @param type $doc_name
-     * @param type $doc_login_email
-     * @param type $doc_primary_location
-     * @param type $user_id
+     * Summary of insertDocData
+     * @param mixed $doc_name
+     * @param mixed $doc_login_email
+     * @param mixed $doc_primary_location
+     * @param mixed $user_id
      * @return doctor
      */
     private function insertDocData($doc_name,$doc_login_email, $doc_primary_location, $user_id){
@@ -117,8 +117,8 @@ class DoctorController extends Controller
     
     
     /**
-     * 
-     * @return type
+     * Summary of addDoctor
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
     public function addDoctor(){
         $formFields = $this->getFormFields($this->roleId);

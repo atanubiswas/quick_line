@@ -57,16 +57,32 @@ class AuthController extends Controller
      * @return type
      */
     public function adminLogin(Request $request){
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
         $credentials = $request->only('email', 'password');
         $remember = $request->has('remember');
         
+        $hasUser = User::where("email", strtolower($request->email))
+            ->first();
+
+        if(!$hasUser){
+            return redirect()->route('admin.login')->with('error', 'Login Email Not Found.');
+        }
+        if($hasUser->status != 1){
+            return redirect()->route('admin.login')->with('error', 'Your account is Deactivated, Contact Quick Line Team to Re-active.');
+        }
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
             $user->increment("login_count");
+            if($user->is_first_login == 1){
+                return redirect()->intended("/admin/change-password");
+            }
             $r = empty($request->r)?"/admin/dashboard":$request->r;
             return redirect()->intended($r);
         }
-        return redirect()->route('admin.login')->with('error', 'Invalid credentials');
+        return redirect()->route('admin.login')->with('error', 'Invalid Credentials');
     }
     
     /**

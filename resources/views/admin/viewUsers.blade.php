@@ -50,7 +50,7 @@
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body">
-                            <table id="lab_table" class="table table-bordered table-hover">
+                            <table id="user_table" class="table table-bordered table-hover">
                                 <thead>
                                     <tr>
                                         <th>User Name</th>
@@ -68,8 +68,8 @@
                                         <td>{{$user->mobile_number}}</td>
                                         <td>{{$user->roles[0]->name}}</td>
                                         <td>
-                                            <input type="checkbox" id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" /> 
-                                            <label for="user_status_{{$user->id}}" data-on-label="Active" data-off-label="Inactive"></label>
+                                            <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" /> 
+                                            <label for="user_status_{{$user->id}}"  @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') style="background-color: #aaa" @endif data-on-label="Active" data-off-label="Inactive"></label>
                                         </td>
                                     </tr>
                                     @endforeach
@@ -109,7 +109,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"></script>
 <script>
 $(function () {
-    $('#lab_table').DataTable({
+    $('#user_table').DataTable({
         "paging": true,
         "lengthChange": true,
         "searching": true,
@@ -120,163 +120,52 @@ $(function () {
         "lengthMenu": [ [10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"] ]
     });
 
-    $('#lab_table tbody').on('change', '.lab_status',function () {
+    $('#user_table tbody').on('change', '.user_status',function () {
         var isChecked = $(this).is(':checked');
-        var lab_id = $(this).data("id");
+        var user_id = $(this).data("id");
 
         if (isChecked) {
             Swal.fire({
                 title: "Are you sure?",
-                text: "You want to enable this Laboratory?",
+                text: "You want to Re-active this Person?",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
                 cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, Enable It!"
+                confirmButtonText: "Yes, Re-active It!"
             }).then((result) => {
                 if (!result.isConfirmed) {
                     $(this).prop('checked', false);
                 } else {
-                    changeLabStatus(lab_id, isChecked);
+                    changeUserStatus(user_id, isChecked);
                 }
             });
         } else {
             Swal.fire({
                 title: "Are you sure?",
-                text: "You want to disabled this Laboratory?",
+                text: "You want to Deactive this Person?",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
                 cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, Disabled It!"
+                confirmButtonText: "Yes, Deactive It!"
             }).then((result) => {
                 if (!result.isConfirmed) {
                     $(this).prop('checked', true);
                 } else {
-                    changeLabStatus(lab_id, isChecked);
+                    changeUserStatus(user_id, isChecked);
                 }
             });
         }
     });
-
-    $("#lab_table tbody").on("click", '.edit_btn',function(){
-        removePreviousDivElements();
-        $(this).html('Opening <i class="fas fa-spinner fa-spin"></i>');
-        var lab_id = $(this).data("id");
-        var form_data = new FormData();
-        form_data.append('lab_id', lab_id);
-
-        $.ajax({
-            url: '{{url("admin/get-edit-laboratory-data")}}',
-            cache: false,
-            contentType: false,
-            processData: false,
-            data: form_data,
-            type: 'post',
-            success: function (data) {
-                $(".edit_btn").html('<i class="fas fa-edit"></i> Edit');
-                $("#edit_lab_div").html(data);
-                scrollToAnchor("edit_form");
-            },
-            error: function (data){
-                $(".edit_btn").html('<i class="fas fa-edit"></i> Edit');
-            }
-        });
-    });
     
-    $("#lab_table tbody").on("click", '.timeline_btn',function () {
-        removePreviousDivElements();
-        $(this).html('Opening <i class="fas fa-spinner fa-spin"></i>');
-        var lab_id = $(this).data("id");
+    function changeUserStatus(user_id, isChecked) {
         var form_data = new FormData();
-        form_data.append('lab_id', lab_id);
-
-        $.ajax({
-            url: '{{url("admin/get-lab-timeline")}}',
-            cache: false,
-            contentType: false,
-            processData: false,
-            data: form_data,
-            type: 'post',
-            success: function (data) {
-                $(".timeline_btn").html('<i class="fas fa-history"></i> View Timeline');
-                $("#lab_timeline").html(data);
-                scrollToAnchor("view_timeline");
-            },
-            error: function (data) {
-                $(".timeline_btn").html('<i class="fas fa-history"></i> View Timeline');
-                printErrorMsg("Somthing went wrong! Reload the page.");
-            }
-        });
-    });
-    
-    $("#lab_table tbody").on("click", '.add_documents_btn',function () {
-        removePreviousDivElements();
-        $(this).html('Opening <i class="fas fa-spinner fa-spin"></i>');
-        var lab_id = $(this).data("id");
-        var form_data = new FormData();
-        form_data.append('lab_id', lab_id);
-
-        $.ajax({
-            url: '{{url("admin/add-document-ajax")}}',
-            cache: false,
-            contentType: false,
-            processData: false,
-            data: form_data,
-            type: 'post',
-            success: function (data) {
-                $(".add_documents_btn").html('<i class="fas fa-file-import"></i> Add Document');
-                $("#add_documents").html(data);
-                scrollToAnchor("add_document");
-            },
-            error: function (data) {
-                $(".add_documents_btn").html('<i class="fas fa-file-import"></i> Add Document');
-                printErrorMsg("Somthing went wrong! Reload the page.");
-            }
-        });
-    });
-
-    $("#lab_table tbody").on("click", '.view_documents_btn',function () {
-        removePreviousDivElements();
-        $(this).html('Opening <i class="fas fa-spinner fa-spin"></i>');
-        var lab_id = $(this).data("id");
-        var form_data = new FormData();
-        form_data.append('id', lab_id);
-        form_data.append('type', 'centre');
-
-        $.ajax({
-            url: '{{url("admin/get-documents")}}',
-            cache: false,
-            contentType: false,
-            processData: false,
-            data: form_data,
-            type: 'post',
-            success: function (data) {
-                $(".view_documents_btn").html('<i class="fas fa-id-card"></i> View Documents');
-                $("#view_documents").html(data);
-                scrollToAnchor("document_table");
-            },
-            error: function (data) {
-                $(".view_documents_btn").html('<i class="fas fa-id-card"></i> View Documents');
-                printErrorMsg("Somthing went wrong! Reload the page.");
-            }
-        });
-    });
-
-    function removePreviousDivElements(){
-        $("#edit_lab_div").html('');
-        $("#add_documents").html('');
-        $("#view_documents").html('');
-        $("#lab_timeline").html('');
-    }
-    
-    function changeLabStatus(lab_id, isChecked) {
-        var form_data = new FormData();
-        form_data.append('lab_id', lab_id);
+        form_data.append('user_id', user_id);
         form_data.append('is_checked', isChecked);
 
         $.ajax({
-            url: '{{url("admin/change-laboratory-status")}}',
+            url: '{{url("admin/change-user-status")}}',
             cache: false,
             contentType: false,
             processData: false,
