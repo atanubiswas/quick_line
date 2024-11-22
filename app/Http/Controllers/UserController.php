@@ -48,6 +48,11 @@ class UserController extends Controller
                 return response()->json(['error' => $validator->errors()]);
             }
 
+            $auth = Auth::user();
+            if($auth->roles[0]->name === 'Manager' && $request->user_type != 2){
+                return response()->json(['error' => "You do not have Permission!"]);
+            }
+
             $role = role::where('id', $request->input('user_type'))->first();
             $user = new User();
             $user->name = $request->input('user_name');

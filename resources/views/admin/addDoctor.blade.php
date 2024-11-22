@@ -6,6 +6,8 @@
         color: #FF0000;
     }
 </style>
+<link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">
+<link rel="stylesheet" href="{{asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css')}}">
 @endsection
 @section('content')
 <div class="content-wrapper">
@@ -33,7 +35,7 @@
         <!-- Info boxes -->
         <div class="row">
           <div class="col-12 col-sm-6 col-md-12">
-              <div class="card card-primary">
+              <div class="card card-purple">
               <div class="card-header">
                 <h3 class="card-title">Add {{$pageName}} Data</h3>
               </div>
@@ -42,23 +44,31 @@
               <form name="doctor_form" id="doctor_form" method="post" action="">
                 <div class="card-body">
                     <div class="form-group">
-                      <label for="exampleInputEmail1">Doctor's Name <em>*</em></label>
+                      <label for="exampleInputEmail1">Name <em>*</em></label>
                       <input type="text" class="form-control" required="required" name="doctor_name" id="doctor_name" placeholder="Enter Doctor's Name">
                     </div>
                     <div class="form-group">
-                      <label for="exampleInputEmail1">Doctor's Login Email <em>*</em></label>
+                      <label for="exampleInputEmail1">Login Email <em>*</em></label>
                       <input type="text" class="form-control" required="required" name="doctor_login_email" id="doctor_login_email" placeholder="Doctor's Login Email">
                     </div>
                     <div class="form-group">
-                      <label for="exampleInputEmail1">Doctor's Location <em>*</em></label>
-                      <input type="text" class="form-control" required="required" name="doctor_location" id="doctor_location" placeholder="Doctor's Location">
+                      <label for="exampleInputEmail1">Phone Number<em>*</em></label>
+                      <input type="text" class="form-control" required="required" name="doctor_phone_number" id="doctor_phone_number" placeholder="Doctor's Phone Number">
+                    </div>
+                    <div class="form-group">
+                      <label for="exampleInputEmail1">Modality <em>*</em></label>
+                      <select class="form-control select2" required="required" multiple="multiple" name="modality[]" id="modality">
+                        @foreach($modalityes as $modality)
+                        <option value="{{$modality->id}}">{{$modality->name}}</option>
+                        @endforeach
+                      </select>
                     </div>
                     @include('admin.includes.extra_fields')
                 </div>
                 <!-- /.card-body -->
 
                 <div class="card-footer">
-                    <button type="button" id="save_btn" class="btn btn-primary save_btn">Save</button>
+                    <button type="button" id="save_btn" class="btn btn-success save_btn float-right">Save</button>
                 </div>
               </form>
             </div>
@@ -73,8 +83,24 @@
 @endsection
 
 @section("extra_js")
+<script src="{{asset('plugins/select2/js/select2.full.min.js')}}"></script>
 <script type="text/javascript">
 $(function(){
+    $('.select2').select2({
+      theme: 'bootstrap4',
+      placeholder: '-- Select Modality --',
+      selectionCssClass: 'bg-purple'
+    });
+    $('#doctor_phone_number').inputmask({
+      mask: "9999-999-999",
+      prefix: "+91 ",
+      placeholder: "____-___-___",           // Optional: use space as placeholder
+      showMaskOnHover: true,      // Don't show mask when not focused
+      showMaskOnFocus: true,       // Show mask on focus
+      onincomplete: function () {
+          $(this).val('');         // Clear field if input is incomplete
+      }
+    });
     $('#save_btn').on('click', function () {
         $(this).html('Saving <i class="fas fa-spinner fa-spin"></i>');
         $(".form-control").removeClass("is-invalid");

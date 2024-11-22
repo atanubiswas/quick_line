@@ -108,6 +108,7 @@ Route::group(['prefix' => 'admin'], function () {
    /*============== TIMELINE CONTROLLER =================*/
    Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
         Route::post('/get-lab-timeline', [TimeLineController::class,'getLabTimeline']);
+        Route::post('/get-doc-timeline', [TimeLineController::class,'getDocTimeline']);
    });
    
    /*============== DOCUMENT CONTROLLER =================*/

@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\docFormFieldValue;
 use DB;
 use Hash;
 use Auth;
@@ -10,11 +11,13 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Collection;
 
 use App\Models\User;
+use App\Models\DoctorLog;
 use App\Models\role_user;
 use App\Models\WalletUser;
 use App\Models\Transaction;
 use App\Models\FormFieldRole;
 use App\Models\laboratoryLog;
+use App\Models\DoctorModality;
 use App\Models\LabFormFieldValue;
 
 trait GeneralFunctionTrait{
@@ -77,7 +80,6 @@ trait GeneralFunctionTrait{
         $formFields = FormFieldRole::where("role_id", $roleId)
             ->with("FormField.formFieldOptions")
             ->get();
-        
         return $formFields;
     }
 
@@ -89,6 +91,17 @@ trait GeneralFunctionTrait{
         $LabFormValues = LabFormFieldValue::where("laboratorie_id", $labId)
         ->get();
         return $LabFormValues;
+    }
+
+    /**
+     * Summary of getDocFormFieldValues
+     * @param mixed $docId
+     * @return Collection|docFormFieldValue[]
+     */
+    private function getDocFormFieldValues($docId){
+        $DocFormValues = docFormFieldValue::where("doctor_id", $docId)
+        ->get();
+        return $DocFormValues;
     }
     
     /**
@@ -172,10 +185,12 @@ trait GeneralFunctionTrait{
      * @return void
      */
     private function deActivateUser($email, $status){
-        User::where("email", $email)
+        $status = (int) $status;
+        $user = User::where("email", $email)
             ->update([
                 "status" => $status
             ]);
+            dd($user);
     }
     
     /**
@@ -393,6 +408,10 @@ trait GeneralFunctionTrait{
             case 'laboratory':
                 laboratoryLog::create($inputArray);
                 break;
+
+            case 'doctor':
+                DoctorLog::create($inputArray);
+                break;
         }
     }
 
@@ -462,5 +481,29 @@ trait GeneralFunctionTrait{
 
         // For dates older than 7 days, use Carbon's diffForHumans()
         return $providedTime->diffForHumans();
+    }
+
+    /**
+     * Summary of getModalityList
+     * @param mixed $doctor_id
+     * @param mixed $returnArray
+     * @return array|string
+     */
+    private function getModalityList($doctor_id, $returnArray = 1){
+        $modalityList = DoctorModality::where('doctor_id', $doctor_id)
+            ->where("status", '1')
+            ->with('Modality')
+            ->get();
+        $modalityListArray = array();
+        foreach($modalityList as $modality){
+            $modalityListArray[] = $modality->Modality->name;
+        }
+
+        if($returnArray == 1){
+            return $modalityListArray;
+        }
+        else{
+            return implode(', ', $modalityListArray);
+        }
     }
 }

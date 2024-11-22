@@ -79,16 +79,16 @@
 @section("extra_js")
 <script type="text/javascript">
 $(function(){
-  $('#lab_phone_number').inputmask({
-    mask: "9999-999-999",
-    prefix: "+91 ",
-    placeholder: "____-___-___",           // Optional: use space as placeholder
-    showMaskOnHover: true,      // Don't show mask when not focused
-    showMaskOnFocus: true,       // Show mask on focus
-    onincomplete: function () {
-        $(this).val('');         // Clear field if input is incomplete
-    }
-  });
+    $('#lab_phone_number').inputmask({
+      mask: "9999-999-999",
+      prefix: "+91 ",
+      placeholder: "____-___-___",           // Optional: use space as placeholder
+      showMaskOnHover: true,      // Don't show mask when not focused
+      showMaskOnFocus: true,       // Show mask on focus
+      onincomplete: function () {
+          $(this).val('');         // Clear field if input is incomplete
+      }
+    });
     $('#save_btn').on('click', function () {
         $(this).html('Saving <i class="fas fa-spinner fa-spin"></i>');
         $(".form-control").removeClass("is-invalid");

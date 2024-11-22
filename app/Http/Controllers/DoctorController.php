@@ -10,6 +10,8 @@ use DB;
 
 use App\Models\doctor;
 use App\Models\formField;
+use App\Models\Modality;
+use App\Models\DoctorModality;
 use App\Models\docFormFieldValue;
 
 use App\Traits\GeneralFunctionTrait;
@@ -24,28 +26,31 @@ class DoctorController extends Controller
      * Summary of insertDocData
      * @param mixed $doc_name
      * @param mixed $doc_login_email
-     * @param mixed $doc_primary_location
+     * @param mixed $doc_phone_number
      * @param mixed $user_id
      * @return doctor
      */
-    private function insertDocData($doc_name,$doc_login_email, $doc_primary_location, $user_id){
+    private function insertDocData($doc_name,$doc_login_email, $doc_phone_number, $user_id){
         $doctor = new doctor;
-        $doctor->doc_name             = $doc_name;
-        $doctor->doc_login_email      = $doc_login_email;
-        $doctor->doc_primary_location = $doc_primary_location;
-        $doctor->user_id              = $user_id;
-        $doctor->status               = 1;
+        $doctor->name           = $doc_name;
+        $doctor->email          = $doc_login_email;
+        $doctor->phone_number   = $doc_phone_number;
+        $doctor->user_id        = $user_id;
+        $doctor->status         = '1';
         $doctor->save();
+        
+        $msg = $this->generateLoggedMessage("add", 'Doctor', $doctor->name);
+        $this->addLog('doctor', 'doctor_id', $doctor->id, 'add', $msg);
         
         return $doctor;
     }
     
     /**
-     * 
-     * @param type $field_name
-     * @param type $value
-     * @param type $doctor_id
-     * @return boolean|docFormFieldValue
+     * Summary of insertDocFormFieldValue
+     * @param mixed $field_name
+     * @param mixed $value
+     * @param mixed $doctor_id
+     * @return bool|docFormFieldValue
      */
     private function insertDocFormFieldValue($field_name, $value, $doctor_id){
         $formField = formField::where("field_name", $field_name)
@@ -67,27 +72,61 @@ class DoctorController extends Controller
     }
     
     /**
-     * 
-     * @param type $doc_name
-     * @param type $doc_location
-     * @param type $doc_id
+     * Summary of updateDocData
+     * @param mixed $name
+     * @param mixed $phone_number
+     * @param mixed $modality
+     * @param mixed $doc_id
+     * @return void
      */
-    private function updateDocData($doc_name, $doc_location, $doc_id){
+    private function updateDocData($name, $phone_number, $modalityes, $doc_id){
+        $docOldData = doctor::find($doc_id);
+        if ($docOldData->name !== $name) {
+            $msg = $this->generateLoggedMessage("update", "Doctor", $docOldData->name, "Doctor Name", $docOldData->name, $name);
+            $this->addLog("doctor", "doctor_id", $doc_id, "update", $msg, "Doctor Name", $docOldData->name, $name);
+        }
+        if ($docOldData->phone_number !== $phone_number) {
+            $msg = $this->generateLoggedMessage("update", "Doctor", $docOldData->phone_number, "Phone Number", $docOldData->phone_number, $phone_number);
+            $this->addLog("doctor", "doctor_id", $doc_id, "update", $msg, "Phone Number", $docOldData->phone_number, $phone_number);
+        }
         doctor::where("id", $doc_id)
             ->update([
-                "doc_name"             => $doc_name,
-                "doc_primary_location" => $doc_location
+                "name"         => $name,
+                "phone_number" => $phone_number
             ]);
+        /*============= ADD DATE TO DOCTOR MODALITY TABLE ===============*/
+        $oldModality = $this->getModalityList($doc_id, 0);
+        $allModalityList = Modality::all();
+        $newModalityArray = array();
+        DoctorModality::where("doctor_id", $doc_id)
+            ->update(["status" => '0']);
+        foreach($modalityes as $modality){
+            foreach($allModalityList as $modalityList){
+                if($modalityList->id == $modality){
+                    $newModalityArray[] = $modalityList->name;
+                    break;
+                }
+            }
+            DoctorModality::updateOrCreate(
+                ["doctor_id" => $doc_id, "modality_id" => $modality],
+                ["status" => '1']);
+        }
+        $newModality = implode(', ', $newModalityArray);
+        if(trim(strtolower($oldModality)) !== trim(strtolower($newModality))){
+            $msg = $this->generateLoggedMessage("update", "Doctor", $oldModality, "Modality", $oldModality, $newModality);
+            $this->addLog("doctor", "doctor_id", $doc_id, "update", $msg, "Modality", $oldModality, $newModality);
+        }
+        /*============= ADD DATE TO DOCTOR MODALITY TABLE ===============*/
     }
     
     /**
-     * 
-     * @param type $field_name
-     * @param type $value
-     * @param type $doc_id
-     * @return boolean
+     * Summary of updateFormFieldValue
+     * @param mixed $field_name
+     * @param mixed $value
+     * @param mixed $doc_id
+     * @return bool
      */
-    private function updateFormFieldValue($field_name, $value, $doc_id){
+    private function updateFormFieldValue($field_name, $value, $doc_id): bool{
         $formField = formField::where("field_name", $field_name)
             ->first();
         
@@ -96,21 +135,25 @@ class DoctorController extends Controller
         }
         $authUser = Auth::user();
         
-        $count = docFormFieldValue::where("form_field_id", $formField->id)
+        $docOldData = docFormFieldValue::where("form_field_id", $formField->id)
             ->where("doctor_id", $doc_id)
-            ->count();
-        
-        if($count > 0){
+            ->first();
+
+        if ($docOldData && $value !== $docOldData->value) {
             docFormFieldValue::where("form_field_id", $formField->id)
                 ->where("doctor_id", $doc_id)
                 ->update([
-                    "value"      => $value,
+                    "value" => $value,
                     "updated_by" => $authUser->id,
                 ]);
-        }
-        else if(!empty($value)){
+            $msg = $this->generateLoggedMessage("update", "Doctor", '', $field_name, $docOldData->value, $value);
+            $this->addLog("doctor", "doctor_id", $doc_id, "update", $msg, $field_name, $docOldData->value, $value);
+        } else if (!$docOldData && !empty($value) && !is_array($value)) {
             $this->insertDocFormFieldValue($field_name, $value, $doc_id);
+            $msg = $this->generateLoggedMessage("update", "Doctor", '', $field_name, 'N/A', $value);
+            $this->addLog("doctor", "doctor_id", $doc_id, "update", $msg, $field_name, 'N/A', $value);
         }
+        return TRUE;
     }
     
     /*================== STARTING OF PUBLIC FUNCTIONS =======================*/
@@ -121,8 +164,9 @@ class DoctorController extends Controller
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
     public function addDoctor(){
+        $modalityes = Modality::all();
         $formFields = $this->getFormFields($this->roleId);
-        return view("admin.addDoctor", ["formFields" => $formFields, "pageName" => $this->pageName]);
+        return view("admin.addDoctor", ["modalityes" => $modalityes, "formFields" => $formFields, "pageName" => $this->pageName]);
     }
     
     /**
@@ -135,7 +179,8 @@ class DoctorController extends Controller
         $validationArray = [
             'doctor_name' => 'required|min:3',
             'doctor_login_email' => 'required|email|unique:users,email',
-            'doctor_location' => 'required|min:3'
+            'doctor_phone_number' => 'required',
+            'modality'=> 'required',
         ];
         foreach($formFields as $formField){
             if($formField->FormField->required == 1){
@@ -155,22 +200,27 @@ class DoctorController extends Controller
             /*============== ADD DATA TO ROLE USER TABLE ============*/
             $roleUser = $this->insertRoleUserData($user->id, $this->roleId);
             /*============== ADD DATA TO ROLE USER TABLE ============*/
-            
-            /*============== ADD DATA TO WALLET TABLE ===============*/
-            $this->insertIntoUserWalletData($user->id);
-            /*============== ADD DATA TO WALLET TABLE ===============*/
 
             /*============== ADD DATA TO DOCTORS TABLE ============*/
-            $doctor = $this->insertDocData($request->doctor_name, $request->doctor_login_email, $request->doctor_location, $user->id);
+            $doctor = $this->insertDocData($request->doctor_name, $request->doctor_login_email, $request->doctor_phone_number, $user->id);
             /*============== ADD DATA TO DOCTORS TABLE ============*/
 
             /*============== ADD DATA TO FORM_FIELD_VALUES TABLE ============*/
             foreach($request->all() as $key=>$value){
-                if(!empty($value)){
+                if(!empty($value) && !is_array($value)){
                     $this->insertDocFormFieldValue($key, $value, $doctor->id);
                 }
             }
             /*============== ADD DATA TO FORM_FIELD_VALUES TABLE ============*/
+
+            /*============= ADD DATE TO DOCTOR MODALITY TABLE ===============*/
+            foreach($request->modality as $modality){
+                $docModality = new DoctorModality();
+                $docModality->doctor_id = $doctor->id;
+                $docModality->modality_id = $modality;
+                $docModality->save();
+            }
+            /*============= ADD DATE TO DOCTOR MODALITY TABLE ===============*/
             DB::commit();
         }
         catch(\Exception $ex) {
@@ -184,46 +234,51 @@ class DoctorController extends Controller
     }
     
     /**
-     * 
-     * @return type
+     * Summary of viewDoctor
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
     public function viewDoctor(){
-        $doctors = doctor::all();
+        $doctors = doctor::with('DoctorModality.Modality')->get();
         return view("admin.viewDoc", ["doctors" => $doctors, "pageName" => $this->pageName]);
     }
     
     /**
-     * 
-     * @param Request $request
-     * @return type
+     * Summary of changeDocStatus
+     * @param \Illuminate\Http\Request $request
+     * @return mixed|\Illuminate\Http\JsonResponse
      */
     public function changeDocStatus(Request $request){
-        $validator = Validator::make($request->all(), [
-            'doc_id' => 'required|numeric|exists:doctors,id',
-            'is_checked' => 'required'
-        ]);
-        if (!$validator->passes()) {
-            return response()->json(['error'=>$validator->errors()]);
+        try{
+            $validator = Validator::make($request->all(), [
+                'doc_id' => 'required|numeric|exists:doctors,id',
+                'is_checked' => 'required'
+            ]);
+            if (!$validator->passes()) {
+                return response()->json(['error'=>$validator->errors()]);
+            }
+            $status = ($request->is_checked == 'true')?'1':'0';
+            $statusString = ($status === '1') ?'active':'inactive';
+
+            $doctor = doctor::find($request->doc_id);
+            $doctor->status = $status;
+            $doctor->save();
+            
+            $this->deActivateUser($doctor->doc_login_email, $status);
+            $msg = $this->generateLoggedMessage($statusString, "Doctor", $doctor->name);
+            $this->addLog("doctor", "doctor_id", $request->doc_id, $statusString, $msg);
         }
-        $auth = Auth::user();
-        $status = ($request->is_checked == 'true')?1:0;
-        $deactivated_by = ($request->is_checked == 'true')?0:$auth->id;
-        $deactivated_on = ($request->is_checked == 'true')?NULL:Carbon::now()->toDateTimeString();
-        
-        $doctor = doctor::find($request->doc_id);
-        $doctor->status = $status;
-        $doctor->deactivated_by = $deactivated_by;
-        $doctor->deactivated_on = $deactivated_on;
-        $doctor->save();
-        
-        $this->deActivateUser($doctor->doc_login_email, $status);
+        catch(\Exception $ex) {
+            return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
+        } catch(\Illuminate\Database\QueryException $ex){
+            return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
+        }
         return response()->json(['success' => [$this->getMessages('_STUPMSG')]]);
     }
     
     /**
      * 
-     * @param Request $request
-     * @return type
+     * @param \Illuminate\Http\Request $request
+     * @return mixed|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\JsonResponse
      */
     public function getEditDocData(Request $request){
         $validator = Validator::make($request->all(), [
@@ -234,11 +289,17 @@ class DoctorController extends Controller
         }
         
         $formFields = $this->getFormFields($this->roleId);
+        $formFieldsValues = $this->getDocFormFieldValues($request->doc_id);
         $doctor = doctor::where("id", $request->doc_id)
-            ->with("docFormFieldValue")
+            ->with("doctorFormFieldValue", "DoctorModality.Modality")
             ->first();
-        
-        return view("admin.editDoc", ["doctor" => $doctor, "formFields" => $formFields, "pageName" => $this->pageName]);
+        $docModalityArray = array();
+        foreach($doctor->DoctorModality as $docModality){
+            $docModalityArray[] = $docModality->Modality->id;
+        }
+        $modalityes = Modality::all();
+
+        return view("admin.editDoc", ["doctor" => $doctor, "formFields" => $formFields, "formFieldsValues" => $formFieldsValues, "modalityes" => $modalityes, "docModalityArray" => $docModalityArray, "pageName" => $this->pageName]);
     }
     
     public function updateDoc(Request $request){
@@ -246,8 +307,9 @@ class DoctorController extends Controller
         $formFields = $this->getFormFields($this->roleId);
         $validationArray = [
             'doc_id' => 'required|numeric|exists:doctors,id',
-            'doc_name' => 'required|min:3',
-            'doc_primary_location' => 'required|min:3'
+            'name' => 'required|min:3',
+            'phone_number' => 'required',
+            'modality' => 'required',
         ];
         foreach($formFields as $formField){
             if($formField->FormField->required == 1){
@@ -262,12 +324,12 @@ class DoctorController extends Controller
         $doctor = doctor::find($request->doc_id);
         try{
             /*============== ADD DATA TO USER TABLE ============*/
-            $this->updateUserData($request->doc_name, $doctor->user_id);
+            $this->updateUserData($request->name, $doctor->user_id);
             /*============== ADD DATA TO USER TABLE ============*/
             
-            /*============== UPDATE DATA TO LABORATORY TABLE ============*/
-            $this->updateDocData($request->doc_name, $request->doc_primary_location, $request->doc_id);
-            /*============== UPDATE DATA TO LABORATORY TABLE ============*/
+            /*============== UPDATE DATA TO DOCTOR TABLE ============*/
+            $this->updateDocData($request->name, $request->phone_number, $request->modality, $request->doc_id);
+            /*============== UPDATE DATA TO DOCTOR TABLE ============*/
 
             /*============== UPDATE DATA TO FORM_FIELD_VALUES TABLE ============*/
             foreach($request->all() as $key=>$value){

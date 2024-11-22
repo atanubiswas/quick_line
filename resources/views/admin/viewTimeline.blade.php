@@ -2,7 +2,7 @@
 <div class="col-12 col-sm-6 col-md-12">
     <div class="card card-purple">
         <div class="card-header">
-            <h3 class="card-title">View {{$labratory->lab_name}}'s Timeline</h3>
+            <h3 class="card-title">View {{$element_name}}'s Timeline</h3>
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="remove">
                     <i class="fas fa-times"></i>

@@ -1,7 +1,7 @@
 @foreach ($formFields as $formField)
     @php $value = ''; @endphp
     @foreach ($formFieldsValues as $formFieldsValue)
-        @if($formFieldsValue->form_field_id == $formField->id)
+        @if($formFieldsValue->form_field_id === $formField->form_field_id)
             @php
             $value = $formFieldsValue->value;
             break;
@@ -9,7 +9,7 @@
         @endif
     @endforeach
 <div class="form-group">
-    <label for="exampleInputEmail1">{{$formField->FormField->field_alise}} @if($formField->FormField->required==1) <em>*</em> @endif</label>
+    <label for="{{$formField->FormField->field_alise}}">{{$formField->FormField->field_alise}} @if($formField->FormField->required==1) <em>*</em> @endif</label>
     @if($formField->FormField->element_type == "text"|| $formField->FormField->element_type == "date" || $formField->FormField->element_type == "datetime")
     <input type="text" value="{{$value}}" @if($formField->FormField->required==1) required="required" @endif class="form-control" name="{{$formField->FormField->field_name}}" id="{{$formField->FormField->field_name}}" placeholder="{{$formField->FormField->field_alise}}">
     @elseif($formField->FormField->element_type == "phone")

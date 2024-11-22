@@ -12,6 +12,8 @@
 <link rel="stylesheet" href="{{asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css')}}">
 <link rel="stylesheet" href="{{asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css')}}">
 <link rel="stylesheet" href="{{asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css')}}">
+<link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">
+<link rel="stylesheet" href="{{asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css')}}">
 @endsection
 @section('content')
 <div class="content-wrapper">
@@ -47,8 +49,9 @@
                                 <thead>
                                     <tr>
                                         <th>Doctor Name</th>
-                                        <th>Doctor Location</th>
                                         <th>Doctor Email</th>
+                                        <th>Doctor Phone Number</th>
+                                        <th>Modality</th>
                                         <th>Status</th>
                                         <th>Controls</th>
                                     </tr>
@@ -56,15 +59,21 @@
                                 <tbody>
                                     @foreach($doctors as $doctor)
                                     <tr>
-                                        <td>{{$doctor->doc_name}}</td>
-                                        <td>{{$doctor->doc_primary_location}}</td>
-                                        <td><a href="mailto:{{$doctor->doc_login_email}}">{{$doctor->doc_login_email}}</a></td>
+                                        <td>{{$doctor->name}}</td>
+                                        <td><a href="mailto:{{$doctor->email}}">{{$doctor->email}}</a></td>
+                                        <td>{{$doctor->phone_number}}</td>
+                                        <td>
+                                            @foreach($doctor->DoctorModality as $DModality)
+                                            <span class="badge bg-warning">{{$DModality->Modality->name}}</span>
+                                            @endforeach
+                                        </td>
                                         <td>
                                             <input type="checkbox" id="doc_status_{{$doctor->id}}" data-id="{{$doctor->id}}" @if($doctor->status==1) checked="checked" @endif class="doc_status" switch="bool" class="doc_status" /> 
                                             <label for="doc_status_{{$doctor->id}}" data-on-label="Active" data-off-label="Inactive"></label>
                                         </td>
                                         <td>
-                                            <button type="button" data-id="{{$doctor->id}}" class="btn edit_btn btn-block bg-gradient-info btn-xs"><i class="fas fa-edit"></i> Edit</button>
+                                            <button type="button" data-id="{{$doctor->id}}" class="btn edit_btn btn-block bg-warning btn-xs"><i class="fas fa-edit"></i> Edit</button>
+                                            <button type="button" data-id="{{$doctor->id}}" class="btn timeline_btn btn-block bg-gradient-blue btn-xs"><i class="fas fa-history"></i> View Timeline</button>
                                         </td>
                                     </tr>
                                     @endforeach
@@ -81,6 +90,10 @@
             <!-- /.row -->
             <div class="row" id="edit_doc_div">
                 
+            </div>
+            <!-- /.row -->
+            <div class="row" id="doc_timeline">
+
             </div>
             <!-- /.row -->
         </div>
@@ -115,19 +128,9 @@ $(function () {
         "autoWidth": false,
         "responsive": true,
         "lengthMenu": [ [10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"] ],
-        "initComplete": function() {
-            // Add button in the header
-            var buttonHtml = '<button id="myButton" class="btn btn-primary">My Button</button>';
-            $(this).closest('.dataTables_wrapper').find('.dataTables_length').append(buttonHtml);
-            
-            // Button click event
-            $('#myButton').on('click', function() {
-                alert('Button clicked!');
-            });
-        }
     });
 
-    $('.doc_status').on('change', function () {
+    $("#doc_table tbody").on("change", '.doc_status',function(){
         var isChecked = $(this).is(':checked');
         var doc_id = $(this).data("id");
 
@@ -166,7 +169,8 @@ $(function () {
         }
     });
     
-    $(".edit_btn").on("click", function(){
+    $("#doc_table tbody").on("click", '.edit_btn',function(){
+        removePreviousDivElements();
         $(this).html('Opening <i class="fas fa-spinner fa-spin"></i>');
         var doc_id = $(this).data("id");
         var form_data = new FormData();
@@ -189,6 +193,37 @@ $(function () {
             }
         });
     });
+
+    $("#doc_table tbody").on("click", '.timeline_btn',function () {
+        removePreviousDivElements();
+        $(this).html('Opening <i class="fas fa-spinner fa-spin"></i>');
+        var doc_id = $(this).data("id");
+        var form_data = new FormData();
+        form_data.append('doctor_id', doc_id);
+
+        $.ajax({
+            url: '{{url("admin/get-doc-timeline")}}',
+            cache: false,
+            contentType: false,
+            processData: false,
+            data: form_data,
+            type: 'post',
+            success: function (data) {
+                $(".timeline_btn").html('<i class="fas fa-history"></i> View Timeline');
+                $("#doc_timeline").html(data);
+                scrollToAnchor("view_timeline");
+            },
+            error: function (data) {
+                $(".timeline_btn").html('<i class="fas fa-history"></i> View Timeline');
+                printErrorMsg("Somthing went wrong! Reload the page.");
+            }
+        });
+    });
+
+    function removePreviousDivElements(){
+        $("#edit_doc_div").html('');
+        $("#doc_timeline").html('');
+    }
 
     function changeDocStatus(doc_id, isChecked) {
         var form_data = new FormData();

@@ -180,7 +180,7 @@ class LaboratoryController extends Controller
             return response()->json(['error' => $validator->errors()]);
         }
 
-        //try{
+        try{
         /*============== ADD DATA TO USER TABLE ============*/
         $user = $this->insertUserData($request->lab_name, $request->lab_login_email);
         /*============== ADD DATA TO USER TABLE ============*/
@@ -204,14 +204,14 @@ class LaboratoryController extends Controller
         }
         /*============== ADD DATA TO FORM_FIELD_VALUES TABLE ============*/
         DB::commit();
-        // }
-        // catch(\Exception $ex) {
-        //     DB::rollback();
-        //     return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
-        // } catch(\Illuminate\Database\QueryException $ex){
-        //     DB::rollback();
-        //     return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
-        // }
+        }
+        catch(\Exception $ex) {
+            DB::rollback();
+            return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
+        } catch(\Illuminate\Database\QueryException $ex){
+            DB::rollback();
+            return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
+        }
         return response()->json(['success' => [$this->getMessages('_SVSUMSG')]]);
     }
 
