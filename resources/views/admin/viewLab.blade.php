@@ -62,7 +62,7 @@
                                         <td>{{$labratorye->lab_name}}</td>
                                         <td>{{$labratorye->lab_primary_location}}</td>
                                         <td><a href="mailto:{{$labratorye->lab_login_email}}">{{$labratorye->lab_login_email}}</a></td>
-                                        <td>{{$labratorye->lab_phone_number}}</td>
+                                        <td><a href="tel:+91{{$labratorye->lab_phone_number}}">{{$labratorye->lab_phone_number}}</a></td>
                                         <td>
                                             <input type="checkbox" id="lab_status_{{$labratorye->id}}" data-id="{{$labratorye->id}}" @if($labratorye->status==1) checked="checked" @endif class="lab_status" switch="bool" /> 
                                             <label for="lab_status_{{$labratorye->id}}" data-on-label="Active" data-off-label="Inactive"></label>

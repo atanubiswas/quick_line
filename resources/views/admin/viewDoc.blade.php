@@ -61,7 +61,7 @@
                                     <tr>
                                         <td>{{$doctor->name}}</td>
                                         <td><a href="mailto:{{$doctor->email}}">{{$doctor->email}}</a></td>
-                                        <td>{{$doctor->phone_number}}</td>
+                                        <td><a href="tel:+91{{$doctor->phone_number}}">{{$doctor->phone_number}}</a></td>
                                         <td>
                                             @foreach($doctor->DoctorModality as $DModality)
                                             <span class="badge bg-warning">{{$DModality->Modality->name}}</span>

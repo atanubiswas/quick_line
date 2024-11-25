@@ -65,7 +65,7 @@
                                     <tr>
                                         <td><img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}</td>
                                         <td><a href="mailto:{{$user->email}}">{{$user->email}}</a></td>
-                                        <td>{{$user->mobile_number}}</td>
+                                        <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
                                         <td>{{$user->roles[0]->name}}</td>
                                         <td>
                                             <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" /> 

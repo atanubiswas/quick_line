@@ -112,7 +112,7 @@ Route::group(['prefix' => 'admin'], function () {
    });
    
    /*============== DOCUMENT CONTROLLER =================*/
-    Route::middleware(['role:Admin', '2fa'])->group(function () {
+    Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
        Route::post('/get-documents', [DocumentController::class, 'getDocuments']);
        Route::post('/update-document-status', [DocumentController::class, 'updateDocumentStatus']);
        Route::post('/add-document-ajax', [DocumentController::class, 'addDocumentAjax']);

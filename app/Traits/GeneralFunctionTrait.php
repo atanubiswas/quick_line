@@ -190,7 +190,6 @@ trait GeneralFunctionTrait{
             ->update([
                 "status" => $status
             ]);
-            dd($user);
     }
     
     /**

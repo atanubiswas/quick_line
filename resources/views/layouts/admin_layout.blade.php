@@ -27,7 +27,7 @@
   </style>
   @yield('extra_css')
 </head>
-<body class="hold-transition light-mode sidebar-dark-purple layout-fixed layout-navbar-fixed layout-footer-fixed">
+<body class="hold-transition light-mode sidebar-dark-purple  sidebar-collapse sidebar-mini-md text-sm accent-orange">
 <div class="wrapper">
 
   <!-- Preloader -->
@@ -94,7 +94,7 @@
   <!-- /.navbar -->
 
   <!-- Main Sidebar Container -->
-  <aside class="main-sidebar sidebar-dark-success elevation-4">
+  <aside class="main-sidebar sidebar-dark-purple elevation-4">
     <!-- Brand Logo -->
     <a href="{{Route('admin.dashboard')}}" class="brand-link">
       <img src="{{asset('dist/img/quick_on_small_icon.png')}}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
@@ -225,15 +225,15 @@
         // Checkboxes
 
         $container.append(
-          '<h5>Settings</h5><hr class="mb-2"/>'
+          '<h5>Settings</h5><hr/>'
         );
 
         $container.append(
-            '<i class="fas fa-key">&nbsp</i><a href="{{Route("2fa")}}">Two Factor Authentication</a>'
+            '<div class="mb-4"><i class="fas fa-key">&nbsp</i><a href="{{Route("2fa")}}">Two Factor Authentication</a></div>'
         );
 
         $container.append(
-            '<i class="fas fa-sign-out-alt">&nbsp</i><a href="{{ route("admin.logout")}}">Logout</a>'
+            '<div class="mb-1"><i class="fas fa-sign-out-alt">&nbsp</i><a href="{{ route("admin.logout")}}">Logout</a></div>'
         );
     })(jQuery);
     
