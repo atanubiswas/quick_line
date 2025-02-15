@@ -8,4 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Modality extends Model
 {
     use HasFactory;
+
+    public function DoctorModality(){
+        return $this->hasMany(DoctorModality::class, 'modality_id')->where("status", '1');
+    }
 }

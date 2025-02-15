@@ -2,7 +2,6 @@
 
 namespace App\Traits;
 
-use App\Models\docFormFieldValue;
 use DB;
 use Hash;
 use Auth;
@@ -15,10 +14,12 @@ use App\Models\DoctorLog;
 use App\Models\role_user;
 use App\Models\WalletUser;
 use App\Models\Transaction;
+use App\Models\LabModality;
 use App\Models\FormFieldRole;
 use App\Models\laboratoryLog;
 use App\Models\DoctorModality;
 use App\Models\LabFormFieldValue;
+use App\Models\docFormFieldValue;
 
 trait GeneralFunctionTrait{
     
@@ -135,16 +136,18 @@ trait GeneralFunctionTrait{
      * Summary of insertUserData
      * @param mixed $user_name
      * @param mixed $login_email
+     * @param mixed $access_type
      * @param mixed $default_password
      * @return User
      */
-    private function insertUserData($user_name, $login_email, $default_password='Quick Line'){
+    private function insertUserData($user_name, $login_email, $access_type, $default_password='Quick Line'){
         $userImage = $this->getUserImage($user_name);
-        $user = new User;
-        $user->name       = $user_name;
-        $user->email      = strtolower($login_email);
-        $user->password   = Hash::make($default_password);
-        $user->user_image = $userImage;
+        $user               = new User;
+        $user->name         = $user_name;
+        $user->email        = strtolower($login_email);
+        $user->password     = Hash::make($default_password);
+        $user->user_image   = $userImage;
+        $user->access_type  = $access_type;
         $user->save();
         
         return $user;
@@ -483,13 +486,37 @@ trait GeneralFunctionTrait{
     }
 
     /**
-     * Summary of getModalityList
+     * Summary of getDoctorModalityList
      * @param mixed $doctor_id
      * @param mixed $returnArray
      * @return array|string
      */
-    private function getModalityList($doctor_id, $returnArray = 1){
+    private function getDoctorModalityList($doctor_id, $returnArray = 1){
         $modalityList = DoctorModality::where('doctor_id', $doctor_id)
+            ->where("status", '1')
+            ->with('Modality')
+            ->get();
+        $modalityListArray = array();
+        foreach($modalityList as $modality){
+            $modalityListArray[] = $modality->Modality->name;
+        }
+
+        if($returnArray == 1){
+            return $modalityListArray;
+        }
+        else{
+            return implode(', ', $modalityListArray);
+        }
+    }
+
+    /**
+     * Summary of getLabModalityList
+     * @param mixed $lab_id
+     * @param mixed $returnArray
+     * @return array|string
+     */
+    private function getLabModalityList($lab_id, $returnArray = 1){
+        $modalityList = LabModality::where('laboratory_id', $lab_id)
             ->where("status", '1')
             ->with('Modality')
             ->get();

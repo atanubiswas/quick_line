@@ -1,5 +1,5 @@
 @extends('layouts.admin_layout')
-@section('title', "View Laboratory Data")
+@section('title', "View Case Studies")
 @section('extra_css')
 <!-- CSS Switch -->
 <link rel="stylesheet" href="{{asset('css/css_switch.css')}}">

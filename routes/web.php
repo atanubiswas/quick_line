@@ -12,6 +12,7 @@ use App\Http\Controllers\TimeLineController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\CollectorController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CaseStudyController;
 use App\Http\Controllers\LaboratoryController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\LoginSecurityController;
@@ -93,6 +94,7 @@ Route::group(['prefix' => 'admin'], function () {
        Route::post('/update-laboratory', [LaboratoryController::class, 'updateLab']);
        Route::post('/get-assigned-collectors', [LaboratoryController::class, 'getAssignedCollectors']);
        Route::get('/view-laboratory', [LaboratoryController::class, 'viewLab'])->name('admin.viewLab');
+       Route::post('/get-preferred-doc', [LaboratoryController::class, 'getPreferredDoctors']);
    });
 
       /*================ DOCTOR CONTROLLER ====================*/
@@ -104,6 +106,16 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('/get-edit-doctor-data', [DoctorController::class, 'getEditDocData']);
         Route::post('/update-doctor', [DoctorController::class, 'updateDoc']);
     });
+
+       /*================ CASE STUDY CONTROLLER ===================*/
+        Route::middleware(['role:Admin,2fa'])->group(function () {
+            Route::get('/add-case-study', [CaseStudyController::class, 'addCaseStudy'])->name('admin.addCaseStudy');
+            Route::post('/insert-case-study', [CaseStudyController::class, 'insertCaseStudy']);
+            Route::get('/view-case-study', [CaseStudyController::class, 'viewCaseStudy'])->name('admin.viewCaseStudy');
+        //    Route::post('/change-case-study-status', [CaseStudyController::class, 'changeCaseStudyStatus']);
+        //    Route::post('/get-edit-case-study-data', [CaseStudyController::class, 'getEditCaseStudyData']);
+        //    Route::post('/update-case-study', [CaseStudyController::class, 'updateCaseStudy']);
+        });
 
    /*============== TIMELINE CONTROLLER =================*/
    Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {

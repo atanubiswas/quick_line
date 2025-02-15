@@ -148,7 +148,7 @@ class CollectorController extends Controller {
 
         try {
             /* ============== ADD DATA TO USER TABLE ============ */
-            $user = $this->insertUserData($request->collector_name, $request->collector_login_email);
+            $user = $this->insertUserData($request->collector_name, $request->collector_login_email, 'Collector');
             /* ============== ADD DATA TO USER TABLE ============ */
 
             /* ============== ADD DATA TO ROLE USER TABLE ============ */

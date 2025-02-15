@@ -64,7 +64,7 @@
                                         <td><a href="tel:+91{{$doctor->phone_number}}">{{$doctor->phone_number}}</a></td>
                                         <td>
                                             @foreach($doctor->DoctorModality as $DModality)
-                                            <span class="badge bg-warning">{{$DModality->Modality->name}}</span>
+                                            <span class="badge bg-danger">{{$DModality->Modality->name}}</span>
                                             @endforeach
                                         </td>
                                         <td>
@@ -72,7 +72,7 @@
                                             <label for="doc_status_{{$doctor->id}}" data-on-label="Active" data-off-label="Inactive"></label>
                                         </td>
                                         <td>
-                                            <button type="button" data-id="{{$doctor->id}}" class="btn edit_btn btn-block bg-warning btn-xs"><i class="fas fa-edit"></i> Edit</button>
+                                            <button type="button" data-id="{{$doctor->id}}" class="btn edit_btn btn-block bg-gradient-warning btn-xs"><i class="fas fa-edit"></i> Edit</button>
                                             <button type="button" data-id="{{$doctor->id}}" class="btn timeline_btn btn-block bg-gradient-blue btn-xs"><i class="fas fa-history"></i> View Timeline</button>
                                         </td>
                                     </tr>

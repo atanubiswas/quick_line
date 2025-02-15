@@ -27,7 +27,7 @@
   </style>
   @yield('extra_css')
 </head>
-<body class="hold-transition light-mode sidebar-dark-purple  sidebar-collapse sidebar-mini-md text-sm accent-orange">
+<body class="hold-transition light-mode sidebar-dark-purple  sidebar-collapse sidebar-mini-md text-sm accent-blue">
 <div class="wrapper">
 
   <!-- Preloader -->

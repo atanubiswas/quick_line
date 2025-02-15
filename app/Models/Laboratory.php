@@ -16,4 +16,8 @@ class Laboratory extends Model
     public function user(){
         return $this->belongsTo(User::class);
     }
+
+    public function labModality(){
+        return $this->hasMany(LabModality::class);
+    }
 }

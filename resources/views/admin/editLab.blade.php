@@ -29,6 +29,14 @@
                     <label for="exampleInputCentrePhoneNumber">Centre Phone Number<em>*</em></label>
                     <input type="text" value="{{$labratory->lab_phone_number}}" class="form-control" required="required" name="lab_phone_number" id="lab_phone_number" placeholder="Lab Phone Number">
                 </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Modality <em>*</em></label>
+                    <select class="form-control select2" required="required" multiple="multiple" name="modality[]" id="modality">
+                        @foreach($modalityes as $modality)
+                        <option value="{{$modality->id}}" @if(in_array($modality->id, $labModalityArray)) selected="selected" @endif>{{$modality->name}}</option>
+                        @endforeach
+                    </select>
+                </div>
                 @include('admin.includes.extra_fields_edit')
             </div>
             <!-- /.card-body -->
@@ -42,6 +50,15 @@
 </div>
 <script type="text/javascript">
     $(function () {
+        $('.select2').select2({
+            theme: 'bootstrap4',
+            placeholder: '-- Select Modality --',
+            templateSelection: function (data, container) {
+                $(container).addClass('bg-purple');
+                return data.text;
+            },
+            closeOnSelect: false
+        });
         $('#lab_phone_number').inputmask({
             mask: "9999-999-999",
             prefix: "+91 ",

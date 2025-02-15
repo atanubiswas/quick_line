@@ -25,7 +25,7 @@ class UserController extends Controller
      */
     public function addUser(Request $request){
         $auth = Auth::user();
-        $roleArray = $auth->roles[0]->name === 'Manager'?array(2):array(2,5);
+        $roleArray = $auth->roles[0]->name === 'Manager'?array(2):array(2,5,6);
         $roles = role::whereIn("id", $roleArray)->orderBy("name")->get();
         return view("admin.addUser", ["pageName" => $this->pageName, "roles"=> $roles]);
     }
@@ -86,7 +86,7 @@ class UserController extends Controller
     public function viewUser(){
         $authUser = Auth::user();
         $users = User::with('roles')
-            ->whereIn("access_type", array('Quality Controller', 'Manager'))
+            ->whereIn("access_type", array('Quality Controller', 'Manager', 'Assigner'))
             ->get();
         $pageName = $this->pageName;
         return view("admin.viewUsers", compact("users", "pageName", "authUser"));

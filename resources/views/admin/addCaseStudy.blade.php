@@ -1,13 +1,11 @@
 @extends('layouts.admin_layout')
-@section('title', "Add New Laboratory Data")
+@section('title', "Add Case Study")
 @section('extra_css')
 <style type="text/css">
     label em{
         color: #FF0000;
     }
 </style>
-<link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">
-<link rel="stylesheet" href="{{asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css')}}">
 @endsection
 @section('content')
 <div class="content-wrapper">
@@ -87,14 +85,8 @@
 @endsection
 
 @section("extra_js")
-<script src="{{asset('plugins/select2/js/select2.full.min.js')}}"></script>
 <script type="text/javascript">
 $(function(){
-    $('.select2').select2({
-      theme: 'bootstrap4',
-      placeholder: '-- Select Modality --',
-      selectionCssClass: 'bg-purple'
-    });
     $('#lab_phone_number').inputmask({
       mask: "9999-999-999",
       prefix: "+91 ",

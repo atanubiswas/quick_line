@@ -8,8 +8,12 @@ use Validator;
 use Auth;
 use DB;
 
+use App\Models\Doctor;
+use App\Models\Modality;
 use App\Models\formField;
 use App\Models\Laboratory;
+use App\Models\LabModality;
+use App\Models\DoctorModality;
 use App\Models\LabFormFieldValue;
 use App\Models\CollectorLabAssociation;
 
@@ -68,6 +72,7 @@ class LaboratoryController extends Controller
         $formFieldValue->value = $value;
         $formFieldValue->laboratorie_id = $labrotory_id;
         $formFieldValue->updated_by = $authUser->id;
+        dd($formFieldValue);
         $formFieldValue->save();
 
         return $formFieldValue;
@@ -81,8 +86,7 @@ class LaboratoryController extends Controller
      * @param mixed $lab_id
      * @return void
      */
-    private function updateLabData($lab_name, $lab_location, $lab_phone_number, $lab_id)
-    {
+    private function updateLabData($lab_name, $lab_location, $lab_phone_number, $lab_id, $modalityes){
         $labOldData = Laboratory::find($lab_id);
         if ($labOldData->lab_name !== $lab_name) {
             $msg = $this->generateLoggedMessage("update", "Centre", $labOldData->lab_name, "Centre Name", $labOldData->lab_name, $lab_name);
@@ -96,12 +100,30 @@ class LaboratoryController extends Controller
             $msg = $this->generateLoggedMessage("update", "Centre", $labOldData->lab_phone_number, "Centre Phone Number", $labOldData->lab_phone_number, $lab_phone_number);
             $this->addLog("laboratory", "laboratorie_id", $lab_id, "update", $msg, "Centre Phon Number", $labOldData->lab_phone_number, $lab_phone_number);
         }
+
+        $oldModality = $this->getLabModalityList($lab_id, 0);
+        $allModalityList = Modality::all();
+        $newModalityArray = array();
+        LabModality::where("laboratory_id", $lab_id)
+            ->update(["status" => '0']);
+        foreach($modalityes as $modality){
+            foreach($allModalityList as $modalityList){
+                if($modalityList->id == $modality){
+                    $newModalityArray[] = $modalityList->name;
+                    break;
+                }
+            }
+            LabModality::updateOrCreate(
+                ["laboratory_id" => $lab_id, "modality_id" => $modality],
+                ["status" => '1']);
+        }
+
         Laboratory::where("id", $lab_id)
-            ->update([
-                "lab_name" => $lab_name,
-                "lab_primary_location" => $lab_location,
-                "lab_phone_number" => $lab_phone_number
-            ]);
+        ->update([
+            "lab_name" => $lab_name,
+            "lab_primary_location" => $lab_location,
+            "lab_phone_number" => $lab_phone_number
+        ]);
     }
 
     /**
@@ -115,10 +137,11 @@ class LaboratoryController extends Controller
     {
         $formField = formField::where("field_name", $field_name)
             ->first();
-
+          
         if (!$formField) {
             return false;
         }
+        
         $authUser = Auth::user();
 
         $labOldData = LabFormFieldValue::where("form_field_id", $formField->id)
@@ -151,8 +174,9 @@ class LaboratoryController extends Controller
      */
     public function addLab()
     {
+        $modalityes = Modality::all();
         $formFields = $this->getFormFields($this->roleId);
-        return view("admin.addLab", ["formFields" => $formFields, "pageName" => $this->pageName]);
+        return view("admin.addLab", ["formFields" => $formFields, "modalityes" => $modalityes, "pageName" => $this->pageName]);
     }
 
     /**
@@ -168,7 +192,8 @@ class LaboratoryController extends Controller
             'lab_name' => 'required|min:3',
             'lab_login_email' => 'required|email|unique:users,email',
             'lab_primary_location' => 'required|min:3',
-            'lab_phone_number' => 'required'
+            'lab_phone_number' => 'required',
+            'modality'=> 'required',
         ];
         foreach ($formFields as $formField) {
             if ($formField->FormField->required == 1) {
@@ -182,7 +207,7 @@ class LaboratoryController extends Controller
 
         try{
         /*============== ADD DATA TO USER TABLE ============*/
-        $user = $this->insertUserData($request->lab_name, $request->lab_login_email);
+        $user = $this->insertUserData($request->lab_name, $request->lab_login_email, 'Laboratory');
         /*============== ADD DATA TO USER TABLE ============*/
 
         /*============== ADD DATA TO ROLE USER TABLE ============*/
@@ -203,6 +228,15 @@ class LaboratoryController extends Controller
             }
         }
         /*============== ADD DATA TO FORM_FIELD_VALUES TABLE ============*/
+
+        /*============= ADD DATE TO LABORATORY MODALITY TABLE ===============*/
+        foreach($request->modality as $modality){
+            $labModality = new LabModality();
+            $labModality->laboratory_id = $labrotory->id;
+            $labModality->modality_id = $modality;
+            $labModality->save();
+        }
+        /*============= ADD DATE TO LABORATORY MODALITY TABLE ===============*/
         DB::commit();
         }
         catch(\Exception $ex) {
@@ -227,6 +261,7 @@ class LaboratoryController extends Controller
             ->when($isAdmin === false, function ($query) {
                 $query->where('status', 1);
             })
+            ->with("labModality.modality")
             ->get();
         $pageName = $this->pageName;
         return view("admin.viewLab", compact("labratoryes", "pageName", "isAdmin", "appliedLabs"));
@@ -278,9 +313,14 @@ class LaboratoryController extends Controller
         $formFieldsValues = $this->getLabFormFieldValues($request->lab_id);
         $labratory = Laboratory::where("id", $request->lab_id)
             ->with("labFormFieldValue")
+            ->with("labModality.modality")
             ->first();
-
-        return view("admin.editLab", ["labratory" => $labratory, "formFields" => $formFields, "formFieldsValues" => $formFieldsValues, "pageName" => $this->pageName]);
+        $labModalityArray = array();
+        foreach($labratory->labModality as $labModality){
+            $labModalityArray[] = $labModality->Modality->id;
+        }
+        $modalityes = Modality::all();
+        return view("admin.editLab", ["labratory" => $labratory, "formFields" => $formFields, "formFieldsValues" => $formFieldsValues, "pageName" => $this->pageName, "labModalityArray" => $labModalityArray, "modalityes" => $modalityes]);
     }
 
     /**
@@ -297,7 +337,8 @@ class LaboratoryController extends Controller
             'lab_id' => 'required|numeric|exists:laboratories,id',
             'lab_name' => 'required|min:3',
             'lab_primary_location' => 'required|min:3',
-            'lab_phone_number' => 'required'
+            'lab_phone_number' => 'required',
+            'modality' => 'required',
         ];
         foreach ($formFields as $formField) {
             if ($formField->FormField->required == 1) {
@@ -310,13 +351,13 @@ class LaboratoryController extends Controller
         }
 
         $labrotory = Laboratory::find($request->lab_id);
-        try {
+        //try {
             /*============== ADD DATA TO USER TABLE ============*/
             $this->updateUserData($request->lab_name, $labrotory->user_id);
             /*============== ADD DATA TO USER TABLE ============*/
 
             /*============== UPDATE DATA TO LABORATORY TABLE ============*/
-            $this->updateLabData($request->lab_name, $request->lab_primary_location, $request->lab_phone_number, $request->lab_id);
+            $this->updateLabData($request->lab_name, $request->lab_primary_location, $request->lab_phone_number, $request->lab_id, $request->modality);
             /*============== UPDATE DATA TO LABORATORY TABLE ============*/
 
             /*============== UPDATE DATA TO FORM_FIELD_VALUES TABLE ============*/
@@ -325,13 +366,13 @@ class LaboratoryController extends Controller
             }
             /*============== UPDATE DATA TO FORM_FIELD_VALUES TABLE ============*/
             DB::commit();
-        } catch (\Exception $ex) {
-            DB::rollback();
-            return response()->json(['error' => [$this->getMessages('_GNERROR')]]);
-        } catch (\Illuminate\Database\QueryException $ex) {
-            DB::rollback();
-            return response()->json(['error' => [$this->getMessages('_DBERROR')]]);
-        }
+        // } catch (\Exception $ex) {
+        //     DB::rollback();
+        //     return response()->json(['error' => [$this->getMessages('_GNERROR')]]);
+        // } catch (\Illuminate\Database\QueryException $ex) {
+        //     DB::rollback();
+        //     return response()->json(['error' => [$this->getMessages('_DBERROR')]]);
+        // }
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
     }
 
@@ -393,5 +434,35 @@ class LaboratoryController extends Controller
             ->get();
 
         return $this->returnAPIResponse('Success', 200, ['lab_data' => $labs]);
+    }
+
+    public function getPreferredDoctors(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'lab_id' => 'required|numeric|exists:laboratories,id'
+        ]);
+        if (!$validator->passes()) {
+            return response()->json(['error' => $validator->errors()]);
+        }
+        $lab = Laboratory::find($request->lab_id);
+        $modalities = Modality::orderBy('name')
+            ->get();
+        $doctors = Doctor::where('status', '1')
+            ->orderBy('name')
+            ->get();
+        foreach($modalities as $modality){
+            $tempArray = array();
+            $docModality = DoctorModality::select("doctors.*")
+                ->leftJoin('doctors', 'doctors.id', '=', 'doctor_id')
+                ->where('modality_id', $modality->id)
+                ->where('doctors.status', '1')
+                ->orderBy('name')
+                ->get();
+            foreach($docModality as $dm){
+                $tempArray[] = $dm;
+            }
+            $modality['doctor'] = $tempArray;
+        }
+        return view("admin.preferredDoctor", compact("lab", "doctors", "modalities"));
     }
 }

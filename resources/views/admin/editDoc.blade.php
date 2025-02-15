@@ -49,9 +49,13 @@
         $('.select2').select2({
             theme: 'bootstrap4',
             placeholder: '-- Select Modality --',
-            selectionCssClass: 'bg-purple'
+            templateSelection: function (data, container) {
+                $(container).addClass('bg-purple');
+                return data.text;
+            },
+            closeOnSelect: false
         });
-        $('#doctor_phone_number').inputmask({
+        $('#phone_number').inputmask({
             mask: "9999-999-999",
             prefix: "+91 ",
             placeholder: "____-___-___",           // Optional: use space as placeholder

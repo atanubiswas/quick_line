@@ -14,7 +14,7 @@ class DoctorModality extends Model
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function Doctor(){
-        return $this->belongsTo(Doctor::class);
+        return $this->belongsTo(Doctor::class)->orderBy("name");
     }
 
     /**

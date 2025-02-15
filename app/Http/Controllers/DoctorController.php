@@ -95,7 +95,7 @@ class DoctorController extends Controller
                 "phone_number" => $phone_number
             ]);
         /*============= ADD DATE TO DOCTOR MODALITY TABLE ===============*/
-        $oldModality = $this->getModalityList($doc_id, 0);
+        $oldModality = $this->getDoctorModalityList($doc_id, 0);
         $allModalityList = Modality::all();
         $newModalityArray = array();
         DoctorModality::where("doctor_id", $doc_id)
@@ -194,7 +194,7 @@ class DoctorController extends Controller
         
         try{
             /*============== ADD DATA TO USER TABLE ============*/
-            $user = $this->insertUserData($request->doctor_name, $request->doctor_login_email);
+            $user = $this->insertUserData($request->doctor_name, $request->doctor_login_email, 'Doctor');
             /*============== ADD DATA TO USER TABLE ============*/
 
             /*============== ADD DATA TO ROLE USER TABLE ============*/
