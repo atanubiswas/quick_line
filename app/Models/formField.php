@@ -10,6 +10,6 @@ class formField extends Model
     use HasFactory;
     
     public function formFieldOptions(){
-        return $this->hasMany(formFieldOption::class);
+        return $this->hasMany(FormFieldOption::class);
     }
 }
