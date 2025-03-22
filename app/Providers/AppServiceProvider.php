@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 
 use App\Models\adminMenuRole;
+use App\Models\caseStudy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +24,20 @@ class AppServiceProvider extends ServiceProvider
                     ->orderBy("menu_order")
                     ->get();
                 $view->with('menues', $menues);
+
+                if(in_array(auth()->user()->roles[0]->id, [1, 5, 6])){
+                    $caseCount = caseStudy::where("study_status_id", 1)->count();
+                    $emergencyCaseCount = caseStudy::where("study_status_id", 1)->where("is_emergency", 1)->count();
+                    $normalCaseCount = $caseCount - $emergencyCaseCount;
+                    $view->with('case_count', $caseCount);
+                    $view->with('emergencyCaseCount', $emergencyCaseCount);
+                    $view->with('normalCaseCount', $normalCaseCount);
+                    $view->with('caseStudiesUrl', route('admin.viewCaseStudy'));
+                }else{
+                    $view->with('case_count', 0);
+                    $view->with('emergencyCaseCount', 0);
+                    $view->with('normalCaseCount', 0);
+                }
              }
             $view->with('user', auth()->user());
             $view->with('site_name', 'Quick Line');

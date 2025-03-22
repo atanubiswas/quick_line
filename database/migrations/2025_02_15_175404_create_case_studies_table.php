@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId("assigner_id")->constrained("users")->nullable();
             $table->text("clinical_history")->nullable();
             $table->smallInteger(("is_emergency"))->default(0);
-            $table->smallInteger(("is_post_perative"))->default(0);
+            $table->smallInteger(("is_post_operative"))->default(0);
             $table->smallInteger(("is_follow_up"))->default(0);
             $table->smallInteger(("is_subspecialty"))->default(0);
             $table->smallInteger(("is_callback"))->default(0);

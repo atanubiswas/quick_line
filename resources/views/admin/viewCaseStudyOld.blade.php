@@ -207,7 +207,6 @@
         .ui-resizable-sw { bottom: -5px; left: -5px; cursor: sw-resize; }
 
         .study-section {
-            position: relative;
             border: 1px solid #ccc;
             padding: 15px;
             margin-bottom: 10px;
@@ -215,36 +214,18 @@
             background-color: #f9f9f9;
         }
 
-        .study-section .buttons {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            display: flex;
-            gap: 5px;
+        .btn {
+            margin-left: 5px;
         }
 
         .d-none {
             display: none;
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 576px) {
-            .study-section {
-                padding-top: 40px; /* Ensure space for buttons */
-            }
-            .study-section .buttons {
-                top: 5px;
-                right: 5px;
-            }
-        }
-        .child-table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        .child-table th, .child-table td {
-            border: 1px solid #ddd;
-            padding: 5px;
-            text-align: left;
+        .upload-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
         }
     </style>
 
@@ -292,66 +273,29 @@
                                 <table id="study_table" class="table table-bordered table-hover">
                                     <thead>
                                         <tr>
-                                            <th style="width: 2%;">Sl. No</th>
-                                            <th style="width: 6%;">Case Id</th>
-                                            <th style="width: 7%;">Date & Time</th>
-                                            <th style="width: 15%;">Patient Name</th>
-                                            <th style="width: 7%;">Modality</th>
-                                            <th style="width: 5%;">Age Sex</th>
-                                            <th style="width: 6%;">History</th>
-                                            <th style="width: 6%;">Status</th>
+                                            <th>Id</th>
+                                            <th>Patient Name</th>
+                                            <th>Age & Sex</th>
+                                            <th>Modality</th>
+                                            <th>Study & Description</th>
+                                            <th>History</th>
                                             <th>Doctor</th>
-                                            <th style="width: 7%;">View</th>
+                                            <th>Images</th>
                                             <th>Centre</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @php $slNo = 1; @endphp
                                         @foreach($CaseStudies as $caseStudy)
-                                            @php
-                                                if($caseStudy->doctor_id != null){
-                                                    $doctor = $caseStudy->doctor->name;
-                                                }
-                                                else{
-                                                    $doctor = "Not Assigned.";
-                                                }
-                                            @endphp
-                                            <tr id="row-{{ $caseStudy->id }}" 
-                                            @if(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id == $authUserId) class="bg-gradient-warning text-black" 
-                                            @elseif(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id != $authUserId) class="bg-gradient-teal text-black" 
-                                            @endif>
-                                                <td>
-                                                    @if(!empty($caseStudy->assigner_id))
-                                                    <span title="@if($caseStudy->study_status_id==1) Open By: @else Assigned By: @endif{{ $caseStudy->assigner->name }}" class="badge text-black"><i class="fas fa-user"></i></span>
-                                                    @endif
-                                                    {{$slNo++}}
-                                                </td>
+                                            <tr class="case-study-row">
                                                 <td>{{$caseStudy->case_study_id}}</td>
-                                                <td>{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('jS M Y, g:i a') }}</td>
-                                                <td>
-                                                    {{$caseStudy->patient->name}}
-                                                    @if($caseStudy->is_emergency == 1)
-                                                    <div class="badge bg-gradient-danger"><i class="fas fa-info-circle me-1"></i> Emergency</div>
-                                                    @endif
-                                                </td>
-                                                <td>{{ $caseStudy->modality->name }}</td>
-                                                <td>{{$caseStudy->patient->age."/".strtoupper(substr($caseStudy->patient->gender,0, 1))}}</td>
-                                                <td>{{$caseStudy->clinical_history}}</td>
-                                                <td>
-                                                    <span 
-                                                    @if($caseStudy->study_status_id ==1)class="badge bg-gradient-info" 
-                                                    @elseif($caseStudy->study_status_id ==2)class="badge bg-gradient-indigo"
-                                                    @elseif($caseStudy->study_status_id ==3)class="badge bg-gradient-orange"
-                                                    @elseif($caseStudy->study_status_id ==4)class="badge bg-gradient-danger"
-                                                    @elseif($caseStudy->study_status_id ==5)class="badge bg-gradient-success"
-                                                    @endif>{{$caseStudy->status->name}}</span>
-                                                </td>
-                                                <td>{!!$doctor!!}</td>
-                                                <td>
-                                                    <button class="btn btn-xs bg-gradient-purple" title="View Images"><i class="fas fa-eye"></i></button>
-                                                    <button class="btn btn-xs bg-gradient-blue view-case-btn" title="View Studies" data-index="{{ $caseStudy->id }}"><i class="fas fa-folder"></i></button>
-                                                </td>
-                                                <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>
+                                                <td>{{$caseStudy->case_study_id}}</td>
+                                                <td>{{$caseStudy->case_study_id}}</td>
+                                                <td>{{$caseStudy->case_study_id}}</td>
+                                                <td>{{$caseStudy->case_study_id}}</td>
+                                                <td>{{$caseStudy->case_study_id}}</td>
+                                                <td>{{$caseStudy->case_study_id}}</td>
+                                                <td>{{$caseStudy->case_study_id}}</td>
+                                                <td>{{$caseStudy->case_study_id}}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -446,10 +390,6 @@
                                 </div>
                                 <div id="study-sections">
                                     <div class="study-section">
-                                        <div class="buttons">
-                                            <button type="button" class="btn btn-success add-study"><i class="fas fa-plus"></i></button>
-                                            <button type="button" class="btn btn-danger remove-study d-none"><i class="fas fa-minus"></i></button>
-                                        </div>
                                         <div class="row">
                                             <div class="col-sm-5">
                                                 <div class="form-group">
@@ -460,7 +400,36 @@
                                             <div class="col-sm-5">
                                                 <div class="form-group">
                                                     <label for="description">Description</label>
-                                                    <textarea name="description[]" class="form-control" placeholder="Enter Description"></textarea>
+                                                    <textarea name="description[]" class="form-control description"
+                                                        placeholder="Enter Description"></textarea>
+                                                </div>
+                                            </div>
+
+                                            <!-- Buttons beside fields -->
+                                            <div class="col-sm-2 d-flex align-items-end">
+                                                <button type="button" class="btn btn-success add-study"><i class="fas fa-plus"></i></button>
+                                                <button type="button" class="btn btn-danger remove-study d-none"><i class="fas fa-minus"></i></button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Upload Section (Now included in every study section) -->
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <div class="upload-container">
+                                                        <!-- Browse Files Button -->
+                                                        <label class="upload-btn">
+                                                            <i class="fas fa-folder-open"></i> Browse
+                                                            <input type="file" class="uploadImages" multiple="multiple" accept="image/*" hidden>
+                                                        </label>
+
+                                                        <!-- Camera Button -->
+                                                        <label class="camera-btn">
+                                                            <i class="fas fa-camera"></i>
+                                                            <input type="file" class="cameraUpload" accept="image/*" capture="environment" hidden>
+                                                        </label>
+                                                    </div>
+                                                    <div class="previewImages d-flex flex-wrap mt-3"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -506,26 +475,6 @@
                                                 <input type="checkbox" class="form-check-input" id="callback" name="callback" value="1">
                                                 <label class="form-check-label" for="callback">Callback</label>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <div class="form-group">
-                                            <div class="upload-container">
-                                                <!-- Browse Files Button -->
-                                                <label for="uploadImages" class="upload-btn">
-                                                    <i class="fas fa-folder-open"></i> Browse
-                                                </label>
-                                                <input type="file" id="uploadImages" multiple="multiple" accept="image/*" hidden>
-
-                                                <!-- Camera Button (Shown Only on Mobile) -->
-                                                <label for="cameraUpload" class="camera-btn">
-                                                    <i class="fas fa-camera"></i>
-                                                </label>
-                                                <input type="file" id="cameraUpload" accept="image/*" capture="environment" hidden>
-                                            </div>
-                                            <div id="previewImages" class="d-flex flex-wrap mt-3"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -646,6 +595,8 @@
                 // Clear values in the cloned section
                 newSection.find("select").val(""); // Reset dropdown
                 newSection.find("textarea").val(""); // Reset textareas
+                newSection.find("input[type='file']").val(""); // Reset file inputs
+                newSection.find(".previewImages").html(""); // Clear image preview
 
                 // Show the minus button in the new section
                 newSection.find(".remove-study").removeClass("d-none");
@@ -712,31 +663,42 @@
                 let files = event.target.files;
 
                 $.each(files, function (index, file) {
-                    let fileIndex = allFiles.length; // Unique index
+                    let fileIndex = allFiles.length; // Unique index for each file
                     allFiles.push(file); // Store file in array
 
                     let reader = new FileReader();
                     reader.onload = function (e) {
                         let imgId = "img-" + fileIndex;
-                        $("#previewImages").append(`
-                            <div class="m-2 position-relative d-inline-block" id="preview-${fileIndex}">
-                                <img src="${e.target.result}" id="img-${fileIndex}" class="img-thumbnail preview-img" width="100" data-file-index="${fileIndex}" height="100" style="cursor: pointer;">
-                                <button type="button" class="close-btn btn btn-danger btn-sm" data-index="${fileIndex}" style="position: absolute; top: 5px; right: 5px;">×</button>
+                        
+                        // Make sure the image preview is inside a valid parent section
+                        let previewHTML = `
+                            <div class="image-upload-section m-2 position-relative d-inline-block" id="preview-${fileIndex}">
+                                <img src="${e.target.result}" id="${imgId}" class="img-thumbnail preview-img" 
+                                    width="100" height="100" style="cursor: pointer;" data-file-index="${fileIndex}">
+                                <button type="button" class="close-btn btn btn-danger btn-sm" data-index="${fileIndex}" 
+                                    style="position: absolute; top: 5px; right: 5px;">×</button>
                             </div>
-                        `);
+                        `;
+
+                        $("#previewImages").append(previewHTML);
                     };
                     reader.readAsDataURL(file);
                 });
 
-                // Reset file input to allow re-selection of the same files
-                $(this).val("");
+                $(this).val(""); // Reset input field to allow re-selection
             });
 
-            $("#previewImages").on("click", ".close-btn", function () {
-                let index = $(this).data("index");
-                $("#preview-" + index).remove();
-                allFiles[index] = null; // Mark file as removed
+            // Handle image removal when clicking the close button
+            $("#study-sections").on("click", ".close-btn", function () {
+                let fileIndex = $(this).data("index");
+                $("#preview-" + fileIndex).remove(); // Remove from UI
             });
+
+            // $("#previewImages").on("click", ".close-btn", function () {
+            //     let index = $(this).data("index");
+            //     $("#preview-" + index).remove();
+            //     allFiles[index] = null; // Mark file as removed
+            // });
 
             $("#save_study").on("click", function (event) {
                 $(this).html('Saving <i class="fas fa-spinner fa-spin"></i>');
@@ -783,10 +745,23 @@
         // Open Cropper Modal when an image is clicked
         $(document).on("click", ".preview-img", function () {
             let imgSrc = $(this).attr("src");
-            currentFile = $(this).data("file-index"); // Store file index
-            console.log("Current File Index:", currentFile);
+            let fileIndex = $(this).data("file-index"); // Store file index
+            let parentSection = $(this).closest(".image-upload-section"); // Get the parent section
+
+            console.log("Current File Index:", fileIndex);
+            console.log("Parent Section:", parentSection);
+
+            if (fileIndex === undefined || !parentSection.length) {
+                console.error("File index or parent section not found!");
+                return;
+            }
+
             $("#cropImage").attr("src", imgSrc);
-            
+
+            // Store data in the modal before opening
+            $("#cropModal").data("file-index", fileIndex);
+            $("#cropModal").data("parent-section", parentSection);
+
             $("#cropModal").modal("show");
 
             $("#cropModal").on("shown.bs.modal", function () {
@@ -797,8 +772,8 @@
                 let image = document.getElementById("cropImage");
                 cropper = new Cropper(image, {
                     aspectRatio: NaN, // Free cropping
-                    viewMode: 2, // Prevents overflow
-                    autoCropArea: 1, // Ensures image fits well
+                    viewMode: 2,
+                    autoCropArea: 1,
                     responsive: true,
                     restore: false,
                     scalable: true,
@@ -807,11 +782,6 @@
                     movable: true,
                     autoCrop: false
                 });
-
-                // Resize Cropper to fit within the modal
-                setTimeout(() => {
-                    cropper.resize();
-                }, 300);
             });
         });
 
@@ -894,41 +864,68 @@
         });
         // Crop & Save
         $("#cropSave").click(function () {
-            cropper.crop(); // Ensure cropping is active
-            let canvas = cropper.getCroppedCanvas(); // Get the cropped canvas
+            if (!cropper) return;
+
+            let canvas = cropper.getCroppedCanvas();
             let croppedImage = canvas.toDataURL("image/png"); // Convert to Base64
 
-            console.log(croppedImage);
+            console.log("Cropped Image:", croppedImage);
 
-            let imgSelector = `#img-${currentFile}`;
-            console.log(imgSelector);
-            $(imgSelector).attr("src", croppedImage);
+            // Retrieve stored information from the modal
+            let fileIndex = $("#cropModal").data("file-index");
+            let parentSection = $("#cropModal").data("parent-section");
+
+            if (fileIndex === undefined || !parentSection.length) {
+                console.error("File index or parent section is missing!");
+                return;
+            }
+
+            // Find the correct preview image
+            let imgSelector = parentSection.find(`img[data-file-index="${fileIndex}"]`);
+            if (!imgSelector.length) {
+                console.error("Image selector not found!");
+                return;
+            }
+
+            // Replace the preview image source
+            imgSelector.attr("src", croppedImage);
             $("#cropModal").modal("hide");
 
-            // Find the original file from allFiles
-            let originalFile = allFiles[currentFile];
-            if (!originalFile) {
-                console.error("Original file not found!");
+            // Get the original file
+            let fileInput = parentSection.find(".uploadImages");
+            let filesArray = fileInput.prop("files"); 
+
+            if (!filesArray || filesArray.length === 0) {
+                console.error("No files found in input!");
                 return;
             }
 
             // Convert Base64 to Blob
             let croppedBlob = dataURLtoBlob(croppedImage);
-
-            // Create a new File object with the original name and same type
+            
+            // Create a new File object
+            let originalFile = filesArray[fileIndex];
             let croppedFile = new File([croppedBlob], originalFile.name, { type: originalFile.type });
 
-            // Replace the original file in allFiles with the cropped file
-            allFiles[currentFile] = croppedFile;
+            // Create a new FileList with the updated file
+            let dataTransfer = new DataTransfer();
+            for (let i = 0; i < filesArray.length; i++) {
+                dataTransfer.items.add(i === fileIndex ? croppedFile : filesArray[i]);
+            }
+
+            // Update input file list
+            fileInput.prop("files", dataTransfer.files);
+
+            console.log("Cropped file updated in input field.");
         });
 
-        // Function to Convert Base64 to Blob
+        // Convert Base64 to Blob
         function dataURLtoBlob(dataURL) {
-            let arr = dataURL.split(','),
-                mime = arr[0].match(/:(.*?);/)[1],
-                bstr = atob(arr[1]),
-                n = bstr.length,
-                u8arr = new Uint8Array(n);
+            let arr = dataURL.split(',');
+            let mime = arr[0].match(/:(.*?);/)[1];
+            let bstr = atob(arr[1]);
+            let n = bstr.length;
+            let u8arr = new Uint8Array(n);
 
             while (n--) {
                 u8arr[n] = bstr.charCodeAt(n);
@@ -944,7 +941,7 @@
             }
         });
 
-        var study_table = $('#study_table').DataTable({
+        $('#study_table').DataTable({
             "paging": true,
             "lengthChange": true,
             "searching": true,
@@ -952,63 +949,8 @@
             "info": true,
             "autoWidth": false,
             "responsive": true,
-            "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]],
-            rowId: function(data) {
-                return 'row-' + data.id; // Ensuring a unique ID for each row
-            }
+            "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]]
         });
-
-        $('#study_table tbody').on('click', '.view-case-btn', function () {
-            var tr = $(this).closest('tr');
-            var row = study_table.row(tr);
-            var case_study_id = $(this).data('index');
-            
-            if (row.child.isShown()) {
-                tr.removeClass('bg-gradient-warning text-black');
-                row.child.hide();
-                $.ajax({
-                    url: "{{ route('admin.reset-assigner-id') }}",
-                    type: "POST",
-                    data: {
-                        "_token": "{{ csrf_token() }}",
-                        "case_id": case_study_id
-                    },
-                    success: function (response) {
-                        
-                    }
-                });
-                $(this).html('<i class="fas fa-folder"></i>');
-            } else {
-                tr.addClass('bg-gradient-warning text-black');
-                $.ajax({
-                    url: "{{ route('admin.get-all-studies') }}",
-                    type: "POST",
-                    data: {
-                        "_token": "{{ csrf_token() }}",
-                        "case_id": case_study_id
-                    },
-                    success: function (response) {
-                        row.child(response).show();
-                    }
-                });
-                $(this).html('<i class="fas fa-folder-open"></i>');
-            }
-        });
-
-        function formatChildRow(case_study_id) {
-            $.ajax({
-                url: "{{ route('admin.get-all-studies') }}",
-                type: "POST",
-                data: {
-                    "_token": "{{ csrf_token() }}",
-                    "case_id": case_study_id
-                },
-                success: function (response) {
-                    console.log(response);
-                    return response;
-                }
-            });
-        }
 
         $('#centre_id').select2({
             dropdownParent: $('#add-case-study-modal'),
@@ -1057,7 +999,7 @@
                         "modality_id": modality
                     },
                     success: function (response) {
-                        $('.study_id').html(response);
+                        $('#study_id').html(response);
                     }
                 });
             }

@@ -15,6 +15,8 @@ use App\Models\Laboratory;
 use App\Models\LabModality;
 use App\Models\DoctorModality;
 use App\Models\LabFormFieldValue;
+use App\Models\lab_preferred_doctor;
+use App\Models\lab_black_listed_doctor;
 use App\Models\CollectorLabAssociation;
 
 use App\Traits\GeneralFunctionTrait;
@@ -72,7 +74,6 @@ class LaboratoryController extends Controller
         $formFieldValue->value = $value;
         $formFieldValue->laboratorie_id = $labrotory_id;
         $formFieldValue->updated_by = $authUser->id;
-        dd($formFieldValue);
         $formFieldValue->save();
 
         return $formFieldValue;
@@ -450,6 +451,16 @@ class LaboratoryController extends Controller
         $doctors = Doctor::where('status', '1')
             ->orderBy('name')
             ->get();
+        
+        $preferredDoctors = lab_preferred_doctor::where('laboratorie_id', $request->lab_id)
+            ->get();
+        $preferredDoctorIds = $preferredDoctors->pluck('doctor_id')->toArray();
+
+        $labBlackListedDoctorIds = lab_black_listed_doctor::where('laboratorie_id', $request->lab_id)
+            ->where('status', 1)
+            ->pluck('doctor_id')
+            ->toArray();
+        
         foreach($modalities as $modality){
             $tempArray = array();
             $docModality = DoctorModality::select("doctors.*")
@@ -463,6 +474,87 @@ class LaboratoryController extends Controller
             }
             $modality['doctor'] = $tempArray;
         }
-        return view("admin.preferredDoctor", compact("lab", "doctors", "modalities"));
+        return view("admin.preferredDoctor", compact("lab", "doctors", "modalities", "preferredDoctors", 'preferredDoctorIds', 'labBlackListedDoctorIds'));
+    }
+
+    /**
+     * Summary of getModality
+     * @param \Illuminate\Http\Request $request
+     * @return mixed|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\JsonResponse
+     */
+    public function getModality(Request $request){
+        $validator = Validator::make($request->all(), [
+            'lab_id' => 'required|numeric|exists:laboratories,id'
+        ]);
+        if (!$validator->passes()) {
+            return response()->json(['error' => $validator->errors()]);
+        }
+        $labModalities = LabModality::where('laboratory_id', $request->lab_id)
+            ->with("modality")
+            ->where("status", 1)
+            ->get();
+            
+        return view("admin.getModality", compact("labModalities"));
+    }
+
+    /**
+     * Summary of getStudy
+     * @param \Illuminate\Http\Request $request
+     * @return mixed|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\JsonResponse
+     */
+    public function getStudy(Request $request){
+        $validator = Validator::make($request->all(), [
+            'lab_id' => 'required|numeric|exists:laboratories,id'
+        ]);
+        if (!$validator->passes()) {
+            return response()->json(['error' => $validator->errors()]);
+        }
+        $lab = Laboratory::find($request->lab_id);
+        $caseStudies = $lab->caseStudy;
+        return view("admin.getStudy", compact("caseStudies", "lab"));
+    }
+
+    public function updatePreferredDoctors(Request $request){
+        $labId = $request->lab_id;
+        $labOldData = Laboratory::find($labId);
+        foreach($request->all() as $key => $value){
+            $mArray = explode("modality_", $key);
+            if(!isset($mArray[1])){continue;}
+            $modalityId = $mArray[1];
+            if($key == 'lab_id'){
+                continue;
+            }
+            else if(empty($value)){
+                lab_preferred_doctor::where('laboratorie_id', $labId)
+                    ->where('modality_id', $modalityId)
+                    ->delete();
+            }
+            else{
+                lab_preferred_doctor::updateOrCreate([
+                    "laboratorie_id" => $labId,
+                    "doctor_id" => $value,
+                    "modality_id" => $modalityId
+                ], []);
+            }
+        }
+        return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
+    }
+
+    public function updateBlackListedDoctors(Request $request){
+        $labId = $request->lab_id;
+        lab_black_listed_doctor::where('laboratorie_id', $labId)
+            ->update(["status" => 0]);
+        if(!isset($request->doctors)){
+            return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
+        }
+        foreach($request->doctors as $doctor){
+            lab_black_listed_doctor::updateOrCreate([
+                "laboratorie_id" => $labId,
+                "doctor_id" => $doctor,
+            ], [
+                "status" => 1
+            ]);
+        }
+        return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
     }
 }

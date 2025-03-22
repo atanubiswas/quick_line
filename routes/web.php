@@ -14,11 +14,12 @@ use App\Http\Controllers\CollectorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CaseStudyController;
 use App\Http\Controllers\LaboratoryController;
+use App\Http\Controllers\StudyLayoutController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\LoginSecurityController;
 use App\Http\Controllers\PathologyTestController;
 
-use App\Http\Controllers\CollectorLabAssociationController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -64,7 +65,7 @@ Route::group(['prefix' => 'admin'], function () {
     Route::get('logout', [AuthController::class, 'logout'])->name('admin.logout');
     
     /*============= DASHBOARD CONTROLLER ==================*/
-    Route::middleware(['role:Admin,Centre,Quality Controller,Doctor,Manager', '2fa'])->group(function () {
+    Route::middleware(['role:Admin,Centre,Quality Controller,Doctor,Manager,Assigner', '2fa'])->group(function () {
        Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('admin.dashboard');
     });
    
@@ -75,7 +76,7 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('/view-user', [UserController::class, 'viewUser'])->name('admin.viewUser');
         Route::post('/change-user-status', [UserController::class,'changeStatus']);
     });
-    Route::middleware(['role:Admin,Centre,Quality Controller,Doctor,Manager', '2fa'])->group(function () {
+    Route::middleware(['role:Admin,Centre,Quality Controller,Doctor,Manager,Assigner', '2fa'])->group(function () {
         Route::get('/change-password', [UserController::class, 'changePassword'])->name('admin.changePassword');
         Route::post('/update-password', [UserController::class, 'updatePassword'])->name('admin.updatePassword');
     });
@@ -95,6 +96,9 @@ Route::group(['prefix' => 'admin'], function () {
        Route::post('/get-assigned-collectors', [LaboratoryController::class, 'getAssignedCollectors']);
        Route::get('/view-laboratory', [LaboratoryController::class, 'viewLab'])->name('admin.viewLab');
        Route::post('/get-preferred-doc', [LaboratoryController::class, 'getPreferredDoctors']);
+       Route::post('/get-modality', [LaboratoryController::class, 'getModality'])->name('get-modality');
+       Route::post('/update-preferred-doctors', [LaboratoryController::class, 'updatePreferredDoctors']);
+       Route::post('/update-black-listed-doctors', [LaboratoryController::class, 'updateBlackListedDoctors']);
    });
 
       /*================ DOCTOR CONTROLLER ====================*/
@@ -108,11 +112,15 @@ Route::group(['prefix' => 'admin'], function () {
     });
 
        /*================ CASE STUDY CONTROLLER ===================*/
-        Route::middleware(['role:Admin,2fa'])->group(function () {
+        Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {
             Route::get('/add-case-study', [CaseStudyController::class, 'addCaseStudy'])->name('admin.addCaseStudy');
             Route::post('/insert-case-study', [CaseStudyController::class, 'insertCaseStudy']);
             Route::get('/view-case-study', [CaseStudyController::class, 'viewCaseStudy'])->name('admin.viewCaseStudy');
-        //    Route::post('/change-case-study-status', [CaseStudyController::class, 'changeCaseStudyStatus']);
+            Route::post('/get-study-type', [CaseStudyController::class, 'getStudyType'])->name('get-study-type');
+            Route::post('/get-patient-details', [CaseStudyController::class, 'getPatientDetails']);
+            Route::post('/get-all-studies', [CaseStudyController::class, 'getAllStudies'])->name('admin.get-all-studies');
+            Route::post('/reset-assigner-id', [CaseStudyController::class, 'resetAssignerId'])->name('admin.reset-assigner-id');
+            Route::post('/assign-doctor', [CaseStudyController::class, 'assignDoctor'])->name('admin.assign-doctor');
         //    Route::post('/get-edit-case-study-data', [CaseStudyController::class, 'getEditCaseStudyData']);
         //    Route::post('/update-case-study', [CaseStudyController::class, 'updateCaseStudy']);
         });
@@ -122,7 +130,13 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('/get-lab-timeline', [TimeLineController::class,'getLabTimeline']);
         Route::post('/get-doc-timeline', [TimeLineController::class,'getDocTimeline']);
    });
-   
+
+   /*============== STUDYLAYOUT CONTROLLER ==============*/
+   Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
+        Route::get('/add-study-layout', [StudyLayoutController::class,'getLabTimeline'])->name('admin.addStudyLayout');
+        Route::post('/view-study-layout', [StudyLayoutController::class,'getDocTimeline'])->name('admin.viewStudyLayout');
+   });
+
    /*============== DOCUMENT CONTROLLER =================*/
     Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
        Route::post('/get-documents', [DocumentController::class, 'getDocuments']);

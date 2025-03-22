@@ -18,6 +18,6 @@ class Laboratory extends Model
     }
 
     public function labModality(){
-        return $this->hasMany(LabModality::class);
+        return $this->hasMany(LabModality::class)->where('status', 1);
     }
 }

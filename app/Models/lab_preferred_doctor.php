@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class studyType extends Model
+class lab_preferred_doctor extends Model
 {
     use HasFactory;
-
-    public function modality(){
-        return $this->belongsTo('App\Models\modality');
-    }
+    protected $fillable = [
+        'laboratorie_id',
+        'modality_id',
+        'doctor_id',
+    ];
 }

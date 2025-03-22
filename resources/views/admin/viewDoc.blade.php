@@ -39,7 +39,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
-                    <div class="card">
+                    <div class="card card-purple">
                         <div class="card-header">
                             <h3 class="card-title">View {{$pageName}} Data</h3>
                         </div>

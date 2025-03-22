@@ -22,8 +22,8 @@ class AuthController extends Controller
     use GeneralFunctionTrait;
     
     /**
-     * 
-     * @param User $user
+     * Summary of getToken
+     * @param \App\Models\User $user
      * @param string $user_role
      * @param int $id
      * @param string $email
@@ -42,9 +42,9 @@ class AuthController extends Controller
     }
     
     /**
-     * 
-     * @param Request $request
-     * @return type
+     * Summary of adminLoginView
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
     public function adminLoginView(Request $request){
         $r = isset($request->r)?$request->r:"";
@@ -52,9 +52,9 @@ class AuthController extends Controller
     }
     
     /**
-     * 
-     * @param Request $request
-     * @return type
+     * Summary of adminLogin
+     * @param \Illuminate\Http\Request $request
+     * @return mixed|\Illuminate\Http\RedirectResponse
      */
     public function adminLogin(Request $request){
         $request->validate([
@@ -75,11 +75,11 @@ class AuthController extends Controller
         }
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
-            $user->increment("login_count");
+            //$user->increment("login_count");
             if($user->is_first_login == 1){
-                return redirect()->intended("/admin/change-password");
+                return redirect()->intended(url("/admin/change-password"));
             }
-            $r = empty($request->r)?"/admin/dashboard":$request->r;
+            $r = empty($request->r)?url("/admin/dashboard"):$request->r;
             return redirect()->intended($r);
         }
         return redirect()->route('admin.login')->with('error', 'Invalid Credentials');

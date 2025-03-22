@@ -25,7 +25,7 @@ class UserController extends Controller
      */
     public function addUser(Request $request){
         $auth = Auth::user();
-        $roleArray = $auth->roles[0]->name === 'Manager'?array(2):array(2,5,6);
+        $roleArray = $auth->roles[0]->name === 'Manager'?array(2,6):array(2,5,6);
         $roles = role::whereIn("id", $roleArray)->orderBy("name")->get();
         return view("admin.addUser", ["pageName" => $this->pageName, "roles"=> $roles]);
     }

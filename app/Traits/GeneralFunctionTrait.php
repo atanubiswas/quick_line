@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Collection;
 
 use App\Models\User;
+use App\Models\patient;
+use App\Models\caseStudy;
 use App\Models\DoctorLog;
 use App\Models\role_user;
 use App\Models\WalletUser;
@@ -531,5 +533,35 @@ trait GeneralFunctionTrait{
         else{
             return implode(', ', $modalityListArray);
         }
+    }
+
+    /**
+     * Summary of generatePatientId
+     * @param int $idLength
+     * @return string
+     */
+    private function generatePatientId(int $idLength = 6){
+        do {
+            // Generate a numeric random string of the specified length
+            $uniquePart = str_pad(random_int(0, pow(10, $idLength) - 1), $idLength, '0', STR_PAD_LEFT);
+            $patientId = "QL-PT-" . $uniquePart;
+        } while (Patient::where('patient_id', $patientId)->exists());
+    
+        return $patientId;
+    }
+
+    /**
+     * Summary of generateCaseStudyId
+     * @param int $idLength
+     * @return string
+     */
+    private function generateCaseStudyId(int $idLength = 6){
+        do {
+            // Generate a numeric random string of the specified length
+            $uniquePart = str_pad(random_int(0, pow(10, $idLength) - 1), $idLength, '0', STR_PAD_LEFT);
+            $caseStudyId = "QL-CS-" . $uniquePart;
+        } while (caseStudy::where('case_study_id', $caseStudyId)->exists());
+    
+        return $caseStudyId;
     }
 }

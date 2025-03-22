@@ -15,4 +15,8 @@ class Doctor extends Model
     public function DoctorModality(){
         return $this->hasMany(DoctorModality::class)->where("status", '1');
     }
+
+    public function modalities(){
+        return $this->belongsToMany(Modality::class, 'doctor_modalities');
+    }
 }

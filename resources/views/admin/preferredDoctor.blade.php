@@ -12,14 +12,23 @@
         <!-- /.card-header -->
         <!-- form start -->
         <form name="praferred_doctors" id="praferred_doctors" method="post" action="">
+            <input type="hidden" name="lab_id" value="{{$lab->id}}">
             <div class="card-body">
-                @foreach($modalities as $modality) 
+                @foreach($modalities as $modality)
+                    @php $selected_doctor = ""; @endphp
+                    @foreach($preferredDoctors as $preferredDoctor)
+                        @if($preferredDoctor->modality_id == $modality->id)
+                            @php
+                                $selected_doctor = $preferredDoctor->doctor_id;
+                            @endphp
+                        @endif
+                    @endforeach
                 <div class="form-group">
                     <label for="exampleInputEmail1">Select Doctor For {{$modality->name}}</label>
-                    <select class="form-control" required="required" id="modality">
+                    <select class="form-control" required="required" data-modality_id="{{ $modality->id }}" id="modality_{{ $modality->id }}" name="modality_{{ $modality->id }}">
                         <option value="">Select Doctor</option>
                         @foreach($modality->doctor as $doc)
-                            <option value="{{$doc->id}}">{{$doc->name}}</option>
+                            <option value="{{$doc->id}}" @if($selected_doctor == $doc->id) selected="selected" @endif>{{$doc->name}}</option>
                         @endforeach
                     </select>
                 </div>
@@ -28,7 +37,7 @@
             <!-- /.card-body -->
 
             <div class="card-footer">
-                <button type="button" id="update_btn" data-id="{{$lab->id}}" class="btn btn-warning float-right update_btn">Update</button>
+                <button type="button" id="update_praferred_btn" data-id="{{$lab->id}}" class="btn btn-warning float-right update_btn">Update</button>
             </div>
         </form>
     </div>
@@ -45,20 +54,21 @@
         <!-- /.card-header -->
         <!-- form start -->
         <form name="black_listed_doctors" id="black_listed_doctors" method="post" action="">
+            <input type="hidden" name="lab_id" value="{{$lab->id}}">
             <div class="card-body">
                 <div class="form-group">
                     <label for="exampleInputEmail1">Black List Doctor For {{$lab->lab_name}}</label>
-                    <select class="form-control select2" required="required" multiple="multiple" name="blacklisted_doctors[]" id="blacklisted_doctors">
+                    <select class="form-control select2" required="required" multiple="multiple" name="doctors[]" id="blacklisted_doctors">
                         <option value="">Select Doctor</option>
                         @foreach($doctors as $doc)
-                            <option value="{{$doc->id}}">{{$doc->name}}</option>
+                            <option value="{{$doc->id}}" @if(in_array($doc->id, $labBlackListedDoctorIds)) selected="selected" @endif @if(in_array($doc->id, $preferredDoctorIds)) disabled="disabled" @endif>{{$doc->name}} @if(in_array($doc->id, $preferredDoctorIds)) (Disabled) @endif</option>
                         @endforeach
                     </select>
                 </div>
             <!-- /.card-body -->
 
                 <div class="card-footer">
-                    <button type="button" id="update_btn" data-id="{{$lab->id}}" class="btn btn-warning float-right update_btn">Update</button>
+                    <button type="button" id="update_black_list_btn" class="btn btn-warning float-right update_btn">Update</button>
                 </div>
             </div>
         </form>
@@ -77,6 +87,58 @@
                 return data.text;
             },
             closeOnSelect: false
+        });
+
+        $('#update_praferred_btn').click(function () {
+            $('#update_praferred_btn').html('Updating...');
+            var form_data = new FormData($('#praferred_doctors')[0]);
+            
+            $.ajax({
+                url: '{{url("admin/update-preferred-doctors")}}',
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,
+                type: 'post',
+                success: function (data) {
+                    $('#update_praferred_btn').html('Update');
+                    if ($.isEmptyObject(data.error)) {
+                        printSuccessMsg(data.success);
+                        $('#praferred_doctors').trigger("reset");
+                    } else {
+                        printErrorMsg(data.error);
+                    }
+                },
+                error: function (data) {
+                    $('#update_praferred_btn').html('Update');
+                }
+            });
+        });
+
+        $("#update_black_list_btn").click(function(){
+            $('#update_black_list_btn').html('Updating...');
+            var form_data = new FormData($('#black_listed_doctors')[0]);
+            
+            $.ajax({
+                url: '{{url("admin/update-black-listed-doctors")}}',
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,
+                type: 'post',
+                success: function (data) {
+                    $('#update_black_list_btn').html('Update');
+                    if ($.isEmptyObject(data.error)) {
+                        printSuccessMsg(data.success);
+                        $('#black_listed_doctors').trigger("reset");
+                    } else {
+                        printErrorMsg(data.error);
+                    }
+                },
+                error: function (data) {
+                    $('#update_black_list_btn').html('Update');
+                }
+            });
         });
     });
 </script>
