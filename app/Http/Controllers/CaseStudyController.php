@@ -29,12 +29,15 @@ class CaseStudyController extends Controller
      * Summary of viewCaseStudy
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
-    public function viewCaseStudy(){
+    public function viewCaseStudy(Request $request){
+        $start_date = $end_date = Carbon::now()->startOfDay();;
+        $end_date = Carbon::now()->endOfDay();;
         $pageName = $this->pageName;
         $CaseStudies = CaseStudy::orderBy('created_at', 'desc')
         ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
+        ->whereBetween('created_at', [$start_date, $end_date])
         ->get();
-        //dd($CaseStudies[0]->modality->DoctorModality);
+
         $authUserId = Auth::user()->id;
         $Labrotories = Laboratory::where("status", 1)
             ->orderBy("lab_name")
@@ -51,7 +54,7 @@ class CaseStudyController extends Controller
         $studyTypes = studyType::where("modality_id", $request->modality_id)->orderBy("name")->get();
         return view('admin.getStudyTypes', compact('studyTypes'));
     }
-
+    
     public function insertCaseStudy(Request $request){
         DB::beginTransaction();
         try{
@@ -89,6 +92,7 @@ class CaseStudyController extends Controller
                     'clinical_history' => $request->clinical_history,
                 ]
             );
+            $addedBy = Auth::user()->id;
             $caseStudy = new CaseStudy();
             $caseStudy->laboratory_id = $request->centre_id;
             $caseStudy->patient_id = $patient->id;
@@ -102,6 +106,7 @@ class CaseStudyController extends Controller
             $caseStudy->status_updated_on = Carbon::now();
             $caseStudy->case_study_id = $this->generateCaseStudyId();
             $caseStudy->modality_id = $request->modality;
+            $caseStudy->added_by = $addedBy;
             $caseStudy->save();
 
             foreach($request->study_id as $key=>$studyId){
@@ -143,9 +148,14 @@ class CaseStudyController extends Controller
         }
     }
 
+    /**
+     * Summary of getAllStudies
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function getAllStudies(Request $request){
         $allStudies = array();
-        // try{
+        try{
             $caseStudy = caseStudy::where("id", $request->case_id)->with('doctor')->first();
             
             $caseId = $request->case_id;
@@ -187,14 +197,14 @@ class CaseStudyController extends Controller
                 ->get();
                 
             return view('admin.getAllStudies', compact( 'caseId','allStudies', 'doctors', 'caseStudy', 'assignedDoctor', 'faveriteDoctors'));
-        // }catch (\Exception $e){
-        //     $allStudies['error'] = $e->getMessage();
-        //     return view('admin.getAllStudies', compact('allStudies'));
-        // }
-        // catch(\Illuminate\Database\QueryException $ex){
-        //     $allStudies['error'] = $e->getMessage();
-        //     return view('admin.getAllStudies', compact('allStudies'));
-        // }
+        }catch (\Exception $e){
+            $allStudies['error'] = $e->getMessage();
+            return view('admin.getAllStudies', compact('allStudies'));
+        }
+        catch(\Illuminate\Database\QueryException $ex){
+            $allStudies['error'] = $e->getMessage();
+            return view('admin.getAllStudies', compact('allStudies'));
+        }
     }
 
     public function resetAssignerId(Request $request){
@@ -214,5 +224,23 @@ class CaseStudyController extends Controller
         $study->status_updated_on = Carbon::now();
         $study->save();
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
+    }
+
+    public function getCaseStudySearchResult(Request $request){
+        $start_date = Carbon::parse($request->start_date)->startOfDay();;
+        $end_date = Carbon::parse($request->end_date)->endOfDay();;
+        $centre_id = empty($request->centre_id)?null:$request->centre_id;
+
+        $CaseStudies = CaseStudy::orderBy('created_at', 'desc')
+        ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
+        ->whereBetween('created_at', [$start_date, $end_date])
+        ->when($centre_id !== null, function($query) use($centre_id){
+            $query->where("laboratory_id", $centre_id);
+        })
+        ->get();
+        
+        $authUserId = Auth::user()->id;
+
+        return view('admin.caseStudySearchResult', compact( 'CaseStudies', 'authUserId'));
     }
 }

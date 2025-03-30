@@ -121,20 +121,25 @@ Route::group(['prefix' => 'admin'], function () {
             Route::post('/get-all-studies', [CaseStudyController::class, 'getAllStudies'])->name('admin.get-all-studies');
             Route::post('/reset-assigner-id', [CaseStudyController::class, 'resetAssignerId'])->name('admin.reset-assigner-id');
             Route::post('/assign-doctor', [CaseStudyController::class, 'assignDoctor'])->name('admin.assign-doctor');
-        //    Route::post('/get-edit-case-study-data', [CaseStudyController::class, 'getEditCaseStudyData']);
+           Route::post('/get-case-study-search-result', [CaseStudyController::class, 'getCaseStudySearchResult']);
         //    Route::post('/update-case-study', [CaseStudyController::class, 'updateCaseStudy']);
         });
 
    /*============== TIMELINE CONTROLLER =================*/
-   Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
+   Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {
         Route::post('/get-lab-timeline', [TimeLineController::class,'getLabTimeline']);
         Route::post('/get-doc-timeline', [TimeLineController::class,'getDocTimeline']);
    });
 
    /*============== STUDYLAYOUT CONTROLLER ==============*/
    Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
-        Route::get('/add-study-layout', [StudyLayoutController::class,'getLabTimeline'])->name('admin.addStudyLayout');
-        Route::post('/view-study-layout', [StudyLayoutController::class,'getDocTimeline'])->name('admin.viewStudyLayout');
+        Route::get('/add-study-layout', [StudyLayoutController::class,'addStudyLayout'])->name('admin.addStudyLayout');
+        Route::post('/insert-study-layout', [StudyLayoutController::class,'insertStudyLayout']);
+        Route::get('/view-study-layout', [StudyLayoutController::class,'viewStudyLayout'])->name('admin.viewStudyLayout');
+
+        Route::get('/view-studies', [StudyLayoutController::class,'viewStudies'])->name('admin.viewStudies');
+        Route::post('/get-study-details', [StudyLayoutController::class,'getStudyDetails']);
+        Route::post('/insert-new-case-study', [StudyLayoutController::class,'insertNewCaseStudy']);
    });
 
    /*============== DOCUMENT CONTROLLER =================*/

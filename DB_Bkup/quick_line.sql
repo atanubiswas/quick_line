@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 18, 2024 at 07:02 AM
+-- Generation Time: Mar 24, 2025 at 12:30 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -53,7 +53,11 @@ INSERT INTO `admin_menus` (`id`, `menu_name`, `request`, `icon`, `route`, `paren
 (7, 'View Users', 'admin/view-users', 'fa-list-alt', 'admin.viewUser', 5, 2, NULL, NULL),
 (8, 'Doctors', NULL, 'fa-user-md', '#', 0, 0, NULL, NULL),
 (9, 'Add Doctor', 'admin/add-doctor', 'fa-file-import', 'admin.addDoctor', 8, 1, '2024-11-06 18:07:15', '2024-11-06 18:07:15'),
-(10, 'View Doctor', 'admin/view-doctor', 'fa-list-alt', 'admin.viewDoctor', 8, 2, '2024-11-03 17:44:17', '2024-11-03 17:44:17');
+(10, 'View Doctor', 'admin/view-doctor', 'fa-list-alt', 'admin.viewDoctor', 8, 2, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
+(11, 'Case Studies', 'admin/view-case-study', 'fa-notes-medical', 'admin.viewCaseStudy', 0, 0, '2025-02-08 12:55:26', '2025-02-08 12:55:26'),
+(12, 'Study Layouts', NULL, 'fa-file-pdf', '#', 0, 0, NULL, NULL),
+(13, 'Add Study Layout', 'admin/add-study-layout', 'fa-file-import', 'admin.addStudyLayout', 12, 1, '2024-11-06 18:07:15', '2024-11-06 18:07:15'),
+(14, 'View Study Layouts', 'admin/view-study-layout', 'fa-list-alt', 'admin.viewStudyLayout', 12, 2, '2024-11-03 17:44:17', '2024-11-03 17:44:17');
 
 -- --------------------------------------------------------
 
@@ -76,16 +80,23 @@ CREATE TABLE `admin_menu_roles` (
 
 INSERT INTO `admin_menu_roles` (`id`, `admin_menu_id`, `role_id`, `menu_order`, `created_at`, `updated_at`) VALUES
 (1, 1, 1, 1, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
-(2, 2, 1, 2, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
-(3, 5, 1, 4, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
+(2, 2, 1, 4, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
+(3, 5, 1, 6, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
 (4, 1, 3, 1, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
 (5, 1, 4, 1, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
 (6, 1, 2, 1, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
 (7, 1, 5, 1, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
 (8, 2, 5, 2, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
 (9, 5, 5, 4, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
-(10, 8, 1, 3, '2024-11-06 18:07:15', '2024-11-06 18:07:15'),
-(11, 8, 5, 3, '2024-11-13 18:32:42', '2024-11-13 18:32:42');
+(10, 8, 1, 5, '2024-11-06 18:07:15', '2024-11-06 18:07:15'),
+(11, 8, 5, 3, '2024-11-13 18:32:42', '2024-11-13 18:32:42'),
+(12, 1, 6, 1, '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
+(13, 11, 1, 2, NULL, NULL),
+(14, 11, 5, 5, NULL, NULL),
+(15, 11, 6, 2, NULL, NULL),
+(16, 12, 1, 3, NULL, NULL),
+(17, 12, 5, 6, NULL, NULL),
+(18, 12, 6, 5, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -114,6 +125,43 @@ CREATE TABLE `cache_locks` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `case_studies`
+--
+
+CREATE TABLE `case_studies` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `laboratory_id` bigint(20) UNSIGNED NOT NULL,
+  `patient_id` bigint(20) UNSIGNED NOT NULL,
+  `doctor_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `qc_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `assigner_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `clinical_history` text DEFAULT NULL,
+  `is_emergency` smallint(6) NOT NULL DEFAULT 0,
+  `is_post_operative` smallint(6) NOT NULL DEFAULT 0,
+  `is_follow_up` smallint(6) NOT NULL DEFAULT 0,
+  `is_subspecialty` smallint(6) NOT NULL DEFAULT 0,
+  `is_callback` smallint(6) NOT NULL DEFAULT 0,
+  `study_status_id` bigint(20) UNSIGNED NOT NULL,
+  `status_updated_on` datetime NOT NULL DEFAULT current_timestamp(),
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `case_study_id` varchar(255) NOT NULL,
+  `modality_id` bigint(20) UNSIGNED NOT NULL,
+  `added_by` bigint(20) UNSIGNED DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `case_studies`
+--
+
+INSERT INTO `case_studies` (`id`, `laboratory_id`, `patient_id`, `doctor_id`, `qc_id`, `assigner_id`, `clinical_history`, `is_emergency`, `is_post_operative`, `is_follow_up`, `is_subspecialty`, `is_callback`, `study_status_id`, `status_updated_on`, `created_at`, `updated_at`, `case_study_id`, `modality_id`, `added_by`) VALUES
+(1, 1, 24, NULL, NULL, 4, 'Low BP', 1, 0, 0, 0, 0, 1, '2025-03-16 13:17:03', '2025-03-10 04:59:04', '2025-03-23 12:39:27', 'QL-CS-378277', 1, 1),
+(2, 1, 25, 8, NULL, 1, 'BP', 0, 0, 1, 0, 0, 5, '2025-03-15 17:52:11', '2025-03-15 12:11:33', '2025-03-16 06:18:23', 'QL-CS-891287', 1, 1),
+(3, 7, 26, 33, NULL, 4, 'Test', 1, 0, 0, 0, 0, 2, '2025-03-23 17:59:51', '2025-03-23 12:26:59', '2025-03-23 12:29:51', 'QL-CS-873059', 1, 4);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `doctors`
 --
 
@@ -135,7 +183,7 @@ CREATE TABLE `doctors` (
 INSERT INTO `doctors` (`id`, `name`, `email`, `phone_number`, `user_id`, `status`, `created_at`, `updated_at`) VALUES
 (4, 'Rajib Biswas.', 'rbiswas@gmail.com', '9632-596-326', 11, '1', '2024-11-11 04:59:24', '2024-11-17 19:50:27'),
 (7, 'Dipankar Bannerjee', 'drbannerjee@gmail.com', '9635-489-635', 14, '1', '2024-11-11 06:00:04', '2024-11-17 19:54:08'),
-(8, 'Aapto Biswas', 'aapto@gmail.com', '9658-789-655', 16, '1', '2024-12-02 17:03:53', '2024-12-02 17:03:53'),
+(8, 'Aapto Biswas', 'aapto@gmail.com', '9658-789-655', 16, '1', '2024-12-02 17:03:53', '2025-02-08 19:02:09'),
 (9, 'Colt Connelly', 'mlang@gmail.com', '+15029639344', 17, '1', '2024-12-02 17:32:02', '2024-12-02 17:32:02'),
 (10, 'Rhett Hansen', 'stamm.hassie@bins.org', '1-480-206-5262', 18, '1', '2024-12-02 17:32:03', '2024-12-02 17:32:03'),
 (11, 'Tate Considine', 'emory77@hotmail.com', '516.255.9883', 19, '1', '2024-12-02 17:32:03', '2024-12-02 17:32:03'),
@@ -149,7 +197,7 @@ INSERT INTO `doctors` (`id`, `name`, `email`, `phone_number`, `user_id`, `status
 (19, 'Dr. Lorena Hintz', 'dakota.emard@gmail.com', '304-251-9769', 27, '1', '2024-12-02 17:32:05', '2024-12-02 17:32:05'),
 (20, 'Prof. Irwin Kozey', 'qreichel@gmail.com', '267.208.2374', 28, '1', '2024-12-02 17:32:05', '2024-12-02 17:32:05'),
 (21, 'Margret Muller', 'awill@yahoo.com', '+14454576974', 29, '1', '2024-12-02 17:32:05', '2024-12-02 17:32:05'),
-(22, 'Aurelia Flatley', 'hreichel@yahoo.com', '+1 (906) 233-7179', 30, '1', '2024-12-02 17:32:05', '2024-12-02 17:32:05'),
+(22, 'Aurelia Flatley', 'hreichel@yahoo.com', '1906-233-717', 30, '1', '2024-12-02 17:32:05', '2025-02-08 19:01:56'),
 (23, 'Mrs. Lilian Miller Sr.', 'twhite@oreilly.org', '(872) 254-3236', 31, '1', '2024-12-02 17:32:05', '2024-12-02 17:32:05'),
 (24, 'Chyna Erdman', 'cooper.reynolds@gmail.com', '414.254.5116', 32, '1', '2024-12-02 17:32:06', '2024-12-02 17:32:06'),
 (25, 'Janiya Ullrich', 'conn.eino@zulauf.com', '+1-870-292-6370', 33, '1', '2024-12-02 17:32:06', '2024-12-02 17:32:06'),
@@ -225,7 +273,10 @@ INSERT INTO `doctor_logs` (`id`, `type`, `doctor_id`, `log`, `user_id`, `column_
 (12, 'inactive', 7, 'The Doctor, Dipankar Bannerjee was Disable by John Doe on 18th of Nov, 2024 at 1:21 AM', 7, NULL, NULL, NULL, '2024-11-17 19:51:17', '2024-11-17 19:51:17'),
 (13, 'add', 8, 'New Doctor added by Pranab Karmakar on 2nd of Dec, 2024 at 10:33 PM', 1, NULL, NULL, NULL, '2024-12-02 17:03:53', '2024-12-02 17:03:53'),
 (14, 'inactive', 31, 'The Doctor, Dangelo Jerde DDS was Disable by Pranab Karmakar on 2nd of Dec, 2024 at 11:14 PM', 1, NULL, NULL, NULL, '2024-12-02 17:44:55', '2024-12-02 17:44:55'),
-(15, 'active', 31, 'The Doctor, Dangelo Jerde DDS was Active by Pranab Karmakar on 2nd of Dec, 2024 at 11:14 PM', 1, NULL, NULL, NULL, '2024-12-02 17:44:59', '2024-12-02 17:44:59');
+(15, 'active', 31, 'The Doctor, Dangelo Jerde DDS was Active by Pranab Karmakar on 2nd of Dec, 2024 at 11:14 PM', 1, NULL, NULL, NULL, '2024-12-02 17:44:59', '2024-12-02 17:44:59'),
+(16, 'update', 22, 'Phone Number was updated from \'+1 (906) 233-7179\' to \'1906-233-717\' by Pranab Karmakar on 9th of Feb, 2025 at 12:31 AM', 1, 'Phone Number', '+1 (906) 233-7179', '1906-233-717', '2025-02-08 19:01:56', '2025-02-08 19:01:56'),
+(17, 'update', 22, 'Modality was updated from \'Radiology, Neurology, Cardiology\' to \'Radiology, Cardiology\' by Pranab Karmakar on 9th of Feb, 2025 at 12:31 AM', 1, 'Modality', 'Radiology, Neurology, Cardiology', 'Radiology, Cardiology', '2025-02-08 19:01:56', '2025-02-08 19:01:56'),
+(18, 'update', 8, 'Modality was updated from \'Neurology, Veterinary\' to \'Radiology, Neurology, Veterinary\' by Pranab Karmakar on 9th of Feb, 2025 at 12:32 AM', 1, 'Modality', 'Neurology, Veterinary', 'Radiology, Neurology, Veterinary', '2025-02-08 19:02:09', '2025-02-08 19:02:09');
 
 -- --------------------------------------------------------
 
@@ -251,15 +302,15 @@ INSERT INTO `doctor_modalities` (`id`, `doctor_id`, `modality_id`, `created_at`,
 (2, 7, 1, '2024-11-11 06:00:04', '2024-11-16 18:24:36', '1'),
 (3, 7, 2, '2024-11-11 06:00:04', '2024-11-16 18:24:36', '1'),
 (6, 7, 4, '2024-11-14 19:07:47', '2024-11-16 18:24:36', '0'),
-(7, 7, 5, '2024-11-14 19:08:29', '2024-11-16 18:24:36', '0'),
+(7, 7, 4, '2024-11-14 19:08:29', '2024-11-16 18:24:36', '0'),
 (8, 7, 3, '2024-11-16 14:35:52', '2024-11-16 18:24:36', '0'),
 (9, 4, 4, '2024-11-16 14:36:04', '2024-11-16 18:24:10', '0'),
 (10, 4, 2, '2024-11-16 16:46:52', '2024-11-16 18:24:10', '0'),
-(11, 4, 5, '2024-11-16 16:56:52', '2024-11-16 18:24:10', '0'),
-(12, 8, 3, '2024-12-02 17:03:53', '2024-12-02 17:03:53', '1'),
-(13, 8, 5, '2024-12-02 17:03:53', '2024-12-02 17:03:53', '1'),
+(11, 4, 4, '2024-11-16 16:56:52', '2024-11-16 18:24:10', '0'),
+(12, 8, 3, '2024-12-02 17:03:53', '2025-02-08 19:02:09', '1'),
+(13, 8, 4, '2024-12-02 17:03:53', '2025-02-08 19:02:09', '1'),
 (14, 9, 3, '2024-12-02 17:32:02', '2024-12-02 17:32:02', '1'),
-(15, 9, 5, '2024-12-02 17:32:02', '2024-12-02 17:32:02', '1'),
+(15, 9, 4, '2024-12-02 17:32:02', '2024-12-02 17:32:02', '1'),
 (16, 9, 1, '2024-12-02 17:32:02', '2024-12-02 17:32:02', '1'),
 (17, 9, 4, '2024-12-02 17:32:02', '2024-12-02 17:32:02', '1'),
 (18, 10, 3, '2024-12-02 17:32:03', '2024-12-02 17:32:03', '1'),
@@ -268,9 +319,9 @@ INSERT INTO `doctor_modalities` (`id`, `doctor_id`, `modality_id`, `created_at`,
 (21, 11, 1, '2024-12-02 17:32:03', '2024-12-02 17:32:03', '1'),
 (22, 11, 3, '2024-12-02 17:32:03', '2024-12-02 17:32:03', '1'),
 (23, 11, 4, '2024-12-02 17:32:03', '2024-12-02 17:32:03', '1'),
-(24, 11, 5, '2024-12-02 17:32:03', '2024-12-02 17:32:03', '1'),
+(24, 11, 4, '2024-12-02 17:32:03', '2024-12-02 17:32:03', '1'),
 (25, 12, 2, '2024-12-02 17:32:03', '2024-12-02 17:32:03', '1'),
-(26, 12, 5, '2024-12-02 17:32:03', '2024-12-02 17:32:03', '1'),
+(26, 12, 4, '2024-12-02 17:32:03', '2024-12-02 17:32:03', '1'),
 (27, 12, 3, '2024-12-02 17:32:03', '2024-12-02 17:32:03', '1'),
 (28, 13, 4, '2024-12-02 17:32:03', '2024-12-02 17:32:03', '1'),
 (29, 13, 2, '2024-12-02 17:32:03', '2024-12-02 17:32:03', '1'),
@@ -279,38 +330,38 @@ INSERT INTO `doctor_modalities` (`id`, `doctor_id`, `modality_id`, `created_at`,
 (32, 14, 4, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
 (33, 15, 1, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
 (34, 15, 3, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
-(35, 15, 5, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
+(35, 15, 4, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
 (36, 15, 4, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
 (37, 16, 4, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
 (38, 16, 1, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
 (39, 17, 2, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
 (40, 17, 1, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
-(41, 17, 5, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
+(41, 17, 4, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
 (42, 17, 3, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
 (43, 18, 3, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
-(44, 18, 5, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
+(44, 18, 4, '2024-12-02 17:32:04', '2024-12-02 17:32:04', '1'),
 (45, 19, 1, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
-(46, 19, 5, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
+(46, 19, 4, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
 (47, 19, 4, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
 (48, 20, 4, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
 (49, 20, 2, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
 (50, 20, 3, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
-(51, 21, 5, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
+(51, 21, 4, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
 (52, 21, 2, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
 (53, 21, 1, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
-(54, 22, 1, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
-(55, 22, 3, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
-(56, 22, 2, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
-(57, 23, 5, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
+(54, 22, 1, '2024-12-02 17:32:05', '2025-02-08 19:01:56', '1'),
+(55, 22, 3, '2024-12-02 17:32:05', '2025-02-08 19:01:56', '0'),
+(56, 22, 2, '2024-12-02 17:32:05', '2025-02-08 19:01:56', '1'),
+(57, 23, 4, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
 (58, 23, 4, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
 (59, 23, 1, '2024-12-02 17:32:05', '2024-12-02 17:32:05', '1'),
 (60, 24, 2, '2024-12-02 17:32:06', '2024-12-02 17:32:06', '1'),
 (61, 24, 1, '2024-12-02 17:32:06', '2024-12-02 17:32:06', '1'),
 (62, 24, 3, '2024-12-02 17:32:06', '2024-12-02 17:32:06', '1'),
-(63, 24, 5, '2024-12-02 17:32:06', '2024-12-02 17:32:06', '1'),
+(63, 24, 4, '2024-12-02 17:32:06', '2024-12-02 17:32:06', '1'),
 (64, 25, 1, '2024-12-02 17:32:06', '2024-12-02 17:32:06', '1'),
 (65, 25, 3, '2024-12-02 17:32:06', '2024-12-02 17:32:06', '1'),
-(66, 26, 5, '2024-12-02 17:32:06', '2024-12-02 17:32:06', '1'),
+(66, 26, 4, '2024-12-02 17:32:06', '2024-12-02 17:32:06', '1'),
 (67, 26, 3, '2024-12-02 17:32:06', '2024-12-02 17:32:06', '1'),
 (68, 27, 4, '2024-12-02 17:32:06', '2024-12-02 17:32:06', '1'),
 (69, 27, 3, '2024-12-02 17:32:06', '2024-12-02 17:32:06', '1'),
@@ -324,24 +375,24 @@ INSERT INTO `doctor_modalities` (`id`, `doctor_id`, `modality_id`, `created_at`,
 (77, 29, 1, '2024-12-02 17:32:07', '2024-12-02 17:32:07', '1'),
 (78, 30, 2, '2024-12-02 17:32:07', '2024-12-02 17:32:07', '1'),
 (79, 30, 3, '2024-12-02 17:32:07', '2024-12-02 17:32:07', '1'),
-(80, 31, 5, '2024-12-02 17:32:07', '2024-12-02 17:32:07', '1'),
+(80, 31, 4, '2024-12-02 17:32:07', '2024-12-02 17:32:07', '1'),
 (81, 31, 2, '2024-12-02 17:32:07', '2024-12-02 17:32:07', '1'),
 (82, 31, 1, '2024-12-02 17:32:07', '2024-12-02 17:32:07', '1'),
 (83, 31, 3, '2024-12-02 17:32:07', '2024-12-02 17:32:07', '1'),
 (84, 32, 2, '2024-12-02 17:32:07', '2024-12-02 17:32:07', '1'),
 (85, 32, 1, '2024-12-02 17:32:07', '2024-12-02 17:32:07', '1'),
 (86, 32, 4, '2024-12-02 17:32:07', '2024-12-02 17:32:07', '1'),
-(87, 33, 5, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
+(87, 33, 4, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
 (88, 33, 2, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
 (89, 33, 1, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
-(90, 34, 5, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
+(90, 34, 4, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
 (91, 34, 2, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
 (92, 34, 1, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
 (93, 35, 3, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
-(94, 35, 5, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
+(94, 35, 4, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
 (95, 35, 4, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
 (96, 35, 1, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
-(97, 36, 5, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
+(97, 36, 4, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
 (98, 36, 2, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
 (99, 36, 4, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
 (100, 36, 3, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
@@ -350,13 +401,13 @@ INSERT INTO `doctor_modalities` (`id`, `doctor_id`, `modality_id`, `created_at`,
 (103, 37, 2, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
 (104, 37, 4, '2024-12-02 17:32:08', '2024-12-02 17:32:08', '1'),
 (105, 38, 1, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
-(106, 38, 5, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
+(106, 38, 4, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
 (107, 39, 2, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
 (108, 39, 3, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
 (109, 39, 1, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
 (110, 40, 1, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
-(111, 40, 5, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
-(112, 41, 5, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
+(111, 40, 4, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
+(112, 41, 4, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
 (113, 41, 1, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
 (114, 41, 4, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
 (115, 41, 2, '2024-12-02 17:32:09', '2024-12-02 17:32:09', '1'),
@@ -367,25 +418,25 @@ INSERT INTO `doctor_modalities` (`id`, `doctor_id`, `modality_id`, `created_at`,
 (120, 43, 4, '2024-12-02 17:32:10', '2024-12-02 17:32:10', '1'),
 (121, 44, 4, '2024-12-02 17:32:10', '2024-12-02 17:32:10', '1'),
 (122, 44, 3, '2024-12-02 17:32:10', '2024-12-02 17:32:10', '1'),
-(123, 45, 5, '2024-12-02 17:32:10', '2024-12-02 17:32:10', '1'),
+(123, 45, 4, '2024-12-02 17:32:10', '2024-12-02 17:32:10', '1'),
 (124, 45, 4, '2024-12-02 17:32:10', '2024-12-02 17:32:10', '1'),
 (125, 46, 1, '2024-12-02 17:32:10', '2024-12-02 17:32:10', '1'),
 (126, 46, 2, '2024-12-02 17:32:10', '2024-12-02 17:32:10', '1'),
 (127, 47, 1, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
-(128, 47, 5, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
-(129, 48, 5, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
+(128, 47, 4, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
+(129, 48, 4, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
 (130, 48, 4, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
 (131, 48, 2, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
 (132, 48, 1, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
-(133, 49, 5, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
+(133, 49, 4, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
 (134, 49, 1, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
 (135, 49, 3, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
 (136, 50, 4, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
 (137, 50, 2, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
-(138, 50, 5, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
+(138, 50, 4, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
 (139, 51, 3, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
-(140, 51, 5, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
-(141, 52, 5, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
+(140, 51, 4, '2024-12-02 17:32:11', '2024-12-02 17:32:11', '1'),
+(141, 52, 4, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
 (142, 52, 3, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
 (143, 53, 3, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
 (144, 53, 2, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
@@ -395,19 +446,20 @@ INSERT INTO `doctor_modalities` (`id`, `doctor_id`, `modality_id`, `created_at`,
 (148, 54, 3, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
 (149, 55, 2, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
 (150, 55, 1, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
-(151, 55, 5, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
+(151, 55, 4, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
 (152, 55, 3, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
 (153, 56, 4, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
-(154, 56, 5, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
+(154, 56, 4, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
 (155, 56, 2, '2024-12-02 17:32:12', '2024-12-02 17:32:12', '1'),
 (156, 57, 4, '2024-12-02 17:32:13', '2024-12-02 17:32:13', '1'),
-(157, 57, 5, '2024-12-02 17:32:13', '2024-12-02 17:32:13', '1'),
+(157, 57, 4, '2024-12-02 17:32:13', '2024-12-02 17:32:13', '1'),
 (158, 57, 3, '2024-12-02 17:32:13', '2024-12-02 17:32:13', '1'),
 (159, 57, 2, '2024-12-02 17:32:13', '2024-12-02 17:32:13', '1'),
 (160, 58, 4, '2024-12-02 17:32:13', '2024-12-02 17:32:13', '1'),
 (161, 58, 3, '2024-12-02 17:32:13', '2024-12-02 17:32:13', '1'),
 (162, 58, 2, '2024-12-02 17:32:13', '2024-12-02 17:32:13', '1'),
-(163, 58, 1, '2024-12-02 17:32:13', '2024-12-02 17:32:13', '1');
+(163, 58, 1, '2024-12-02 17:32:13', '2024-12-02 17:32:13', '1'),
+(164, 8, 1, '2025-02-08 19:02:09', '2025-02-08 19:02:09', '1');
 
 -- --------------------------------------------------------
 
@@ -477,7 +529,7 @@ INSERT INTO `form_fields` (`id`, `field_name`, `field_alise`, `description`, `re
 (2, 'owner_phone_number', 'Owner Phone Number', NULL, 0, 'phone'),
 (3, 'technician_name', 'Technician Name', NULL, 0, 'text'),
 (4, 'technician_phone_number', 'Technician Phone Number', NULL, 0, 'phone'),
-(5, 'modality', 'Modality', NULL, 0, 'multiselect'),
+(5, 'modality_old', 'Modality', NULL, 0, 'multiselect'),
 (6, 'account_department_number', 'Accounts Department Phone Number', NULL, 0, 'phone'),
 (7, 'installation_date', 'Installation Date', NULL, 0, 'date'),
 (8, 'special_suggestion', 'Special Suggestion', NULL, 0, 'textarea'),
@@ -618,9 +670,10 @@ CREATE TABLE `laboratories` (
 --
 
 INSERT INTO `laboratories` (`id`, `lab_name`, `lab_login_email`, `lab_primary_location`, `user_id`, `status`, `lab_phone_number`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 'Balaji Diagnostic Centre Halisahar Unit 2', 'balajihalisahar@gmail.com', 'Kancharapara', 2, 1, '9896-587-899', NULL, '2024-10-02 17:47:27', '2024-11-17 19:40:16'),
+(1, 'Balaji Diagnostic Centre Halisahar Unit 2', 'balajihalisahar@gmail.com', 'Kancharapara', 2, 1, '9896-587-899', NULL, '2024-10-02 17:47:27', '2025-02-24 03:39:53'),
 (2, 'Naihati Diagnostics', 'naihati_diagnostics@gmail.com', 'Naihati', 3, 0, '8978-965-880', NULL, '2024-10-05 14:17:09', '2024-11-22 19:16:36'),
-(3, 'New Rapoo', 'rapoo@gmail.com', 'Palta', 15, 1, '9632-563-212', NULL, '2024-12-02 17:03:00', '2024-12-02 17:03:00');
+(3, 'New Rapoo', 'rapoo@gmail.com', 'Palta', 15, 1, '9632-563-212', NULL, '2024-12-02 17:03:00', '2025-02-09 17:18:49'),
+(7, 'Naihati Pathology', 'naihati_pathology@gmail.com', 'Naihati', 70, 1, '9866-563-256', NULL, '2025-02-08 18:46:12', '2025-02-08 18:46:12');
 
 -- --------------------------------------------------------
 
@@ -685,7 +738,38 @@ INSERT INTO `laboratory_logs` (`id`, `type`, `laboratorie_id`, `log`, `user_id`,
 (37, 'inactive', 2, 'The Centre, Naihati Diagnostics was Disable by Pranab Karmakar on 23rd of Nov, 2024 at 12:32 AM', 1, NULL, NULL, NULL, '2024-11-22 19:02:36', '2024-11-22 19:02:36'),
 (38, 'active', 2, 'The Centre, Naihati Diagnostics was Active by Pranab Karmakar on 23rd of Nov, 2024 at 12:34 AM', 1, NULL, NULL, NULL, '2024-11-22 19:04:00', '2024-11-22 19:04:00'),
 (39, 'inactive', 2, 'The Centre, Naihati Diagnostics was Disable by Pranab Karmakar on 23rd of Nov, 2024 at 12:46 AM', 1, NULL, NULL, NULL, '2024-11-22 19:16:36', '2024-11-22 19:16:36'),
-(40, 'add', 3, 'New Centre added by Pranab Karmakar on 2nd of Dec, 2024 at 10:33 PM', 1, NULL, NULL, NULL, '2024-12-02 17:03:00', '2024-12-02 17:03:00');
+(40, 'add', 3, 'New Centre added by Pranab Karmakar on 2nd of Dec, 2024 at 10:33 PM', 1, NULL, NULL, NULL, '2024-12-02 17:03:00', '2024-12-02 17:03:00'),
+(44, 'add', 7, 'New Centre added by Pranab Karmakar on 9th of Feb, 2025 at 12:16 AM', 1, NULL, NULL, NULL, '2025-02-08 18:46:12', '2025-02-08 18:46:12');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_black_listed_doctors`
+--
+
+CREATE TABLE `lab_black_listed_doctors` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `laboratorie_id` bigint(20) UNSIGNED NOT NULL,
+  `doctor_id` bigint(20) UNSIGNED NOT NULL,
+  `status` smallint(6) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `lab_black_listed_doctors`
+--
+
+INSERT INTO `lab_black_listed_doctors` (`id`, `laboratorie_id`, `doctor_id`, `status`, `created_at`, `updated_at`) VALUES
+(13, 1, 8, 0, '2025-03-15 11:16:16', '2025-03-15 11:26:47'),
+(14, 1, 22, 0, '2025-03-15 11:16:16', '2025-03-15 11:26:47'),
+(15, 1, 34, 0, '2025-03-15 11:16:16', '2025-03-15 11:26:47'),
+(16, 1, 26, 0, '2025-03-15 11:22:20', '2025-03-15 11:26:47'),
+(17, 1, 33, 0, '2025-03-15 11:22:36', '2025-03-15 11:26:47'),
+(18, 1, 48, 0, '2025-03-15 11:22:36', '2025-03-15 11:26:47'),
+(19, 1, 9, 0, '2025-03-15 11:22:36', '2025-03-15 11:26:47'),
+(20, 1, 7, 0, '2025-03-15 11:22:53', '2025-03-15 11:26:47'),
+(21, 1, 4, 0, '2025-03-15 11:25:53', '2025-03-15 11:26:47');
 
 -- --------------------------------------------------------
 
@@ -724,7 +808,64 @@ INSERT INTO `lab_form_field_values` (`id`, `form_field_id`, `value`, `laboratori
 (16, 8, 'Provide report ASAP', 2, 1, '2024-10-05 18:54:07', '2024-10-05 18:54:07'),
 (17, 1, 'Rishab Panth', 3, 1, '2024-12-02 17:03:00', '2024-12-02 17:03:00'),
 (18, 2, '9656-325-458', 3, 1, '2024-12-02 17:03:00', '2024-12-02 17:03:00'),
-(19, 7, '02/12/2024', 3, 1, '2024-12-02 17:03:00', '2024-12-02 17:03:00');
+(19, 7, '02/12/2024', 3, 1, '2024-12-02 17:03:00', '2024-12-02 17:03:00'),
+(30, 1, 'P. K. Saha', 7, 1, '2025-02-08 18:46:12', '2025-02-08 18:46:12'),
+(31, 7, '09/02/2025', 7, 1, '2025-02-08 18:46:12', '2025-02-08 18:46:12');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_modalities`
+--
+
+CREATE TABLE `lab_modalities` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `laboratory_id` bigint(20) UNSIGNED NOT NULL,
+  `modality_id` bigint(20) UNSIGNED NOT NULL,
+  `status` smallint(6) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `lab_modalities`
+--
+
+INSERT INTO `lab_modalities` (`id`, `laboratory_id`, `modality_id`, `status`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 1, NULL, '2025-02-24 03:39:53'),
+(2, 2, 1, 1, NULL, NULL),
+(3, 3, 1, 1, NULL, '2025-02-09 17:18:49'),
+(4, 7, 1, 1, '2025-02-08 18:46:12', '2025-02-08 18:46:12'),
+(10, 1, 2, 0, '2025-02-09 17:18:11', '2025-02-24 03:39:53'),
+(11, 3, 5, 0, '2025-02-09 17:18:40', '2025-02-09 17:18:49');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lab_preferred_doctors`
+--
+
+CREATE TABLE `lab_preferred_doctors` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `laboratorie_id` bigint(20) UNSIGNED NOT NULL,
+  `doctor_id` bigint(20) UNSIGNED NOT NULL,
+  `modality_id` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `lab_preferred_doctors`
+--
+
+INSERT INTO `lab_preferred_doctors` (`id`, `laboratorie_id`, `doctor_id`, `modality_id`, `created_at`, `updated_at`) VALUES
+(1, 7, 48, 2, '2025-03-15 08:49:21', '2025-03-15 08:49:21'),
+(2, 7, 26, 3, '2025-03-15 08:49:21', '2025-03-15 08:49:21'),
+(6, 1, 49, 4, '2025-03-15 08:49:47', '2025-03-15 08:49:47'),
+(7, 1, 28, 5, '2025-03-15 08:49:47', '2025-03-15 08:49:47'),
+(12, 1, 24, 3, '2025-03-15 09:06:05', '2025-03-15 09:06:05'),
+(13, 1, 31, 1, '2025-03-15 09:06:05', '2025-03-15 09:06:05'),
+(14, 3, 34, 2, '2025-03-16 06:01:14', '2025-03-16 06:01:14');
 
 -- --------------------------------------------------------
 
@@ -801,7 +942,22 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (34, '2024_11_11_092532_create_doctor_modalities_table', 18),
 (35, '2024_11_11_101731_doc_form_field_values', 19),
 (36, '2024_11_11_111733_create_doctor_logs_table', 20),
-(37, '2024_11_16_195748_alter_doctor_modalities_add_status', 21);
+(37, '2024_11_16_195748_alter_doctor_modalities_add_status', 21),
+(38, '2024_12_29_125048_alter_users_add_is_outsider', 22),
+(39, '2025_02_08_232046_create_lab_modalities_table', 23),
+(40, '2025_02_10_111646_create_patients_table', 24),
+(41, '2025_02_15_181538_create_study_statuses_table', 25),
+(42, '2025_02_15_175404_create_case_studies_table', 26),
+(44, '2025_02_15_183839_create_study_types_table', 27),
+(45, '2025_02_15_175429_create_studies_table', 28),
+(46, '2025_02_15_175506_create_study_images_table', 29),
+(47, '2025_02_16_002313_alter_case_studies_add_case_id', 30),
+(48, '2025_03_08_193146_alter_studies_add_case_study_id', 31),
+(49, '2025_03_10_100250_alter_case_studies_add_modality_id', 32),
+(50, '2025_03_15_114620_create_lab_preferred_doctors_table', 33),
+(52, '2025_03_15_114642_create_lab_black_listed_doctors_table', 34),
+(53, '2025_03_18_233954_create_modality_study_layouts_table', 35),
+(54, '2025_03_22_113548_alter_case_studies_add_added_by', 36);
 
 -- --------------------------------------------------------
 
@@ -828,6 +984,32 @@ INSERT INTO `modalities` (`id`, `name`, `description`, `status`, `created_at`, `
 (3, 'Neurology', NULL, '1', '2024-11-06 19:18:49', '2024-11-06 19:18:49'),
 (4, 'Uromatric', NULL, '1', '2024-11-06 19:18:49', '2024-11-06 19:18:49'),
 (5, 'Veterinary', NULL, '1', '2024-11-03 17:44:17', '2024-11-03 17:44:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `modality_study_layouts`
+--
+
+CREATE TABLE `modality_study_layouts` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `study_type_id` bigint(20) UNSIGNED NOT NULL,
+  `layout` text NOT NULL,
+  `description` text DEFAULT NULL,
+  `status` tinyint(4) NOT NULL DEFAULT 1,
+  `created_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `modality_study_layouts`
+--
+
+INSERT INTO `modality_study_layouts` (`id`, `study_type_id`, `layout`, `description`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 2, '<p class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size:14.0pt;font-family:&quot;Arial Narrow&quot;,&quot;sans-serif&quot;;\r\nmso-fareast-font-family:&quot;Times New Roman&quot;;mso-bidi-font-family:Tahoma\">Vault,\r\nsella and sutures appear normal.<b><o:p></o:p></b></span></p><p class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size:14.0pt;font-family:&quot;Arial Narrow&quot;,&quot;sans-serif&quot;;\r\nmso-fareast-font-family:&quot;Times New Roman&quot;;mso-bidi-font-family:Tahoma\">No\r\nevidence of bony injury seen.<o:p></o:p></span></p><p class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size:14.0pt;font-family:&quot;Arial Narrow&quot;,&quot;sans-serif&quot;;\r\nmso-fareast-font-family:&quot;Times New Roman&quot;;mso-bidi-font-family:Tahoma\">No\r\nabnormal intracranial calcification is seen.<b><o:p></o:p></b></span></p><p>\r\n\r\n\r\n\r\n\r\n\r\n</p><p class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size:14.0pt;font-family:&quot;Arial Narrow&quot;,&quot;sans-serif&quot;;\r\nmso-fareast-font-family:&quot;Times New Roman&quot;;mso-bidi-font-family:Tahoma\">No\r\nobvious soft tissue abnormality noted.<o:p></o:p></span></p>', NULL, 1, NULL, '2025-03-22 12:43:16', '2025-03-22 12:43:16'),
+(2, 2, '<p class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size:14.0pt;font-family:&quot;Arial Narrow&quot;,&quot;sans-serif&quot;;\r\nmso-fareast-font-family:&quot;Times New Roman&quot;;mso-bidi-font-family:Tahoma\">Vault,\r\nsella and sutures appear normal.<b><o:p></o:p></b></span></p><p class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size:14.0pt;font-family:&quot;Arial Narrow&quot;,&quot;sans-serif&quot;;\r\nmso-fareast-font-family:&quot;Times New Roman&quot;;mso-bidi-font-family:Tahoma\">No\r\nevidence of bony injury seen.<o:p></o:p></span></p><p class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size:14.0pt;font-family:&quot;Arial Narrow&quot;,&quot;sans-serif&quot;;\r\nmso-fareast-font-family:&quot;Times New Roman&quot;;mso-bidi-font-family:Tahoma\">No\r\nabnormal intracranial calcification is seen.<b><o:p></o:p></b></span></p><p>\r\n\r\n\r\n\r\n\r\n\r\n</p><p class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size:14.0pt;font-family:&quot;Arial Narrow&quot;,&quot;sans-serif&quot;;\r\nmso-fareast-font-family:&quot;Times New Roman&quot;;mso-bidi-font-family:Tahoma\">No\r\nobvious soft tissue abnormality noted.<o:p></o:p></span></p>', NULL, 1, NULL, '2025-03-22 12:45:14', '2025-03-22 12:45:14'),
+(4, 2, '<p class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size:14.0pt;font-family:&quot;Arial Narrow&quot;,&quot;sans-serif&quot;;\r\nmso-fareast-font-family:&quot;Times New Roman&quot;;mso-bidi-font-family:Tahoma\">Vault,\r\nsella and sutures appear normal.<b><o:p></o:p></b></span></p><p class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size:14.0pt;font-family:&quot;Arial Narrow&quot;,&quot;sans-serif&quot;;\r\nmso-fareast-font-family:&quot;Times New Roman&quot;;mso-bidi-font-family:Tahoma\">No\r\nevidence of bony injury seen.<o:p></o:p></span></p><p class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size:14.0pt;font-family:&quot;Arial Narrow&quot;,&quot;sans-serif&quot;;\r\nmso-fareast-font-family:&quot;Times New Roman&quot;;mso-bidi-font-family:Tahoma\">No\r\nabnormal intracranial calcification is seen.<b><o:p></o:p></b></span></p><p>\r\n\r\n\r\n\r\n\r\n\r\n</p><p class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size:14.0pt;font-family:&quot;Arial Narrow&quot;,&quot;sans-serif&quot;;\r\nmso-fareast-font-family:&quot;Times New Roman&quot;;mso-bidi-font-family:Tahoma\">No\r\nobvious soft tissue abnormality noted.<o:p></o:p></span></p>', NULL, 1, 16, '2025-03-22 12:49:40', '2025-03-22 12:49:40');
 
 -- --------------------------------------------------------
 
@@ -923,6 +1105,41 @@ CREATE TABLE `password_reset_tokens` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `patients`
+--
+
+CREATE TABLE `patients` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `patient_id` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `age` smallint(6) NOT NULL,
+  `gender` varchar(255) NOT NULL,
+  `clinical_history` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `patients`
+--
+
+INSERT INTO `patients` (`id`, `patient_id`, `name`, `age`, `gender`, `clinical_history`, `created_at`, `updated_at`) VALUES
+(1, 'QL-PT-108384', 'Dulal Mukherjee', 45, 'male', 'High BP', '2024-11-03 17:44:17', '2024-11-03 17:44:17'),
+(15, 'QL-PT-473797', 'Nirmalya Bannerjee', 33, 'male', 'High BP', '2025-03-08 15:51:02', '2025-03-08 15:51:02'),
+(16, 'QL-PT-703062', 'Sankar Basu', 45, 'male', 'High Sugar', '2025-03-08 15:53:49', '2025-03-08 15:53:49'),
+(17, 'QL-PT-268956', 'Kanta Swami', 78, 'male', 'Test', '2025-03-08 18:51:10', '2025-03-08 18:51:10'),
+(18, 'QL-PT-442575', 'Sunil Basu', 63, 'male', 'Test', '2025-03-08 18:55:43', '2025-03-08 18:55:43'),
+(19, 'QL-PT-264039', 'Susil Saha', 63, 'male', 'Test', '2025-03-08 18:57:17', '2025-03-08 18:57:17'),
+(20, 'QL-PT-712292', 'Prasun Bannerjee', 45, 'male', 'Test', '2025-03-08 19:00:33', '2025-03-08 19:00:33'),
+(21, 'QL-PT-106647', 'Test Patient', 45, 'male', 'tewst', '2025-03-08 19:29:30', '2025-03-08 19:29:30'),
+(22, 'QL-PT-667124', 'Kusum Konar', 23, 'female', 'Low BP', '2025-03-08 20:22:48', '2025-03-08 20:22:48'),
+(24, 'QL-PT-749187', 'Nirmalya Bannerjee', 33, 'male', 'Low BP', '2025-03-10 04:59:04', '2025-03-10 04:59:04'),
+(25, 'QL-PT-034422', 'Sujit Nandi', 45, 'male', 'BP', '2025-03-15 12:11:33', '2025-03-15 12:11:33'),
+(26, 'QL-PT-100434', 'Susil Saha', 63, 'male', 'Test', '2025-03-23 12:26:59', '2025-03-23 12:26:59');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `personal_access_tokens`
 --
 
@@ -961,7 +1178,8 @@ INSERT INTO `roles` (`id`, `name`, `created_at`, `updated_at`) VALUES
 (2, 'Quality Controller', NULL, NULL),
 (3, 'Centre', NULL, NULL),
 (4, 'Doctor', NULL, NULL),
-(5, 'Manager', NULL, NULL);
+(5, 'Manager', NULL, NULL),
+(6, 'Assigner', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -991,7 +1209,7 @@ INSERT INTO `role_users` (`id`, `role_id`, `user_id`, `created_at`, `updated_at`
 (7, 5, 7, '2024-11-06 17:23:49', '2024-11-06 17:23:49'),
 (11, 4, 11, '2024-11-11 04:59:24', '2024-11-11 04:59:24'),
 (14, 4, 14, '2024-11-11 06:00:04', '2024-11-11 06:00:04'),
-(15, 3, 15, '2024-12-02 17:03:00', '2024-12-02 17:03:00'),
+(15, 6, 15, '2024-12-02 17:03:00', '2024-12-02 17:03:00'),
 (16, 4, 16, '2024-12-02 17:03:53', '2024-12-02 17:03:53'),
 (17, 4, 17, '2024-12-02 17:32:02', '2024-12-02 17:32:02'),
 (18, 4, 18, '2024-12-02 17:32:03', '2024-12-02 17:32:03'),
@@ -1042,7 +1260,10 @@ INSERT INTO `role_users` (`id`, `role_id`, `user_id`, `created_at`, `updated_at`
 (63, 4, 63, '2024-12-02 17:32:12', '2024-12-02 17:32:12'),
 (64, 4, 64, '2024-12-02 17:32:12', '2024-12-02 17:32:12'),
 (65, 4, 65, '2024-12-02 17:32:13', '2024-12-02 17:32:13'),
-(66, 4, 66, '2024-12-02 17:32:13', '2024-12-02 17:32:13');
+(66, 4, 66, '2024-12-02 17:32:13', '2024-12-02 17:32:13'),
+(70, 3, 70, '2025-02-08 18:46:12', '2025-02-08 18:46:12'),
+(71, 6, 71, '2025-03-09 11:53:04', '2025-03-09 11:53:04'),
+(72, 6, 72, '2025-03-18 18:28:19', '2025-03-18 18:28:19');
 
 -- --------------------------------------------------------
 
@@ -1071,6 +1292,213 @@ INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, 
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `studies`
+--
+
+CREATE TABLE `studies` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `study_type_id` bigint(20) UNSIGNED NOT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `case_study_id` bigint(20) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `studies`
+--
+
+INSERT INTO `studies` (`id`, `study_type_id`, `description`, `created_at`, `updated_at`, `case_study_id`) VALUES
+(1, 14, 'Test', '2025-03-10 04:59:04', '2025-03-10 04:59:04', 1),
+(2, 50, NULL, '2025-03-15 12:11:33', '2025-03-15 12:11:33', 2),
+(3, 2, 'dfdfdf', '2025-03-23 12:26:59', '2025-03-23 12:26:59', 3),
+(4, 9, 'fdgdfgdf', '2025-03-23 12:26:59', '2025-03-23 12:26:59', 3),
+(5, 13, 'dfgdfgdf', '2025-03-23 12:26:59', '2025-03-23 12:26:59', 3);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `study_images`
+--
+
+CREATE TABLE `study_images` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `study_id` bigint(20) UNSIGNED NOT NULL,
+  `image` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `study_images`
+--
+
+INSERT INTO `study_images` (`id`, `study_id`, `image`, `created_at`, `updated_at`) VALUES
+(1, 1, 'D:\\xampp\\htdocs\\quick_line\\storage\\app\\uploads\\Balaji Diagnostic Centre Halisahar Unit 2\\Nirmalya Bannerjee\\1741582744_dog.jpg', '2025-03-10 04:59:04', '2025-03-10 04:59:04'),
+(2, 2, 'D:\\xampp\\htdocs\\quick_line\\storage\\app\\uploads\\Balaji Diagnostic Centre Halisahar Unit 2\\Sujit Nandi\\1742040693_dog.jpg', '2025-03-15 12:11:33', '2025-03-15 12:11:33'),
+(3, 5, 'D:\\xampp\\htdocs\\quick_line\\storage\\app\\uploads\\Naihati Pathology\\Susil Saha\\1742732819_dog.jpg', '2025-03-23 12:26:59', '2025-03-23 12:26:59'),
+(4, 5, 'D:\\xampp\\htdocs\\quick_line\\storage\\app\\uploads\\Naihati Pathology\\Susil Saha\\1742732819_lion.webp', '2025-03-23 12:26:59', '2025-03-23 12:26:59');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `study_statuses`
+--
+
+CREATE TABLE `study_statuses` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `study_statuses`
+--
+
+INSERT INTO `study_statuses` (`id`, `name`, `created_at`, `updated_at`) VALUES
+(1, 'Unread', NULL, NULL),
+(2, 'Pending', NULL, NULL),
+(3, 'QA Pending', NULL, NULL),
+(4, 'Re-Open', NULL, NULL),
+(5, 'Finished', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `study_types`
+--
+
+CREATE TABLE `study_types` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `modality_id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `status` smallint(6) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `study_types`
+--
+
+INSERT INTO `study_types` (`id`, `modality_id`, `name`, `status`, `created_at`, `updated_at`) VALUES
+(1, 1, 'ACU (SPECIAL STUDY)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(2, 1, 'ANKLE AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(3, 1, 'ANKLE LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(4, 1, 'APICAL LORDOTIC', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(5, 1, 'BARIUM', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(6, 1, 'BARIUM ENEMA', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(7, 1, 'BARIUM MEAL FOLLOW THROUGH', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(8, 1, 'BARIUM MEAL ILOCECAL REGION', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(9, 1, 'BARIUM MEAL STOMACH & DUODENUM', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(10, 1, 'BARIUM STUDIES', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(11, 1, 'BARIUM SWALLOW OESOPHAGUS', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(12, 1, 'BILATERAL HIPS', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(13, 1, 'BREASTBONE LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(14, 1, 'BREASTBONE PA', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(15, 1, 'CALCANEUS AXIAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(16, 1, 'CALCANEUS LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(17, 1, 'CARPAL BRIDGE', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(18, 1, 'CARPAL TUNNEL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(19, 1, 'CAVUM (ADENOIDAL HETEROTROPHY)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(20, 1, 'CHEST LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(21, 1, 'CHEST PA', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(22, 1, 'CLAVICLE', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(23, 1, 'CLAVICLE AXIAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(24, 1, 'COCCYX AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(25, 1, 'COCCYX LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(26, 1, 'CERVICAL SPINE (FLEXION & EXTENSION)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(27, 1, 'CERVICAL SPINE (LEFT & RIGHT)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(28, 1, 'CERVICAL SPINE AP/LAT', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(29, 1, 'CERVICAL SPINE OBLIQUE', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(30, 1, 'CERVIVOTHORACIC REGION LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(31, 1, 'DIRECT ABDOMEN ERECT', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(32, 1, 'DIRECT ABDOMINAL (DECUBITUS POSITION)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(33, 1, 'ELBOW AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(34, 1, 'ELBOW LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(35, 1, 'ELBOW OBLIQUE', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(36, 1, 'FEMUR AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(37, 1, 'FEMUR LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(38, 1, 'FERGUSSON TECHNIQUE (L5-S1)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(39, 1, 'FISTULA', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(40, 1, 'FISTULAGRAM', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(41, 1, 'FOOT (LOADED)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(42, 1, 'FOOT AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(43, 1, 'FOOT LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(44, 1, 'FOOT OBLIQUE', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(45, 1, 'FOREARM AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(46, 1, 'FOREARM LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(47, 1, 'HAND LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(48, 1, 'HAND PA', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(49, 1, 'HSG', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(50, 1, 'HIP JOINT AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(51, 1, 'HIP JOINT LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(52, 1, 'HIRTZ', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(53, 1, 'HUMERUS AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(54, 1, 'HUMERUS LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(55, 1, 'HUMERUS TRANSTHORACIC', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(56, 1, 'INTERCONDYAL FOSSA', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(57, 1, 'IN LET', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(58, 1, 'IVP/IVU', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(59, 1, 'JAROSCHY AXIAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(60, 1, 'KNEE AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(61, 1, 'KNEE LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(62, 1, 'KNEE LATERAL (LOADED)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(63, 1, 'KNEE OBLIQUE', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(64, 1, 'KNEE SKYLINE VIEW', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(65, 1, 'KUB', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(66, 1, 'LEG AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(67, 1, 'LEG LATEAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(68, 1, 'LEFT OBLIQUE', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(69, 1, 'LUMBAR SPINE (LEFT & RIGHT TILTED)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(70, 1, 'LUMBAR SPINE (FLEXION & EXTENSION)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(71, 1, 'LUMBAR SPINE AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(72, 1, 'LUMBAR SPINE LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(73, 1, 'LUMBAR SPINE SPINE (FLEXION & EXTENSION)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(74, 1, 'MANDIBLE LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(75, 1, 'MANDIBLE PA', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(76, 1, 'MASTOID LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(77, 1, 'MAMMOGRAPHY', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(78, 1, 'MCU', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(79, 1, 'NASOPHARYNX', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(80, 1, 'NOSE LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(81, 1, 'OBLIQUE HAND', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(82, 1, 'OBLIQUE HAND (NORGAARD)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(83, 1, 'OBLIQUE LUMBAR', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(84, 1, 'ODONTOID PROCESS AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(85, 1, 'OPG', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(86, 1, 'ORBITS LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(87, 1, 'ORBIT PA', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(88, 1, 'OUTLET', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(89, 1, 'OTTENELLO METHOD', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(90, 1, 'PATELLA AXIAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(91, 1, 'PATELLA LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(92, 1, 'PATELLA PA', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(93, 1, 'PELVIS AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(94, 1, 'PELVIS JUDET (ILIAC)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(95, 1, 'PELVIS JUDET (OBTURATOR)', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(96, 1, 'PENIS', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(97, 1, 'PNS OPEN MOUTH VIEW', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(98, 1, 'PNS WATERS VIEW', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(99, 1, 'PULMONARY VERTEX', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(100, 1, 'RGU', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(101, 1, 'RIGHT OBLIQUE', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(102, 1, 'RIBS AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(103, 1, 'RIBS PA', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(104, 1, 'SACRUM AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(105, 1, 'SACRUM AXIAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(106, 1, 'SACRUM LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(107, 1, 'SCAPHOID', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(108, 1, 'SCAPULA AP', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(109, 1, 'SCAPULA LATERAL', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(110, 1, 'SCANOGRAM', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(111, 1, 'SCHULLER I', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36'),
+(112, 1, 'SCHULLER II', 1, '2025-02-16 05:20:36', '2025-02-16 05:20:36');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -1092,75 +1520,79 @@ CREATE TABLE `users` (
   `last_login_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `user_image` varchar(255) DEFAULT NULL,
   `status` smallint(6) NOT NULL DEFAULT 1,
-  `is_first_login` enum('0','1') NOT NULL DEFAULT '1'
+  `is_first_login` enum('0','1') NOT NULL DEFAULT '1',
+  `is_outsider` tinyint(4) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`, `remember_token`, `created_at`, `updated_at`, `access_type`, `mobile_number`, `login_count`, `last_login_at`, `user_image`, `status`, `is_first_login`) VALUES
-(1, 'Pranab Karmakar', 'admin@gmail.com', NULL, '$2y$12$vOOotr9uG2G3bR6SvyxMAuOVd9UwDda6fW4HEoCz.jd4QpAsDgNY6', NULL, NULL, NULL, 'pDQuai73MKKVbaHaYFyfXnTlXAJ6jSbiJdaN11VDkNTZMOp0XFOTDReiWYt5', NULL, '2024-11-22 18:21:15', 'admin', NULL, 42, '2024-11-22 18:21:15', 'https://ui-avatars.com/api/?name=Pranab+Karmakar&background=2ff8ff&color=000000&size=150', 1, '0'),
-(2, 'Balaji Diagnostic Centre Halisahar Unit 2', 'balajihalisahar@gmail.com', NULL, '$2y$12$Vrbwc.xvu8ToXUGmySVImeVcs1EXj1i8UUOpvSTgAIM1eXXpjCAOa', NULL, NULL, NULL, NULL, '2024-10-02 17:47:27', '2024-11-17 19:40:16', 'user', NULL, 0, '2024-11-17 19:40:16', 'https://ui-avatars.com/api/?name=balaji+diagnostic+centre+halisahar&background=fc7a60&color=000000&size=150', 1, '1'),
-(3, 'Naihati Diagnostics', 'naihati_diagnostics@gmail.com', NULL, '$2y$12$Vrbwc.xvu8ToXUGmySVImeVcs1EXj1i8UUOpvSTgAIM1eXXpjCAOa', NULL, NULL, NULL, NULL, '2024-10-05 14:17:09', '2024-11-22 19:16:36', 'user', NULL, 0, '2024-11-22 19:16:36', 'https://ui-avatars.com/api/?name=Naihati+Diagnostics&background=fb5350&color=000000&size=150', 0, '1'),
-(4, 'Rohit Saha', 'rohit_saha@gmail.com', NULL, '$2y$12$HhaSFwyMgMJgZGGndth17eYBNaaw0PJBv006VL.exL7HOVU93EEym', NULL, NULL, NULL, 'alVrmvNzpparYDeoIQK4kar3YsIejWtV70tiuc82VXkD23vbNlUoYV7geOco', '2024-10-23 19:18:36', '2024-11-06 18:06:18', 'Manager', '9865-321-100', 12, '2024-11-06 18:06:18', 'https://ui-avatars.com/api/?name=Rohit+Saha&background=0cc88d&color=000000&size=150', 1, '0'),
-(5, 'Poulomi Biswas', 'pbiswas@gmail.com', NULL, '$2y$12$XHxS7NuVzzzFu3kvE3Gn3.bi1jZVUQJdZP/WwxrjyDZwagquY0icy', NULL, NULL, NULL, 'fIT7LhOBptItakQT6Bau9PRlyXlGu5WVEKCKEos8YCXuOi98PLapKhbzX3MV', '2024-10-23 19:23:42', '2024-12-02 17:44:33', 'Quality Controller', '9632-512-022', 8, '2024-12-02 17:44:33', 'https://ui-avatars.com/api/?name=Poulomi+Biswas&background=b96ed4&color=000000&size=150', 1, '0'),
-(6, 'Rahul Sinha', 'rsinha@gmail.com', NULL, '$2y$12$S6N3sQu1/JEmFeaRwF1B8OHAjoSokiRy8qMccXQVKakJhebiM.FP.', NULL, NULL, NULL, '1hoFfQrnas95ZCuOM0j8TDR81tDv8zxwKnROuWrd78nfrBH1LZGBGBIxa9mB', '2024-11-03 17:57:09', '2024-11-06 06:37:46', 'Quality Controller', '9656-325-658', 4, '2024-11-06 06:37:46', 'https://ui-avatars.com/api/?name=Rahul+Sinha&background=c7074f&color=ffffff&size=150', 1, '0'),
-(7, 'John Doe', 'johnd@gmail.com', NULL, '$2y$12$Xo6ZWNYj9ff2mKl/SJBS6u6Dd8FKp9pCCrHpwwJ0H7.m5HmAcgXEO', NULL, NULL, NULL, 'Awwpzh8OXQQjkQuughaHN6oYJ5q2UWOfX1zehffMGNyGdyc119WUAhKyPJuj', '2024-11-06 17:23:49', '2024-12-02 17:44:38', 'Manager', '9656-325-632', 2, '2024-12-02 17:44:38', 'https://ui-avatars.com/api/?name=John+Doe&background=8c2314&color=ffffff&size=150', 1, '0'),
-(11, 'Rajib Biswas.', 'rbiswas@gmail.com', NULL, '$2y$12$mqlcDjWhSFMYWjnVCAAa6OyGSdEmYgWmlaPvh.Vq6GJppGQ40v4CG', NULL, NULL, NULL, 'bYiXGg9HPtG81edeSQkywmsKK17Dn58cY0Pc9jbGSsr38eUQHZKpQK5ZKmcm', '2024-11-11 04:59:24', '2024-11-17 19:49:42', 'Doctor', NULL, 1, '2024-12-02 16:59:27', 'https://ui-avatars.com/api/?name=Rajib+Biswas&background=8dcb49&color=000000&size=150', 1, '0'),
-(14, 'Dipankar Bannerjee', 'drbannerjee@gmail.com', NULL, '$2y$12$j/DJwWoXo8C5lpBDL2aTQOL.wdtaDcoAHrngaiAsdE1mBKOM1COxq', NULL, NULL, NULL, NULL, '2024-11-11 06:00:04', '2024-11-16 18:24:36', 'Doctor', NULL, 0, '2024-12-02 16:59:34', 'https://ui-avatars.com/api/?name=Dipankar+Bannerjee&background=a0b754&color=000000&size=150', 1, '1'),
-(15, 'New Rapoo', 'rapoo@gmail.com', NULL, '$2y$12$Y78DhHObBFktEUfvAKNfGuHciyFMbg/JAhDThXh0Cwb2T0lh7q4G2', NULL, NULL, NULL, NULL, '2024-12-02 17:03:00', '2024-12-02 17:03:00', 'Laboratory', NULL, 0, '2024-12-02 17:03:00', 'https://ui-avatars.com/api/?name=New+Rapoo&background=976557&color=ffffff&size=150', 1, '1'),
-(16, 'Aapto Biswas', 'aapto@gmail.com', NULL, '$2y$12$pe2GjXKGdfVQI538P5SXKOTmKGPBo0fivDjg/csbpI/oQXNFdVeX.', NULL, NULL, NULL, NULL, '2024-12-02 17:03:53', '2024-12-02 17:03:53', 'Doctor', NULL, 0, '2024-12-02 17:03:53', 'https://ui-avatars.com/api/?name=Aapto+Biswas&background=c5b68c&color=000000&size=150', 1, '1'),
-(17, 'Colt Connelly', 'mlang@gmail.com', NULL, '$2y$12$t4OdDURbHIogo5Xr2NBpcOHOB69JifMzJ8VbSUw/p4TNhHpJulb2e', NULL, NULL, NULL, NULL, '2024-12-02 17:32:02', '2024-12-02 17:32:02', 'Doctor', NULL, 0, '2024-12-02 17:32:02', 'https://ui-avatars.com/api/?name=Colt+Connelly&background=97c6f0&color=000000&size=150', 1, '1'),
-(18, 'Rhett Hansen', 'stamm.hassie@bins.org', NULL, '$2y$12$nj8wK7dfirX2FzCNPZTDJeCJFYkEp2IwQxSUTv1E9TXBIgYWhnKIe', NULL, NULL, NULL, NULL, '2024-12-02 17:32:03', '2024-12-02 17:32:03', 'Doctor', NULL, 0, '2024-12-02 17:32:03', 'https://ui-avatars.com/api/?name=Rhett+Hansen&background=59f3d5&color=000000&size=150', 1, '1'),
-(19, 'Tate Considine', 'emory77@hotmail.com', NULL, '$2y$12$MD651HRnEUPtHBjXrndfYOavJ8H13ecxUC7Pays8mWdWlWroQVfNi', NULL, NULL, NULL, NULL, '2024-12-02 17:32:03', '2024-12-02 17:32:03', 'Doctor', NULL, 0, '2024-12-02 17:32:03', 'https://ui-avatars.com/api/?name=Tate+Considine&background=71dee7&color=000000&size=150', 1, '1'),
-(20, 'Mr. Ibrahim Fisher Jr.', 'gussie34@rohan.com', NULL, '$2y$12$ijlE665yBNiHc25va7dsueR7Uqp/Dp4lP8DIaFEVs0Eqk0a3fcJTm', NULL, NULL, NULL, NULL, '2024-12-02 17:32:03', '2024-12-02 17:32:03', 'Doctor', NULL, 0, '2024-12-02 17:32:03', 'https://ui-avatars.com/api/?name=Mr.+Ibrahim+Fisher+Jr.&background=931103&color=ffffff&size=150', 1, '1'),
-(21, 'Madyson Conn', 'ykulas@gmail.com', NULL, '$2y$12$mM660YnmYfEYydHJEAxCQuO2V3j5WWpvu45F99SkQbv9PTCoL9fYG', NULL, NULL, NULL, NULL, '2024-12-02 17:32:03', '2024-12-02 17:32:03', 'Doctor', NULL, 0, '2024-12-02 17:32:03', 'https://ui-avatars.com/api/?name=Madyson+Conn&background=dcfb8d&color=000000&size=150', 1, '1'),
-(22, 'Stone Marvin', 'wiza.kaylin@gmail.com', NULL, '$2y$12$OwMCAPkpcopnrpEEhKnsf.SY7K7kVnwGF7rjRkg57LLruy.Jjdz/u', NULL, NULL, NULL, NULL, '2024-12-02 17:32:04', '2024-12-02 17:32:04', 'Doctor', NULL, 0, '2024-12-02 17:32:04', 'https://ui-avatars.com/api/?name=Stone+Marvin&background=c1e77c&color=000000&size=150', 1, '1'),
-(23, 'Tristin Koch', 'delbert48@reichert.com', NULL, '$2y$12$egR2vZ0T9LbWMPKciVMWdOh3qxBS/szm9rAR4uWPVWWlRSiHtcoAC', NULL, NULL, NULL, NULL, '2024-12-02 17:32:04', '2024-12-02 17:32:04', 'Doctor', NULL, 0, '2024-12-02 17:32:04', 'https://ui-avatars.com/api/?name=Tristin+Koch&background=17af3a&color=ffffff&size=150', 1, '1'),
-(24, 'Laverne Runte DDS', 'lela73@mohr.info', NULL, '$2y$12$tzEB.7B5VFjruw1tSVzbTeIdZ3A.uFa2pDFu9qIHMJlxuz7fFTbny', NULL, NULL, NULL, NULL, '2024-12-02 17:32:04', '2024-12-02 17:32:04', 'Doctor', NULL, 0, '2024-12-02 17:32:04', 'https://ui-avatars.com/api/?name=Laverne+Runte+DDS&background=9c1269&color=ffffff&size=150', 1, '1'),
-(25, 'Ms. Emmalee Goodwin II', 'brain32@yahoo.com', NULL, '$2y$12$lDIzmjX5DrHZZn1ls9uylOUob.i0rUnNEdWlmUoPehx9m50PGyaUC', NULL, NULL, NULL, NULL, '2024-12-02 17:32:04', '2024-12-02 17:32:04', 'Doctor', NULL, 0, '2024-12-02 17:32:04', 'https://ui-avatars.com/api/?name=Ms.+Emmalee+Goodwin+II&background=da0747&color=ffffff&size=150', 1, '1'),
-(26, 'Prof. Andy Schultz MD', 'gkovacek@yahoo.com', NULL, '$2y$12$8gxjO.CfOpFYdS4KUierD.h5Lm8g1GQgbx9qq8AVUrgMUSjAl9Cm6', NULL, NULL, NULL, NULL, '2024-12-02 17:32:04', '2024-12-02 17:32:04', 'Doctor', NULL, 0, '2024-12-02 17:32:04', 'https://ui-avatars.com/api/?name=Prof.+Andy+Schultz+MD&background=8aaa13&color=000000&size=150', 1, '1'),
-(27, 'Dr. Lorena Hintz', 'dakota.emard@gmail.com', NULL, '$2y$12$Rvo8K8pIqu9l6xRQQ0AhrOPmigDqNzeZfQPv67Wm.B3IpxI95MNpe', NULL, NULL, NULL, NULL, '2024-12-02 17:32:05', '2024-12-02 17:32:05', 'Doctor', NULL, 0, '2024-12-02 17:32:05', 'https://ui-avatars.com/api/?name=Dr.+Lorena+Hintz&background=ecac12&color=000000&size=150', 1, '1'),
-(28, 'Prof. Irwin Kozey', 'qreichel@gmail.com', NULL, '$2y$12$Hs10011naaogu2JugDnLiu.3LVtAAo4mj.6vj3ff/rdvyeZBVxV/6', NULL, NULL, NULL, NULL, '2024-12-02 17:32:05', '2024-12-02 17:32:05', 'Doctor', NULL, 0, '2024-12-02 17:32:05', 'https://ui-avatars.com/api/?name=Prof.+Irwin+Kozey&background=8a2249&color=ffffff&size=150', 1, '1'),
-(29, 'Margret Muller', 'awill@yahoo.com', NULL, '$2y$12$qe1ril2Ih9NjTu93Omv2feZUExDH4ei7rYC7Oa4n9TbcdPjibsjNq', NULL, NULL, NULL, NULL, '2024-12-02 17:32:05', '2024-12-02 17:32:05', 'Doctor', NULL, 0, '2024-12-02 17:32:05', 'https://ui-avatars.com/api/?name=Margret+Muller&background=29e633&color=000000&size=150', 1, '1'),
-(30, 'Aurelia Flatley', 'hreichel@yahoo.com', NULL, '$2y$12$Q2yXV8f0TF.6K5PMdrRSyuQvs.8pHTSJbYRNzlOls/dBFyxAZuhda', NULL, NULL, NULL, NULL, '2024-12-02 17:32:05', '2024-12-02 17:32:05', 'Doctor', NULL, 0, '2024-12-02 17:32:05', 'https://ui-avatars.com/api/?name=Aurelia+Flatley&background=ddebeb&color=000000&size=150', 1, '1'),
-(31, 'Mrs. Lilian Miller Sr.', 'twhite@oreilly.org', NULL, '$2y$12$nX1ly7QGBhs0qGv5ywEdv.9WdJ71rVtB6i1vZpEz9on8pJyLENeza', NULL, NULL, NULL, NULL, '2024-12-02 17:32:05', '2024-12-02 17:32:05', 'Doctor', NULL, 0, '2024-12-02 17:32:05', 'https://ui-avatars.com/api/?name=Mrs.+Lilian+Miller+Sr.&background=be3974&color=ffffff&size=150', 1, '1'),
-(32, 'Chyna Erdman', 'cooper.reynolds@gmail.com', NULL, '$2y$12$eGTeXgZWP0LDf3/lUKuxN.5K9nGDMl.kEtavikrF8Ntg2leuszav2', NULL, NULL, NULL, NULL, '2024-12-02 17:32:06', '2024-12-02 17:32:06', 'Doctor', NULL, 0, '2024-12-02 17:32:06', 'https://ui-avatars.com/api/?name=Chyna+Erdman&background=6cc600&color=000000&size=150', 1, '1'),
-(33, 'Janiya Ullrich', 'conn.eino@zulauf.com', NULL, '$2y$12$Ihs9tzobOM0Zoqi2OHI1luZQFNTVu62T8N98m3t52OLgJJI4asQAy', NULL, NULL, NULL, NULL, '2024-12-02 17:32:06', '2024-12-02 17:32:06', 'Doctor', NULL, 0, '2024-12-02 17:32:06', 'https://ui-avatars.com/api/?name=Janiya+Ullrich&background=94e481&color=000000&size=150', 1, '1'),
-(34, 'Celestine Rice', 'kiehn.johathan@muller.com', NULL, '$2y$12$m8GEej/gmm7YcVdfrpI0tu05TA/4tGmqDkE2TWeVfj4cK3Ncc5cRG', NULL, NULL, NULL, NULL, '2024-12-02 17:32:06', '2024-12-02 17:32:06', 'Doctor', NULL, 0, '2024-12-02 17:32:06', 'https://ui-avatars.com/api/?name=Celestine+Rice&background=02db70&color=000000&size=150', 1, '1'),
-(35, 'Mr. Jovanny Stokes II', 'vswift@greenholt.info', NULL, '$2y$12$U8GIFR8LAc5SOVVHw4Hg4u4cDtTS8WsrrorbHy0ogypBQk/eLoTbO', NULL, NULL, NULL, NULL, '2024-12-02 17:32:06', '2024-12-02 17:32:06', 'Doctor', NULL, 0, '2024-12-02 17:32:06', 'https://ui-avatars.com/api/?name=Mr.+Jovanny+Stokes+II&background=37dd93&color=000000&size=150', 1, '1'),
-(36, 'Cassandra Gislason', 'gladys93@mccullough.com', NULL, '$2y$12$gRexitaGJGT9OsrKmDOoduE2cIlAiazawxRFrbTx2l7rBEeF9tBZ2', NULL, NULL, NULL, NULL, '2024-12-02 17:32:07', '2024-12-02 17:32:07', 'Doctor', NULL, 0, '2024-12-02 17:32:07', 'https://ui-avatars.com/api/?name=Cassandra+Gislason&background=9f69fb&color=000000&size=150', 1, '1'),
-(37, 'Maynard Stiedemann V', 'kuhn.lincoln@fadel.biz', NULL, '$2y$12$iebEG7QUEPudZhmoOzb4vOyxyOgLR.hWjn/7yfuQhp7ywKVs7fTIW', NULL, NULL, NULL, NULL, '2024-12-02 17:32:07', '2024-12-02 17:32:07', 'Doctor', NULL, 0, '2024-12-02 17:32:07', 'https://ui-avatars.com/api/?name=Maynard+Stiedemann+V&background=81f324&color=000000&size=150', 1, '1'),
-(38, 'Neil Reichel', 'hdurgan@gmail.com', NULL, '$2y$12$E8VZJwQ4bQToI6Spsz5FLOlqhHEuIDulYKIEIQi7p9xdmiBs4dH3K', NULL, NULL, NULL, NULL, '2024-12-02 17:32:07', '2024-12-02 17:32:07', 'Doctor', NULL, 0, '2024-12-02 17:32:07', 'https://ui-avatars.com/api/?name=Neil+Reichel&background=e5b0d1&color=000000&size=150', 1, '1'),
-(39, 'Dangelo Jerde DDS', 'hkuvalis@koch.com', NULL, '$2y$12$h4Qte9t9dc2hxPx7gL/u/e62Nw3Ef9lk5RTuEzEH63KzyK8bdQbCq', NULL, NULL, NULL, NULL, '2024-12-02 17:32:07', '2024-12-02 17:32:07', 'Doctor', NULL, 0, '2024-12-02 17:32:07', 'https://ui-avatars.com/api/?name=Dangelo+Jerde+DDS&background=7d053b&color=ffffff&size=150', 1, '1'),
-(40, 'Eldora Towne', 'darby18@blick.biz', NULL, '$2y$12$OctQd5PyapL.jQFy9WwQ/.UKrWfomVSL65KoiE008Vhmi.lpGpKou', NULL, NULL, NULL, NULL, '2024-12-02 17:32:07', '2024-12-02 17:32:07', 'Doctor', NULL, 0, '2024-12-02 17:32:07', 'https://ui-avatars.com/api/?name=Eldora+Towne&background=a75f68&color=ffffff&size=150', 1, '1'),
-(41, 'Chelsea Torp', 'lera.balistreri@conroy.net', NULL, '$2y$12$7ypFPGuyGsHDWO6KbkI67eE24FQW8EiPz0SjE.uwo5dgg0PY6Q782', NULL, NULL, NULL, NULL, '2024-12-02 17:32:08', '2024-12-02 17:32:08', 'Doctor', NULL, 0, '2024-12-02 17:32:08', 'https://ui-avatars.com/api/?name=Chelsea+Torp&background=978753&color=000000&size=150', 1, '1'),
-(42, 'Billie Schiller', 'walsh.fae@little.net', NULL, '$2y$12$wqNl7Fq/4ZXiY6YVagmFCeHNvgsFe5GKsd/goDbJcW2BQC6NMyfZ6', NULL, NULL, NULL, NULL, '2024-12-02 17:32:08', '2024-12-02 17:32:08', 'Doctor', NULL, 0, '2024-12-02 17:32:08', 'https://ui-avatars.com/api/?name=Billie+Schiller&background=80d241&color=000000&size=150', 1, '1'),
-(43, 'Mia Pouros', 'ledner.breana@price.com', NULL, '$2y$12$kC1ujH8DQ7GIHfSQ2HO4nuLWIqubfYVBotkgM7thoT4s4P4TIBr4q', NULL, NULL, NULL, NULL, '2024-12-02 17:32:08', '2024-12-02 17:32:08', 'Doctor', NULL, 0, '2024-12-02 17:32:08', 'https://ui-avatars.com/api/?name=Mia+Pouros&background=3a9d17&color=ffffff&size=150', 1, '1'),
-(44, 'Lucy Heathcote MD', 'roma45@moore.com', NULL, '$2y$12$g/4phXXnNikQz4.x4g6q2.DBCjlLbehEA6I2.ekctytVAOPBwlOX2', NULL, NULL, NULL, NULL, '2024-12-02 17:32:08', '2024-12-02 17:32:08', 'Doctor', NULL, 0, '2024-12-02 17:32:08', 'https://ui-avatars.com/api/?name=Lucy+Heathcote+MD&background=85800e&color=ffffff&size=150', 1, '1'),
-(45, 'Jayda Legros', 'kris98@leffler.biz', NULL, '$2y$12$K6C/0lRCUwbVn/cbeL2O9.7tgts0ZIHICLJLw0Rnr3LciZQTsTmvm', NULL, NULL, NULL, NULL, '2024-12-02 17:32:08', '2024-12-02 17:32:08', 'Doctor', NULL, 0, '2024-12-02 17:32:08', 'https://ui-avatars.com/api/?name=Jayda+Legros&background=849c96&color=000000&size=150', 1, '1'),
-(46, 'Dr. Vito Parker', 'marcel.johns@nader.com', NULL, '$2y$12$0j0eAd5xk31bk0Z.W4jtQuGbkuLSP3gKzdk1AWKJ9Igsl4Arpxeee', NULL, NULL, NULL, NULL, '2024-12-02 17:32:09', '2024-12-02 17:32:09', 'Doctor', NULL, 0, '2024-12-02 17:32:09', 'https://ui-avatars.com/api/?name=Dr.+Vito+Parker&background=893ef2&color=ffffff&size=150', 1, '1'),
-(47, 'Maxine Mann', 'streich.paris@king.org', NULL, '$2y$12$ye/QFX8qddEGWROVPS1Sfu5twbGb1f.BkAwarQRId2HS47iG65VIq', NULL, NULL, NULL, NULL, '2024-12-02 17:32:09', '2024-12-02 17:32:09', 'Doctor', NULL, 0, '2024-12-02 17:32:09', 'https://ui-avatars.com/api/?name=Maxine+Mann&background=3ad991&color=000000&size=150', 1, '1'),
-(48, 'Dr. Simeon Cummings MD', 'yschimmel@paucek.biz', NULL, '$2y$12$H5Ll/Eceyheyrtp1nEMEqOEeoIbDtrirCnsyysZevVBcBWAFOQlmS', NULL, NULL, NULL, NULL, '2024-12-02 17:32:09', '2024-12-02 17:32:09', 'Doctor', NULL, 0, '2024-12-02 17:32:09', 'https://ui-avatars.com/api/?name=Dr.+Simeon+Cummings+MD&background=76d5ae&color=000000&size=150', 1, '1'),
-(49, 'Miss Cortney Barrows V', 'queen.lesch@walker.com', NULL, '$2y$12$fW9R1VE3Kq/PqBodTmkrwufS5FnUTvoFtyX59scFGsdho7y7MPQCC', NULL, NULL, NULL, NULL, '2024-12-02 17:32:09', '2024-12-02 17:32:09', 'Doctor', NULL, 0, '2024-12-02 17:32:09', 'https://ui-avatars.com/api/?name=Miss+Cortney+Barrows+V&background=028cfd&color=ffffff&size=150', 1, '1'),
-(50, 'Dr. Meredith Adams V', 'bvon@carroll.biz', NULL, '$2y$12$ZpRbIW5VHFsXFddTydjKNOwUzjIpR0ccGilYkTiXj/ci7.v5Bqfse', NULL, NULL, NULL, NULL, '2024-12-02 17:32:09', '2024-12-02 17:32:09', 'Doctor', NULL, 0, '2024-12-02 17:32:09', 'https://ui-avatars.com/api/?name=Dr.+Meredith+Adams+V&background=74b147&color=000000&size=150', 1, '1'),
-(51, 'Leonel Hirthe', 'conn.daisy@kuvalis.com', NULL, '$2y$12$bbrCGOuzVo3kcXPfFe/5HO3jdQ.E9kLKimmUuR7M.F4RFCj12ylAe', NULL, NULL, NULL, NULL, '2024-12-02 17:32:10', '2024-12-02 17:32:10', 'Doctor', NULL, 0, '2024-12-02 17:32:10', 'https://ui-avatars.com/api/?name=Leonel+Hirthe&background=f156e6&color=000000&size=150', 1, '1'),
-(52, 'Myrtice Bednar', 'dariana.huels@hotmail.com', NULL, '$2y$12$cyIOXBGpvA/FrGvMkmP/x.6LQ1vr4Xc2mTlFij7HZdFN9mKs1jmlm', NULL, NULL, NULL, NULL, '2024-12-02 17:32:10', '2024-12-02 17:32:10', 'Doctor', NULL, 0, '2024-12-02 17:32:10', 'https://ui-avatars.com/api/?name=Myrtice+Bednar&background=118dff&color=ffffff&size=150', 1, '1'),
-(53, 'Freda Waters', 'krunte@hotmail.com', NULL, '$2y$12$TjnsG7Kwnp8eBU.dHh00zunRa.crD2IMUqFtPkxaKAB.BV0pmSrhS', NULL, NULL, NULL, NULL, '2024-12-02 17:32:10', '2024-12-02 17:32:10', 'Doctor', NULL, 0, '2024-12-02 17:32:10', 'https://ui-avatars.com/api/?name=Freda+Waters&background=316f32&color=ffffff&size=150', 1, '1'),
-(54, 'Rhea Luettgen', 'danielle55@kling.info', NULL, '$2y$12$B52vudzGTyplOkmnQcnUXOet7iqxUbtK.H7vTt5RD88itAcHEmkq.', NULL, NULL, NULL, NULL, '2024-12-02 17:32:10', '2024-12-02 17:32:10', 'Doctor', NULL, 0, '2024-12-02 17:32:10', 'https://ui-avatars.com/api/?name=Rhea+Luettgen&background=19e0eb&color=000000&size=150', 1, '1'),
-(55, 'Lolita Rath', 'daron.morar@mayert.biz', NULL, '$2y$12$TuB5LueuoCa5WEi8mmkR6eu0OSDxdGyqUF7GaXFXwjIggutiACBfO', NULL, NULL, NULL, NULL, '2024-12-02 17:32:11', '2024-12-02 17:32:11', 'Doctor', NULL, 0, '2024-12-02 17:32:11', 'https://ui-avatars.com/api/?name=Lolita+Rath&background=cfb6a5&color=000000&size=150', 1, '1'),
-(56, 'Christian Stamm', 'alfreda54@wiza.net', NULL, '$2y$12$MLc37NSePsVjbGTnAl3exuXEwPYoE1X7W9gZHSGauuehgwjmYyuw2', NULL, NULL, NULL, NULL, '2024-12-02 17:32:11', '2024-12-02 17:32:11', 'Doctor', NULL, 0, '2024-12-02 17:32:11', 'https://ui-avatars.com/api/?name=Christian+Stamm&background=f6a670&color=000000&size=150', 1, '1'),
-(57, 'Dennis Wehner PhD', 'jamaal.konopelski@strosin.com', NULL, '$2y$12$zvYtSuQZeU1nZQtudnssz.ucFurw7TMC02ZPbDEO1.nMTSkK6EzEy', NULL, NULL, NULL, NULL, '2024-12-02 17:32:11', '2024-12-02 17:32:11', 'Doctor', NULL, 0, '2024-12-02 17:32:11', 'https://ui-avatars.com/api/?name=Dennis+Wehner+PhD&background=2931ba&color=ffffff&size=150', 1, '1'),
-(58, 'Katelyn Streich II', 'reta57@gmail.com', NULL, '$2y$12$RyydRHx.Bja.ysD5ExRLk.iJG.QijF53Y/lLGiLZuS65q9aedTlG2', NULL, NULL, NULL, NULL, '2024-12-02 17:32:11', '2024-12-02 17:32:11', 'Doctor', NULL, 0, '2024-12-02 17:32:11', 'https://ui-avatars.com/api/?name=Katelyn+Streich+II&background=d8c8fd&color=000000&size=150', 1, '1'),
-(59, 'Vallie Simonis', 'alfonzo.mclaughlin@gmail.com', NULL, '$2y$12$QVgzJsIENvi7QnDHgq9G6upuwIkkNrn0vL70QLHKR47JODESf85We', NULL, NULL, NULL, NULL, '2024-12-02 17:32:11', '2024-12-02 17:32:11', 'Doctor', NULL, 0, '2024-12-02 17:32:11', 'https://ui-avatars.com/api/?name=Vallie+Simonis&background=e2e44c&color=000000&size=150', 1, '1'),
-(60, 'Mr. Ali Schmidt', 'dstanton@hotmail.com', NULL, '$2y$12$mZ.lQQdJgmPv6lC2TIAipuSasZfQm4ZsGNHLcUm7oZczv1KpF5CMa', NULL, NULL, NULL, NULL, '2024-12-02 17:32:12', '2024-12-02 17:32:12', 'Doctor', NULL, 0, '2024-12-02 17:32:12', 'https://ui-avatars.com/api/?name=Mr.+Ali+Schmidt&background=82fdd6&color=000000&size=150', 1, '1'),
-(61, 'Jordon Lind', 'vernie.wehner@stoltenberg.com', NULL, '$2y$12$.P1iAJRz2tEbM0ggkZZdMOovhOjUagTqqbTDHndTiO5IMaWSuBkH.', NULL, NULL, NULL, NULL, '2024-12-02 17:32:12', '2024-12-02 17:32:12', 'Doctor', NULL, 0, '2024-12-02 17:32:12', 'https://ui-avatars.com/api/?name=Jordon+Lind&background=d2cf52&color=000000&size=150', 1, '1'),
-(62, 'Flo Hauck', 'skuphal@hotmail.com', NULL, '$2y$12$Ha7v5eBlXN2iHgUNTxHFp.bJgRohC72oZn0KWN8TzqxBYtnlQ4U1G', NULL, NULL, NULL, NULL, '2024-12-02 17:32:12', '2024-12-02 17:32:12', 'Doctor', NULL, 0, '2024-12-02 17:32:12', 'https://ui-avatars.com/api/?name=Flo+Hauck&background=e1c468&color=000000&size=150', 1, '1'),
-(63, 'Keaton Parisian V', 'runte.elyse@yahoo.com', NULL, '$2y$12$FCS2.ItU57l.bOD6.Brv.O6aPTaiqSlJ/MI9wwspbPAxjMfFUll2q', NULL, NULL, NULL, NULL, '2024-12-02 17:32:12', '2024-12-02 17:32:12', 'Doctor', NULL, 0, '2024-12-02 17:32:12', 'https://ui-avatars.com/api/?name=Keaton+Parisian+V&background=bf79cc&color=000000&size=150', 1, '1'),
-(64, 'Orion Beer', 'doyle.jewell@koch.com', NULL, '$2y$12$MXC1IWjmF6EmsS7tBUGHa.Kk7ua2iqPx9DxTiMWRIN0QbJTslKtoO', NULL, NULL, NULL, NULL, '2024-12-02 17:32:12', '2024-12-02 17:32:12', 'Doctor', NULL, 0, '2024-12-02 17:32:12', 'https://ui-avatars.com/api/?name=Orion+Beer&background=810250&color=ffffff&size=150', 1, '1'),
-(65, 'Mr. Steve Hane', 'kessler.amina@considine.com', NULL, '$2y$12$kqjR.avdixwI0AwG7EYhLePMcewYZyyHqnDpAW8RsW4Z6x9NhrWXO', NULL, NULL, NULL, NULL, '2024-12-02 17:32:13', '2024-12-02 17:32:13', 'Doctor', NULL, 0, '2024-12-02 17:32:13', 'https://ui-avatars.com/api/?name=Mr.+Steve+Hane&background=8a04cd&color=ffffff&size=150', 1, '1'),
-(66, 'Samson Hane IV', 'nicolas.berry@hotmail.com', NULL, '$2y$12$fq3T.NBNlWEMA42PvhCfJ.4.P1eimB2OH8Mhpj1bWTmPaRixdqF6W', NULL, NULL, NULL, NULL, '2024-12-02 17:32:13', '2024-12-02 17:32:13', 'Doctor', NULL, 0, '2024-12-02 17:32:13', 'https://ui-avatars.com/api/?name=Samson+Hane+IV&background=f98d4f&color=000000&size=150', 1, '1');
+INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`, `remember_token`, `created_at`, `updated_at`, `access_type`, `mobile_number`, `login_count`, `last_login_at`, `user_image`, `status`, `is_first_login`, `is_outsider`) VALUES
+(1, 'Pranab Karmakar', 'admin@gmail.com', NULL, '$2y$12$vOOotr9uG2G3bR6SvyxMAuOVd9UwDda6fW4HEoCz.jd4QpAsDgNY6', NULL, NULL, NULL, 'IFcCqrStIga8RqEj18JWJIyuzuJQOJJjPbURWZ0VD1qOrfBNyT3GD5QVHYTe', NULL, '2025-03-18 18:27:34', 'admin', NULL, 48, '2025-03-23 12:19:37', 'https://ui-avatars.com/api/?name=Pranab+Karmakar&background=2ff8ff&color=000000&size=150', 1, '0', 0),
+(2, 'Balaji Diagnostic Centre Halisahar Unit 2', 'balajihalisahar@gmail.com', NULL, '$2y$12$Vrbwc.xvu8ToXUGmySVImeVcs1EXj1i8UUOpvSTgAIM1eXXpjCAOa', NULL, NULL, NULL, NULL, '2024-10-02 17:47:27', '2025-02-24 03:39:53', 'user', NULL, 0, '2025-02-24 03:39:53', 'https://ui-avatars.com/api/?name=balaji+diagnostic+centre+halisahar&background=fc7a60&color=000000&size=150', 1, '1', 0),
+(3, 'Naihati Diagnostics', 'naihati_diagnostics@gmail.com', NULL, '$2y$12$Vrbwc.xvu8ToXUGmySVImeVcs1EXj1i8UUOpvSTgAIM1eXXpjCAOa', NULL, NULL, NULL, NULL, '2024-10-05 14:17:09', '2024-11-22 19:16:36', 'user', NULL, 0, '2024-11-22 19:16:36', 'https://ui-avatars.com/api/?name=Naihati+Diagnostics&background=fb5350&color=000000&size=150', 0, '1', 0),
+(4, 'Rohit Saha', 'rohit_saha@gmail.com', NULL, '$2y$12$HhaSFwyMgMJgZGGndth17eYBNaaw0PJBv006VL.exL7HOVU93EEym', NULL, NULL, NULL, 'ltnTG2clLHyq4qKA8FUEv1vLe5IIH4TmXOC6lMRfRKLIuqgOK6F2TAhaVR80', '2024-10-23 19:18:36', '2025-03-16 17:29:14', 'Manager', '9865-321-100', 16, '2025-03-23 12:41:03', 'https://ui-avatars.com/api/?name=Rohit+Saha&background=0cc88d&color=000000&size=150', 1, '0', 0),
+(5, 'Poulomi Biswas', 'pbiswas@gmail.com', NULL, '$2y$12$XHxS7NuVzzzFu3kvE3Gn3.bi1jZVUQJdZP/WwxrjyDZwagquY0icy', NULL, NULL, NULL, '2Cr6amg3fP8lDo3yCXGaJ801EOXmUKoBcSSSailP506qmXpLLdHRZRfrQht9', '2024-10-23 19:23:42', '2025-03-15 12:20:39', 'Quality Controller', '9632-512-022', 9, '2025-03-15 12:20:44', 'https://ui-avatars.com/api/?name=Poulomi+Biswas&background=b96ed4&color=000000&size=150', 1, '0', 1),
+(6, 'Rahul Sinha', 'rsinha@gmail.com', NULL, '$2y$12$S6N3sQu1/JEmFeaRwF1B8OHAjoSokiRy8qMccXQVKakJhebiM.FP.', NULL, NULL, NULL, 'QSrJuN2nKArfuhXBxiwsqZXxpjumNkDK2YhFvJh5QSOmBpALxNotFThXGjir', '2024-11-03 17:57:09', '2025-03-15 12:20:48', 'Quality Controller', '9656-325-658', 5, '2025-03-15 12:20:52', 'https://ui-avatars.com/api/?name=Rahul+Sinha&background=c7074f&color=ffffff&size=150', 1, '0', 0),
+(7, 'John Doe', 'johnd@gmail.com', NULL, '$2y$12$Xo6ZWNYj9ff2mKl/SJBS6u6Dd8FKp9pCCrHpwwJ0H7.m5HmAcgXEO', NULL, NULL, NULL, 'x9rilrEWwrzCTUZLSwTJN057MACRFo2GKxQQVd4Z3saMzV7JkwUgAt0KyXs5', '2024-11-06 17:23:49', '2025-03-09 11:50:36', 'Manager', '9656-325-632', 3, '2025-03-09 11:53:27', 'https://ui-avatars.com/api/?name=John+Doe&background=8c2314&color=ffffff&size=150', 1, '0', 0),
+(11, 'Rajib Biswas.', 'rbiswas@gmail.com', NULL, '$2y$12$mqlcDjWhSFMYWjnVCAAa6OyGSdEmYgWmlaPvh.Vq6GJppGQ40v4CG', NULL, NULL, NULL, 'bYiXGg9HPtG81edeSQkywmsKK17Dn58cY0Pc9jbGSsr38eUQHZKpQK5ZKmcm', '2024-11-11 04:59:24', '2024-11-17 19:49:42', 'Doctor', NULL, 1, '2024-12-02 16:59:27', 'https://ui-avatars.com/api/?name=Rajib+Biswas&background=8dcb49&color=000000&size=150', 1, '0', 0),
+(14, 'Dipankar Bannerjee', 'drbannerjee@gmail.com', NULL, '$2y$12$j/DJwWoXo8C5lpBDL2aTQOL.wdtaDcoAHrngaiAsdE1mBKOM1COxq', NULL, NULL, NULL, NULL, '2024-11-11 06:00:04', '2024-11-16 18:24:36', 'Doctor', NULL, 0, '2024-12-02 16:59:34', 'https://ui-avatars.com/api/?name=Dipankar+Bannerjee&background=a0b754&color=000000&size=150', 1, '1', 0),
+(15, 'New Rapoo', 'rapoo@gmail.com', NULL, '$2y$12$Y78DhHObBFktEUfvAKNfGuHciyFMbg/JAhDThXh0Cwb2T0lh7q4G2', NULL, NULL, NULL, NULL, '2024-12-02 17:03:00', '2025-02-09 17:18:49', 'Assigner', '9865-666-888', 0, '2025-02-09 17:18:49', 'https://ui-avatars.com/api/?name=Sunil+Kumar&background=976557&color=ffffff&size=150', 1, '1', 0),
+(16, 'Aapto Biswas', 'aapto@gmail.com', NULL, '$2y$12$pe2GjXKGdfVQI538P5SXKOTmKGPBo0fivDjg/csbpI/oQXNFdVeX.', NULL, NULL, NULL, NULL, '2024-12-02 17:03:53', '2025-02-08 19:02:09', 'Doctor', NULL, 0, '2025-02-08 19:02:09', 'https://ui-avatars.com/api/?name=Aapto+Biswas&background=c5b68c&color=000000&size=150', 1, '1', 0),
+(17, 'Colt Connelly', 'mlang@gmail.com', NULL, '$2y$12$t4OdDURbHIogo5Xr2NBpcOHOB69JifMzJ8VbSUw/p4TNhHpJulb2e', NULL, NULL, NULL, NULL, '2024-12-02 17:32:02', '2024-12-02 17:32:02', 'Doctor', NULL, 0, '2024-12-02 17:32:02', 'https://ui-avatars.com/api/?name=Colt+Connelly&background=97c6f0&color=000000&size=150', 1, '1', 0),
+(18, 'Rhett Hansen', 'stamm.hassie@bins.org', NULL, '$2y$12$nj8wK7dfirX2FzCNPZTDJeCJFYkEp2IwQxSUTv1E9TXBIgYWhnKIe', NULL, NULL, NULL, NULL, '2024-12-02 17:32:03', '2024-12-02 17:32:03', 'Doctor', NULL, 0, '2024-12-02 17:32:03', 'https://ui-avatars.com/api/?name=Rhett+Hansen&background=59f3d5&color=000000&size=150', 1, '1', 0),
+(19, 'Tate Considine', 'emory77@hotmail.com', NULL, '$2y$12$MD651HRnEUPtHBjXrndfYOavJ8H13ecxUC7Pays8mWdWlWroQVfNi', NULL, NULL, NULL, NULL, '2024-12-02 17:32:03', '2024-12-02 17:32:03', 'Doctor', NULL, 0, '2024-12-02 17:32:03', 'https://ui-avatars.com/api/?name=Tate+Considine&background=71dee7&color=000000&size=150', 1, '1', 0),
+(20, 'Mr. Ibrahim Fisher Jr.', 'gussie34@rohan.com', NULL, '$2y$12$ijlE665yBNiHc25va7dsueR7Uqp/Dp4lP8DIaFEVs0Eqk0a3fcJTm', NULL, NULL, NULL, NULL, '2024-12-02 17:32:03', '2024-12-02 17:32:03', 'Doctor', NULL, 0, '2024-12-02 17:32:03', 'https://ui-avatars.com/api/?name=Mr.+Ibrahim+Fisher+Jr.&background=931103&color=ffffff&size=150', 1, '1', 0),
+(21, 'Madyson Conn', 'ykulas@gmail.com', NULL, '$2y$12$mM660YnmYfEYydHJEAxCQuO2V3j5WWpvu45F99SkQbv9PTCoL9fYG', NULL, NULL, NULL, NULL, '2024-12-02 17:32:03', '2024-12-02 17:32:03', 'Doctor', NULL, 0, '2024-12-02 17:32:03', 'https://ui-avatars.com/api/?name=Madyson+Conn&background=dcfb8d&color=000000&size=150', 1, '1', 0),
+(22, 'Stone Marvin', 'wiza.kaylin@gmail.com', NULL, '$2y$12$OwMCAPkpcopnrpEEhKnsf.SY7K7kVnwGF7rjRkg57LLruy.Jjdz/u', NULL, NULL, NULL, NULL, '2024-12-02 17:32:04', '2024-12-02 17:32:04', 'Doctor', NULL, 0, '2024-12-02 17:32:04', 'https://ui-avatars.com/api/?name=Stone+Marvin&background=c1e77c&color=000000&size=150', 1, '1', 0),
+(23, 'Tristin Koch', 'delbert48@reichert.com', NULL, '$2y$12$egR2vZ0T9LbWMPKciVMWdOh3qxBS/szm9rAR4uWPVWWlRSiHtcoAC', NULL, NULL, NULL, NULL, '2024-12-02 17:32:04', '2024-12-02 17:32:04', 'Doctor', NULL, 0, '2024-12-02 17:32:04', 'https://ui-avatars.com/api/?name=Tristin+Koch&background=17af3a&color=ffffff&size=150', 1, '1', 0),
+(24, 'Laverne Runte DDS', 'lela73@mohr.info', NULL, '$2y$12$tzEB.7B5VFjruw1tSVzbTeIdZ3A.uFa2pDFu9qIHMJlxuz7fFTbny', NULL, NULL, NULL, NULL, '2024-12-02 17:32:04', '2024-12-02 17:32:04', 'Doctor', NULL, 0, '2024-12-02 17:32:04', 'https://ui-avatars.com/api/?name=Laverne+Runte+DDS&background=9c1269&color=ffffff&size=150', 1, '1', 0),
+(25, 'Ms. Emmalee Goodwin II', 'brain32@yahoo.com', NULL, '$2y$12$lDIzmjX5DrHZZn1ls9uylOUob.i0rUnNEdWlmUoPehx9m50PGyaUC', NULL, NULL, NULL, NULL, '2024-12-02 17:32:04', '2024-12-02 17:32:04', 'Doctor', NULL, 0, '2024-12-02 17:32:04', 'https://ui-avatars.com/api/?name=Ms.+Emmalee+Goodwin+II&background=da0747&color=ffffff&size=150', 1, '1', 0),
+(26, 'Prof. Andy Schultz MD', 'gkovacek@yahoo.com', NULL, '$2y$12$8gxjO.CfOpFYdS4KUierD.h5Lm8g1GQgbx9qq8AVUrgMUSjAl9Cm6', NULL, NULL, NULL, NULL, '2024-12-02 17:32:04', '2024-12-02 17:32:04', 'Doctor', NULL, 0, '2024-12-02 17:32:04', 'https://ui-avatars.com/api/?name=Prof.+Andy+Schultz+MD&background=8aaa13&color=000000&size=150', 1, '1', 0),
+(27, 'Dr. Lorena Hintz', 'dakota.emard@gmail.com', NULL, '$2y$12$Rvo8K8pIqu9l6xRQQ0AhrOPmigDqNzeZfQPv67Wm.B3IpxI95MNpe', NULL, NULL, NULL, NULL, '2024-12-02 17:32:05', '2024-12-02 17:32:05', 'Doctor', NULL, 0, '2024-12-02 17:32:05', 'https://ui-avatars.com/api/?name=Dr.+Lorena+Hintz&background=ecac12&color=000000&size=150', 1, '1', 0),
+(28, 'Prof. Irwin Kozey', 'qreichel@gmail.com', NULL, '$2y$12$Hs10011naaogu2JugDnLiu.3LVtAAo4mj.6vj3ff/rdvyeZBVxV/6', NULL, NULL, NULL, NULL, '2024-12-02 17:32:05', '2024-12-02 17:32:05', 'Doctor', NULL, 0, '2024-12-02 17:32:05', 'https://ui-avatars.com/api/?name=Prof.+Irwin+Kozey&background=8a2249&color=ffffff&size=150', 1, '1', 0),
+(29, 'Margret Muller', 'awill@yahoo.com', NULL, '$2y$12$qe1ril2Ih9NjTu93Omv2feZUExDH4ei7rYC7Oa4n9TbcdPjibsjNq', NULL, NULL, NULL, NULL, '2024-12-02 17:32:05', '2024-12-02 17:32:05', 'Doctor', NULL, 0, '2024-12-02 17:32:05', 'https://ui-avatars.com/api/?name=Margret+Muller&background=29e633&color=000000&size=150', 1, '1', 0),
+(30, 'Aurelia Flatley', 'hreichel@yahoo.com', NULL, '$2y$12$Q2yXV8f0TF.6K5PMdrRSyuQvs.8pHTSJbYRNzlOls/dBFyxAZuhda', NULL, NULL, NULL, NULL, '2024-12-02 17:32:05', '2025-02-08 19:01:56', 'Doctor', NULL, 0, '2025-02-08 19:01:56', 'https://ui-avatars.com/api/?name=Aurelia+Flatley&background=ddebeb&color=000000&size=150', 1, '1', 0),
+(31, 'Mrs. Lilian Miller Sr.', 'twhite@oreilly.org', NULL, '$2y$12$nX1ly7QGBhs0qGv5ywEdv.9WdJ71rVtB6i1vZpEz9on8pJyLENeza', NULL, NULL, NULL, NULL, '2024-12-02 17:32:05', '2024-12-02 17:32:05', 'Doctor', NULL, 0, '2024-12-02 17:32:05', 'https://ui-avatars.com/api/?name=Mrs.+Lilian+Miller+Sr.&background=be3974&color=ffffff&size=150', 1, '1', 0),
+(32, 'Chyna Erdman', 'cooper.reynolds@gmail.com', NULL, '$2y$12$eGTeXgZWP0LDf3/lUKuxN.5K9nGDMl.kEtavikrF8Ntg2leuszav2', NULL, NULL, NULL, NULL, '2024-12-02 17:32:06', '2024-12-02 17:32:06', 'Doctor', NULL, 0, '2024-12-02 17:32:06', 'https://ui-avatars.com/api/?name=Chyna+Erdman&background=6cc600&color=000000&size=150', 1, '1', 0),
+(33, 'Janiya Ullrich', 'conn.eino@zulauf.com', NULL, '$2y$12$Ihs9tzobOM0Zoqi2OHI1luZQFNTVu62T8N98m3t52OLgJJI4asQAy', NULL, NULL, NULL, NULL, '2024-12-02 17:32:06', '2024-12-02 17:32:06', 'Doctor', NULL, 0, '2024-12-02 17:32:06', 'https://ui-avatars.com/api/?name=Janiya+Ullrich&background=94e481&color=000000&size=150', 1, '1', 0),
+(34, 'Celestine Rice', 'kiehn.johathan@muller.com', NULL, '$2y$12$m8GEej/gmm7YcVdfrpI0tu05TA/4tGmqDkE2TWeVfj4cK3Ncc5cRG', NULL, NULL, NULL, NULL, '2024-12-02 17:32:06', '2024-12-02 17:32:06', 'Doctor', NULL, 0, '2024-12-02 17:32:06', 'https://ui-avatars.com/api/?name=Celestine+Rice&background=02db70&color=000000&size=150', 1, '1', 0),
+(35, 'Mr. Jovanny Stokes II', 'vswift@greenholt.info', NULL, '$2y$12$U8GIFR8LAc5SOVVHw4Hg4u4cDtTS8WsrrorbHy0ogypBQk/eLoTbO', NULL, NULL, NULL, NULL, '2024-12-02 17:32:06', '2024-12-02 17:32:06', 'Doctor', NULL, 0, '2024-12-02 17:32:06', 'https://ui-avatars.com/api/?name=Mr.+Jovanny+Stokes+II&background=37dd93&color=000000&size=150', 1, '1', 0),
+(36, 'Cassandra Gislason', 'gladys93@mccullough.com', NULL, '$2y$12$gRexitaGJGT9OsrKmDOoduE2cIlAiazawxRFrbTx2l7rBEeF9tBZ2', NULL, NULL, NULL, NULL, '2024-12-02 17:32:07', '2024-12-02 17:32:07', 'Doctor', NULL, 0, '2024-12-02 17:32:07', 'https://ui-avatars.com/api/?name=Cassandra+Gislason&background=9f69fb&color=000000&size=150', 1, '1', 0),
+(37, 'Maynard Stiedemann V', 'kuhn.lincoln@fadel.biz', NULL, '$2y$12$iebEG7QUEPudZhmoOzb4vOyxyOgLR.hWjn/7yfuQhp7ywKVs7fTIW', NULL, NULL, NULL, NULL, '2024-12-02 17:32:07', '2024-12-02 17:32:07', 'Doctor', NULL, 0, '2024-12-02 17:32:07', 'https://ui-avatars.com/api/?name=Maynard+Stiedemann+V&background=81f324&color=000000&size=150', 1, '1', 0),
+(38, 'Neil Reichel', 'hdurgan@gmail.com', NULL, '$2y$12$E8VZJwQ4bQToI6Spsz5FLOlqhHEuIDulYKIEIQi7p9xdmiBs4dH3K', NULL, NULL, NULL, NULL, '2024-12-02 17:32:07', '2024-12-02 17:32:07', 'Doctor', NULL, 0, '2024-12-02 17:32:07', 'https://ui-avatars.com/api/?name=Neil+Reichel&background=e5b0d1&color=000000&size=150', 1, '1', 0),
+(39, 'Dangelo Jerde DDS', 'hkuvalis@koch.com', NULL, '$2y$12$h4Qte9t9dc2hxPx7gL/u/e62Nw3Ef9lk5RTuEzEH63KzyK8bdQbCq', NULL, NULL, NULL, NULL, '2024-12-02 17:32:07', '2024-12-02 17:32:07', 'Doctor', NULL, 0, '2024-12-02 17:32:07', 'https://ui-avatars.com/api/?name=Dangelo+Jerde+DDS&background=7d053b&color=ffffff&size=150', 1, '1', 0),
+(40, 'Eldora Towne', 'darby18@blick.biz', NULL, '$2y$12$OctQd5PyapL.jQFy9WwQ/.UKrWfomVSL65KoiE008Vhmi.lpGpKou', NULL, NULL, NULL, NULL, '2024-12-02 17:32:07', '2024-12-02 17:32:07', 'Doctor', NULL, 0, '2024-12-02 17:32:07', 'https://ui-avatars.com/api/?name=Eldora+Towne&background=a75f68&color=ffffff&size=150', 1, '1', 0),
+(41, 'Chelsea Torp', 'lera.balistreri@conroy.net', NULL, '$2y$12$7ypFPGuyGsHDWO6KbkI67eE24FQW8EiPz0SjE.uwo5dgg0PY6Q782', NULL, NULL, NULL, NULL, '2024-12-02 17:32:08', '2024-12-02 17:32:08', 'Doctor', NULL, 0, '2024-12-02 17:32:08', 'https://ui-avatars.com/api/?name=Chelsea+Torp&background=978753&color=000000&size=150', 1, '1', 0),
+(42, 'Billie Schiller', 'walsh.fae@little.net', NULL, '$2y$12$wqNl7Fq/4ZXiY6YVagmFCeHNvgsFe5GKsd/goDbJcW2BQC6NMyfZ6', NULL, NULL, NULL, NULL, '2024-12-02 17:32:08', '2024-12-02 17:32:08', 'Doctor', NULL, 0, '2024-12-02 17:32:08', 'https://ui-avatars.com/api/?name=Billie+Schiller&background=80d241&color=000000&size=150', 1, '1', 0),
+(43, 'Mia Pouros', 'ledner.breana@price.com', NULL, '$2y$12$kC1ujH8DQ7GIHfSQ2HO4nuLWIqubfYVBotkgM7thoT4s4P4TIBr4q', NULL, NULL, NULL, NULL, '2024-12-02 17:32:08', '2024-12-02 17:32:08', 'Doctor', NULL, 0, '2024-12-02 17:32:08', 'https://ui-avatars.com/api/?name=Mia+Pouros&background=3a9d17&color=ffffff&size=150', 1, '1', 0),
+(44, 'Lucy Heathcote MD', 'roma45@moore.com', NULL, '$2y$12$g/4phXXnNikQz4.x4g6q2.DBCjlLbehEA6I2.ekctytVAOPBwlOX2', NULL, NULL, NULL, NULL, '2024-12-02 17:32:08', '2024-12-02 17:32:08', 'Doctor', NULL, 0, '2024-12-02 17:32:08', 'https://ui-avatars.com/api/?name=Lucy+Heathcote+MD&background=85800e&color=ffffff&size=150', 1, '1', 0),
+(45, 'Jayda Legros', 'kris98@leffler.biz', NULL, '$2y$12$K6C/0lRCUwbVn/cbeL2O9.7tgts0ZIHICLJLw0Rnr3LciZQTsTmvm', NULL, NULL, NULL, NULL, '2024-12-02 17:32:08', '2024-12-02 17:32:08', 'Doctor', NULL, 0, '2024-12-02 17:32:08', 'https://ui-avatars.com/api/?name=Jayda+Legros&background=849c96&color=000000&size=150', 1, '1', 0),
+(46, 'Dr. Vito Parker', 'marcel.johns@nader.com', NULL, '$2y$12$0j0eAd5xk31bk0Z.W4jtQuGbkuLSP3gKzdk1AWKJ9Igsl4Arpxeee', NULL, NULL, NULL, NULL, '2024-12-02 17:32:09', '2024-12-02 17:32:09', 'Doctor', NULL, 0, '2024-12-02 17:32:09', 'https://ui-avatars.com/api/?name=Dr.+Vito+Parker&background=893ef2&color=ffffff&size=150', 1, '1', 0),
+(47, 'Maxine Mann', 'streich.paris@king.org', NULL, '$2y$12$ye/QFX8qddEGWROVPS1Sfu5twbGb1f.BkAwarQRId2HS47iG65VIq', NULL, NULL, NULL, NULL, '2024-12-02 17:32:09', '2024-12-02 17:32:09', 'Doctor', NULL, 0, '2024-12-02 17:32:09', 'https://ui-avatars.com/api/?name=Maxine+Mann&background=3ad991&color=000000&size=150', 1, '1', 0),
+(48, 'Dr. Simeon Cummings MD', 'yschimmel@paucek.biz', NULL, '$2y$12$H5Ll/Eceyheyrtp1nEMEqOEeoIbDtrirCnsyysZevVBcBWAFOQlmS', NULL, NULL, NULL, NULL, '2024-12-02 17:32:09', '2024-12-02 17:32:09', 'Doctor', NULL, 0, '2024-12-02 17:32:09', 'https://ui-avatars.com/api/?name=Dr.+Simeon+Cummings+MD&background=76d5ae&color=000000&size=150', 1, '1', 0),
+(49, 'Miss Cortney Barrows V', 'queen.lesch@walker.com', NULL, '$2y$12$fW9R1VE3Kq/PqBodTmkrwufS5FnUTvoFtyX59scFGsdho7y7MPQCC', NULL, NULL, NULL, NULL, '2024-12-02 17:32:09', '2024-12-02 17:32:09', 'Doctor', NULL, 0, '2024-12-02 17:32:09', 'https://ui-avatars.com/api/?name=Miss+Cortney+Barrows+V&background=028cfd&color=ffffff&size=150', 1, '1', 0),
+(50, 'Dr. Meredith Adams V', 'bvon@carroll.biz', NULL, '$2y$12$ZpRbIW5VHFsXFddTydjKNOwUzjIpR0ccGilYkTiXj/ci7.v5Bqfse', NULL, NULL, NULL, NULL, '2024-12-02 17:32:09', '2024-12-02 17:32:09', 'Doctor', NULL, 0, '2024-12-02 17:32:09', 'https://ui-avatars.com/api/?name=Dr.+Meredith+Adams+V&background=74b147&color=000000&size=150', 1, '1', 0),
+(51, 'Leonel Hirthe', 'conn.daisy@kuvalis.com', NULL, '$2y$12$bbrCGOuzVo3kcXPfFe/5HO3jdQ.E9kLKimmUuR7M.F4RFCj12ylAe', NULL, NULL, NULL, NULL, '2024-12-02 17:32:10', '2024-12-02 17:32:10', 'Doctor', NULL, 0, '2024-12-02 17:32:10', 'https://ui-avatars.com/api/?name=Leonel+Hirthe&background=f156e6&color=000000&size=150', 1, '1', 0),
+(52, 'Myrtice Bednar', 'dariana.huels@hotmail.com', NULL, '$2y$12$cyIOXBGpvA/FrGvMkmP/x.6LQ1vr4Xc2mTlFij7HZdFN9mKs1jmlm', NULL, NULL, NULL, NULL, '2024-12-02 17:32:10', '2024-12-02 17:32:10', 'Doctor', NULL, 0, '2024-12-02 17:32:10', 'https://ui-avatars.com/api/?name=Myrtice+Bednar&background=118dff&color=ffffff&size=150', 1, '1', 0),
+(53, 'Freda Waters', 'krunte@hotmail.com', NULL, '$2y$12$TjnsG7Kwnp8eBU.dHh00zunRa.crD2IMUqFtPkxaKAB.BV0pmSrhS', NULL, NULL, NULL, NULL, '2024-12-02 17:32:10', '2024-12-02 17:32:10', 'Doctor', NULL, 0, '2024-12-02 17:32:10', 'https://ui-avatars.com/api/?name=Freda+Waters&background=316f32&color=ffffff&size=150', 1, '1', 0),
+(54, 'Rhea Luettgen', 'danielle55@kling.info', NULL, '$2y$12$B52vudzGTyplOkmnQcnUXOet7iqxUbtK.H7vTt5RD88itAcHEmkq.', NULL, NULL, NULL, NULL, '2024-12-02 17:32:10', '2024-12-02 17:32:10', 'Doctor', NULL, 0, '2024-12-02 17:32:10', 'https://ui-avatars.com/api/?name=Rhea+Luettgen&background=19e0eb&color=000000&size=150', 1, '1', 0),
+(55, 'Lolita Rath', 'daron.morar@mayert.biz', NULL, '$2y$12$TuB5LueuoCa5WEi8mmkR6eu0OSDxdGyqUF7GaXFXwjIggutiACBfO', NULL, NULL, NULL, NULL, '2024-12-02 17:32:11', '2024-12-02 17:32:11', 'Doctor', NULL, 0, '2024-12-02 17:32:11', 'https://ui-avatars.com/api/?name=Lolita+Rath&background=cfb6a5&color=000000&size=150', 1, '1', 0),
+(56, 'Christian Stamm', 'alfreda54@wiza.net', NULL, '$2y$12$MLc37NSePsVjbGTnAl3exuXEwPYoE1X7W9gZHSGauuehgwjmYyuw2', NULL, NULL, NULL, NULL, '2024-12-02 17:32:11', '2024-12-02 17:32:11', 'Doctor', NULL, 0, '2024-12-02 17:32:11', 'https://ui-avatars.com/api/?name=Christian+Stamm&background=f6a670&color=000000&size=150', 1, '1', 0),
+(57, 'Dennis Wehner PhD', 'jamaal.konopelski@strosin.com', NULL, '$2y$12$zvYtSuQZeU1nZQtudnssz.ucFurw7TMC02ZPbDEO1.nMTSkK6EzEy', NULL, NULL, NULL, NULL, '2024-12-02 17:32:11', '2024-12-02 17:32:11', 'Doctor', NULL, 0, '2024-12-02 17:32:11', 'https://ui-avatars.com/api/?name=Dennis+Wehner+PhD&background=2931ba&color=ffffff&size=150', 1, '1', 0),
+(58, 'Katelyn Streich II', 'reta57@gmail.com', NULL, '$2y$12$RyydRHx.Bja.ysD5ExRLk.iJG.QijF53Y/lLGiLZuS65q9aedTlG2', NULL, NULL, NULL, NULL, '2024-12-02 17:32:11', '2024-12-02 17:32:11', 'Doctor', NULL, 0, '2024-12-02 17:32:11', 'https://ui-avatars.com/api/?name=Katelyn+Streich+II&background=d8c8fd&color=000000&size=150', 1, '1', 0),
+(59, 'Vallie Simonis', 'alfonzo.mclaughlin@gmail.com', NULL, '$2y$12$QVgzJsIENvi7QnDHgq9G6upuwIkkNrn0vL70QLHKR47JODESf85We', NULL, NULL, NULL, NULL, '2024-12-02 17:32:11', '2024-12-02 17:32:11', 'Doctor', NULL, 0, '2024-12-02 17:32:11', 'https://ui-avatars.com/api/?name=Vallie+Simonis&background=e2e44c&color=000000&size=150', 1, '1', 0),
+(60, 'Mr. Ali Schmidt', 'dstanton@hotmail.com', NULL, '$2y$12$mZ.lQQdJgmPv6lC2TIAipuSasZfQm4ZsGNHLcUm7oZczv1KpF5CMa', NULL, NULL, NULL, NULL, '2024-12-02 17:32:12', '2024-12-02 17:32:12', 'Doctor', NULL, 0, '2024-12-02 17:32:12', 'https://ui-avatars.com/api/?name=Mr.+Ali+Schmidt&background=82fdd6&color=000000&size=150', 1, '1', 0),
+(61, 'Jordon Lind', 'vernie.wehner@stoltenberg.com', NULL, '$2y$12$.P1iAJRz2tEbM0ggkZZdMOovhOjUagTqqbTDHndTiO5IMaWSuBkH.', NULL, NULL, NULL, NULL, '2024-12-02 17:32:12', '2024-12-02 17:32:12', 'Doctor', NULL, 0, '2024-12-02 17:32:12', 'https://ui-avatars.com/api/?name=Jordon+Lind&background=d2cf52&color=000000&size=150', 1, '1', 0),
+(62, 'Flo Hauck', 'skuphal@hotmail.com', NULL, '$2y$12$Ha7v5eBlXN2iHgUNTxHFp.bJgRohC72oZn0KWN8TzqxBYtnlQ4U1G', NULL, NULL, NULL, NULL, '2024-12-02 17:32:12', '2024-12-02 17:32:12', 'Doctor', NULL, 0, '2024-12-02 17:32:12', 'https://ui-avatars.com/api/?name=Flo+Hauck&background=e1c468&color=000000&size=150', 1, '1', 0),
+(63, 'Keaton Parisian V', 'runte.elyse@yahoo.com', NULL, '$2y$12$FCS2.ItU57l.bOD6.Brv.O6aPTaiqSlJ/MI9wwspbPAxjMfFUll2q', NULL, NULL, NULL, NULL, '2024-12-02 17:32:12', '2024-12-02 17:32:12', 'Doctor', NULL, 0, '2024-12-02 17:32:12', 'https://ui-avatars.com/api/?name=Keaton+Parisian+V&background=bf79cc&color=000000&size=150', 1, '1', 0),
+(64, 'Orion Beer', 'doyle.jewell@koch.com', NULL, '$2y$12$MXC1IWjmF6EmsS7tBUGHa.Kk7ua2iqPx9DxTiMWRIN0QbJTslKtoO', NULL, NULL, NULL, NULL, '2024-12-02 17:32:12', '2024-12-02 17:32:12', 'Doctor', NULL, 0, '2024-12-02 17:32:12', 'https://ui-avatars.com/api/?name=Orion+Beer&background=810250&color=ffffff&size=150', 1, '1', 0),
+(65, 'Mr. Steve Hane', 'kessler.amina@considine.com', NULL, '$2y$12$kqjR.avdixwI0AwG7EYhLePMcewYZyyHqnDpAW8RsW4Z6x9NhrWXO', NULL, NULL, NULL, NULL, '2024-12-02 17:32:13', '2024-12-02 17:32:13', 'Doctor', NULL, 0, '2024-12-02 17:32:13', 'https://ui-avatars.com/api/?name=Mr.+Steve+Hane&background=8a04cd&color=ffffff&size=150', 1, '1', 0),
+(66, 'Samson Hane IV', 'nicolas.berry@hotmail.com', NULL, '$2y$12$fq3T.NBNlWEMA42PvhCfJ.4.P1eimB2OH8Mhpj1bWTmPaRixdqF6W', NULL, NULL, NULL, NULL, '2024-12-02 17:32:13', '2024-12-02 17:32:13', 'Doctor', NULL, 0, '2024-12-02 17:32:13', 'https://ui-avatars.com/api/?name=Samson+Hane+IV&background=f98d4f&color=000000&size=150', 1, '1', 0),
+(70, 'Naihati Pathology', 'naihati_pathology@gmail.com', NULL, '$2y$12$8RtdX8AL/XjirhzCdE/y2.QgDQkUJWVTLIbQgVBESZ3/rBB5F22n6', NULL, NULL, NULL, NULL, '2025-02-08 18:46:12', '2025-02-08 18:46:12', 'Laboratory', NULL, 0, '2025-02-08 18:46:12', 'https://ui-avatars.com/api/?name=Naihati+Pathology&background=20bd7b&color=000000&size=150', 1, '1', 0),
+(71, 'Soumitra Sarkar', 'ss@gmail.com', NULL, '$2y$12$HhaSFwyMgMJgZGGndth17eYBNaaw0PJBv006VL.exL7HOVU93EEym', NULL, NULL, NULL, '6NrVabayqIeWemeLphWguaCFAIvB0j74Jxy4QlfIVTQxXNYf8KxpskMuNXUt', '2025-03-09 11:53:04', '2025-03-16 17:28:50', 'Assigner', '9658-996-366', 2, '2025-03-16 17:28:50', 'https://ui-avatars.com/api/?name=Soumitra+Sarkar&background=a5acc5&color=000000&size=150', 1, '0', 0),
+(72, 'Jamil Sekh', 'sk@gmail.com', NULL, '$2y$12$iE9JDyDLdFIi.Z6pFf4V2.6APfbS20H7qkka.s9ZbEA5ID0vas7Pa', NULL, NULL, NULL, 'WU2GY08N4yHXO4Ru8mkN5X3Or6pkeCEF8tsWMVWaPHFtek3KOyQSzOltYV5x', '2025-03-18 18:28:19', '2025-03-18 19:09:44', 'Assigner', '9865-330-256', 16, '2025-03-22 06:03:22', 'https://ui-avatars.com/api/?name=Jamil+Sekh&background=219a42&color=ffffff&size=150', 1, '0', 0);
 
 -- --------------------------------------------------------
 
@@ -1222,6 +1654,20 @@ ALTER TABLE `cache`
 --
 ALTER TABLE `cache_locks`
   ADD PRIMARY KEY (`key`);
+
+--
+-- Indexes for table `case_studies`
+--
+ALTER TABLE `case_studies`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `case_studies_laboratory_id_foreign` (`laboratory_id`),
+  ADD KEY `case_studies_patient_id_foreign` (`patient_id`),
+  ADD KEY `case_studies_doctor_id_foreign` (`doctor_id`),
+  ADD KEY `case_studies_qc_id_foreign` (`qc_id`),
+  ADD KEY `case_studies_assigner_id_foreign` (`assigner_id`),
+  ADD KEY `case_studies_study_status_id_foreign` (`study_status_id`),
+  ADD KEY `case_studies_modality_id_foreign` (`modality_id`),
+  ADD KEY `case_studies_added_by_foreign` (`added_by`);
 
 --
 -- Indexes for table `doctors`
@@ -1319,6 +1765,14 @@ ALTER TABLE `laboratory_logs`
   ADD KEY `laboratory_logs_user_id_foreign` (`user_id`);
 
 --
+-- Indexes for table `lab_black_listed_doctors`
+--
+ALTER TABLE `lab_black_listed_doctors`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `lab_black_listed_doctors_laboratorie_id_foreign` (`laboratorie_id`),
+  ADD KEY `lab_black_listed_doctors_doctor_id_foreign` (`doctor_id`);
+
+--
 -- Indexes for table `lab_form_field_values`
 --
 ALTER TABLE `lab_form_field_values`
@@ -1326,6 +1780,23 @@ ALTER TABLE `lab_form_field_values`
   ADD KEY `lab_form_field_values_form_field_id_foreign` (`form_field_id`),
   ADD KEY `lab_form_field_values_laboratorie_id_foreign` (`laboratorie_id`),
   ADD KEY `lab_form_field_values_updated_by_foreign` (`updated_by`);
+
+--
+-- Indexes for table `lab_modalities`
+--
+ALTER TABLE `lab_modalities`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `lab_modalities_laboratory_id_foreign` (`laboratory_id`),
+  ADD KEY `lab_modalities_modality_id_foreign` (`modality_id`);
+
+--
+-- Indexes for table `lab_preferred_doctors`
+--
+ALTER TABLE `lab_preferred_doctors`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `lab_preferred_doctors_laboratorie_id_foreign` (`laboratorie_id`),
+  ADD KEY `lab_preferred_doctors_doctor_id_foreign` (`doctor_id`),
+  ADD KEY `lab_preferred_doctors_modality_id_foreign` (`modality_id`);
 
 --
 -- Indexes for table `login_securities`
@@ -1344,6 +1815,14 @@ ALTER TABLE `migrations`
 --
 ALTER TABLE `modalities`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `modality_study_layouts`
+--
+ALTER TABLE `modality_study_layouts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `modality_study_layouts_study_type_id_foreign` (`study_type_id`),
+  ADD KEY `modality_study_layouts_created_by_foreign` (`created_by`);
 
 --
 -- Indexes for table `oauth_access_tokens`
@@ -1386,6 +1865,13 @@ ALTER TABLE `password_reset_tokens`
   ADD PRIMARY KEY (`email`);
 
 --
+-- Indexes for table `patients`
+--
+ALTER TABLE `patients`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `patients_patient_id_unique` (`patient_id`);
+
+--
 -- Indexes for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
@@ -1417,6 +1903,34 @@ ALTER TABLE `sessions`
   ADD KEY `sessions_last_activity_index` (`last_activity`);
 
 --
+-- Indexes for table `studies`
+--
+ALTER TABLE `studies`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `studies_study_type_id_foreign` (`study_type_id`),
+  ADD KEY `studies_case_study_id_foreign` (`case_study_id`);
+
+--
+-- Indexes for table `study_images`
+--
+ALTER TABLE `study_images`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `study_images_study_id_foreign` (`study_id`);
+
+--
+-- Indexes for table `study_statuses`
+--
+ALTER TABLE `study_statuses`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `study_types`
+--
+ALTER TABLE `study_types`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `study_types_modality_id_foreign` (`modality_id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -1438,13 +1952,19 @@ ALTER TABLE `user_documents`
 -- AUTO_INCREMENT for table `admin_menus`
 --
 ALTER TABLE `admin_menus`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `admin_menu_roles`
 --
 ALTER TABLE `admin_menu_roles`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `case_studies`
+--
+ALTER TABLE `case_studies`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `doctors`
@@ -1456,13 +1976,13 @@ ALTER TABLE `doctors`
 -- AUTO_INCREMENT for table `doctor_logs`
 --
 ALTER TABLE `doctor_logs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `doctor_modalities`
 --
 ALTER TABLE `doctor_modalities`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=164;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=165;
 
 --
 -- AUTO_INCREMENT for table `doc_form_field_values`
@@ -1510,19 +2030,37 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT for table `laboratories`
 --
 ALTER TABLE `laboratories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `laboratory_logs`
 --
 ALTER TABLE `laboratory_logs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+
+--
+-- AUTO_INCREMENT for table `lab_black_listed_doctors`
+--
+ALTER TABLE `lab_black_listed_doctors`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `lab_form_field_values`
 --
 ALTER TABLE `lab_form_field_values`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+
+--
+-- AUTO_INCREMENT for table `lab_modalities`
+--
+ALTER TABLE `lab_modalities`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `lab_preferred_doctors`
+--
+ALTER TABLE `lab_preferred_doctors`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `login_securities`
@@ -1534,13 +2072,19 @@ ALTER TABLE `login_securities`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT for table `modalities`
 --
 ALTER TABLE `modalities`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `modality_study_layouts`
+--
+ALTER TABLE `modality_study_layouts`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `oauth_clients`
@@ -1555,6 +2099,12 @@ ALTER TABLE `oauth_personal_access_clients`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `patients`
+--
+ALTER TABLE `patients`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+
+--
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
@@ -1564,19 +2114,43 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `roles`
 --
 ALTER TABLE `roles`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `role_users`
 --
 ALTER TABLE `role_users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
+
+--
+-- AUTO_INCREMENT for table `studies`
+--
+ALTER TABLE `studies`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `study_images`
+--
+ALTER TABLE `study_images`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `study_statuses`
+--
+ALTER TABLE `study_statuses`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `study_types`
+--
+ALTER TABLE `study_types`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
 
 --
 -- AUTO_INCREMENT for table `user_documents`
@@ -1594,6 +2168,19 @@ ALTER TABLE `user_documents`
 ALTER TABLE `admin_menu_roles`
   ADD CONSTRAINT `admin_menu_roles_admin_menu_id_foreign` FOREIGN KEY (`admin_menu_id`) REFERENCES `admin_menus` (`id`),
   ADD CONSTRAINT `admin_menu_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`);
+
+--
+-- Constraints for table `case_studies`
+--
+ALTER TABLE `case_studies`
+  ADD CONSTRAINT `case_studies_added_by_foreign` FOREIGN KEY (`added_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `case_studies_assigner_id_foreign` FOREIGN KEY (`assigner_id`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `case_studies_doctor_id_foreign` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`),
+  ADD CONSTRAINT `case_studies_laboratory_id_foreign` FOREIGN KEY (`laboratory_id`) REFERENCES `laboratories` (`id`),
+  ADD CONSTRAINT `case_studies_modality_id_foreign` FOREIGN KEY (`modality_id`) REFERENCES `modalities` (`id`),
+  ADD CONSTRAINT `case_studies_patient_id_foreign` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`),
+  ADD CONSTRAINT `case_studies_qc_id_foreign` FOREIGN KEY (`qc_id`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `case_studies_study_status_id_foreign` FOREIGN KEY (`study_status_id`) REFERENCES `study_statuses` (`id`);
 
 --
 -- Constraints for table `doctors`
@@ -1656,6 +2243,13 @@ ALTER TABLE `laboratory_logs`
   ADD CONSTRAINT `laboratory_logs_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
+-- Constraints for table `lab_black_listed_doctors`
+--
+ALTER TABLE `lab_black_listed_doctors`
+  ADD CONSTRAINT `lab_black_listed_doctors_doctor_id_foreign` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`),
+  ADD CONSTRAINT `lab_black_listed_doctors_laboratorie_id_foreign` FOREIGN KEY (`laboratorie_id`) REFERENCES `laboratories` (`id`);
+
+--
 -- Constraints for table `lab_form_field_values`
 --
 ALTER TABLE `lab_form_field_values`
@@ -1664,11 +2258,52 @@ ALTER TABLE `lab_form_field_values`
   ADD CONSTRAINT `lab_form_field_values_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
+-- Constraints for table `lab_modalities`
+--
+ALTER TABLE `lab_modalities`
+  ADD CONSTRAINT `lab_modalities_laboratory_id_foreign` FOREIGN KEY (`laboratory_id`) REFERENCES `laboratories` (`id`),
+  ADD CONSTRAINT `lab_modalities_modality_id_foreign` FOREIGN KEY (`modality_id`) REFERENCES `modalities` (`id`);
+
+--
+-- Constraints for table `lab_preferred_doctors`
+--
+ALTER TABLE `lab_preferred_doctors`
+  ADD CONSTRAINT `lab_preferred_doctors_doctor_id_foreign` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`),
+  ADD CONSTRAINT `lab_preferred_doctors_laboratorie_id_foreign` FOREIGN KEY (`laboratorie_id`) REFERENCES `laboratories` (`id`),
+  ADD CONSTRAINT `lab_preferred_doctors_modality_id_foreign` FOREIGN KEY (`modality_id`) REFERENCES `modalities` (`id`);
+
+--
+-- Constraints for table `modality_study_layouts`
+--
+ALTER TABLE `modality_study_layouts`
+  ADD CONSTRAINT `modality_study_layouts_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `modality_study_layouts_study_type_id_foreign` FOREIGN KEY (`study_type_id`) REFERENCES `study_types` (`id`);
+
+--
 -- Constraints for table `role_users`
 --
 ALTER TABLE `role_users`
   ADD CONSTRAINT `role_users_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`),
   ADD CONSTRAINT `role_users_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `studies`
+--
+ALTER TABLE `studies`
+  ADD CONSTRAINT `studies_case_study_id_foreign` FOREIGN KEY (`case_study_id`) REFERENCES `case_studies` (`id`),
+  ADD CONSTRAINT `studies_study_type_id_foreign` FOREIGN KEY (`study_type_id`) REFERENCES `study_types` (`id`);
+
+--
+-- Constraints for table `study_images`
+--
+ALTER TABLE `study_images`
+  ADD CONSTRAINT `study_images_study_id_foreign` FOREIGN KEY (`study_id`) REFERENCES `studies` (`id`);
+
+--
+-- Constraints for table `study_types`
+--
+ALTER TABLE `study_types`
+  ADD CONSTRAINT `study_types_modality_id_foreign` FOREIGN KEY (`modality_id`) REFERENCES `modalities` (`id`);
 
 --
 -- Constraints for table `user_documents`

@@ -284,11 +284,36 @@
                     <div class="col-12">
                         <div class="card card-purple">
                             <div class="card-header">
-                                <h3 class="card-title" style="color: #fff;">View {{$pageName}} Data</h3>
-                                <button type="button" id="add_case_study_btn" class="btn bg-gradient-success float-right btn-sm" data-toggle="modal" data-target="#add-case-study-modal">Add {{$pageName}}</button>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h3 class="card-title" style="color: #fff;">View {{$pageName}} Data</h3>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="input-group">
+                                            <select id="centre" name="centre" class="form-control select2" style="width: 100%;">
+                                                <option value="">All Centres</option>
+                                                @foreach($Labrotories as $Labrotory)
+                                                    <option value="{{$Labrotory->id}}">{{$Labrotory->lab_name}}</option>
+                                                @endforeach
+                                            </select>
+                                            <input type="hidden" id="start_date" name="start_date" value="{{ Carbon\Carbon::now()->format('Y-m-d') }}">
+                                            <input type="hidden" id="end_date" name="end_date" value="{{ Carbon\Carbon::now()->format('Y-m-d') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="input-group">
+                                            <input type="text" id="daterange" class="form-control daterange" data-target="#datepicker"/>
+                                            <button style="margin-left: 10px;" type="button" id="search_btn" name="search_btn" class="btn bg-gradient-orange float-right btn-sm">Search</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" id="add_case_study_btn" class="btn bg-gradient-success float-right btn-sm" data-toggle="modal" data-target="#add-case-study-modal">Add {{$pageName}}</button>
+                                    </div>
+                                
+                                </div>
                             </div>
                             <!-- /.card-header -->
-                            <div class="card-body">
+                            <div class="card-body" id="main-card-body">
                                 <table id="study_table" class="table table-bordered table-hover">
                                     <thead>
                                         <tr>
@@ -329,9 +354,21 @@
                                                 <td>{{$caseStudy->case_study_id}}</td>
                                                 <td>{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('jS M Y, g:i a') }}</td>
                                                 <td>
-                                                    {{$caseStudy->patient->name}}
+                                                    <div>{{$caseStudy->patient->name}}</div>
                                                     @if($caseStudy->is_emergency == 1)
                                                     <div class="badge bg-gradient-danger"><i class="fas fa-info-circle me-1"></i> Emergency</div>
+                                                    @endif
+                                                    @if($caseStudy->is_post_operative == 1)
+                                                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Post Operative</div>
+                                                    @endif
+                                                    @if($caseStudy->is_follow_up == 1)
+                                                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Follow Up</div>
+                                                    @endif
+                                                    @if($caseStudy->is_subspecialty == 1)
+                                                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Subspecialty</div>
+                                                    @endif
+                                                    @if($caseStudy->is_callback == 1)
+                                                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Callback</div>
                                                     @endif
                                                 </td>
                                                 <td>{{ $caseStudy->modality->name }}</td>
@@ -639,6 +676,41 @@
             let isDragging = false;
             let startAngle = 0;
             let currentAngle = 0;
+            $('#daterange').daterangepicker({
+                maxDate:moment(),
+                applyButtonClasses: 'btn bg-gradient-purple',
+                cancelButtonClasses: 'btn bg-gradient-danger',
+                locale: {
+                    format: 'DD/MM/YYYY'
+                }
+            },function(start, end, label) {
+                $('#start_date').val(start.format('YYYY-MM-DD'));
+                $('#end_date').val(end.format('YYYY-MM-DD'));
+            });
+            $("#search_btn").click(function () {
+                $(this).html('Search <i class="fas fa-spinner fa-spin"></i>');
+                let start_date = $('#start_date').val();
+                let end_date = $('#end_date').val();
+                let centre_id = $('#centre').val();
+                
+                $.ajax({
+                    url: "{{ url('admin/get-case-study-search-result') }}",
+                    type: "POST",
+                    data: {
+                        "_token": "{{ csrf_token() }}",
+                        "start_date": start_date,
+                        "end_date": end_date,
+                        "centre_id": centre_id
+                    },
+                    success: function(response) {
+                        $("#search_btn").html("Search");
+                        $("#main-card-body").html(response);
+                    },
+                    error: function(response){
+                        $("#search_btn").html("Search");
+                    }
+                });
+            });
 
             $("#study-sections").on("click", ".add-study", function () {
                 let newSection = $(".study-section").first().clone(); // Clone the first section

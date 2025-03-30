@@ -1,0 +1,94 @@
+<table id="study_table" class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th style="width: 2%;">Sl. No</th>
+            <th style="width: 6%;">Case Id</th>
+            <th style="width: 7%;">Date & Time</th>
+            <th style="width: 15%;">Patient Name</th>
+            <th style="width: 7%;">Modality</th>
+            <th style="width: 5%;">Age Sex</th>
+            <th style="width: 6%;">History</th>
+            <th style="width: 6%;">Status</th>
+            <th>Doctor</th>
+            <th style="width: 7%;">View</th>
+            <th>Centre</th>
+        </tr>
+    </thead>
+    <tbody>
+        @php $slNo = 1; @endphp
+        @foreach($CaseStudies as $caseStudy)
+            @php
+                if($caseStudy->doctor_id != null){
+                    $doctor = $caseStudy->doctor->name;
+                }
+                else{
+                    $doctor = "Not Assigned.";
+                }
+            @endphp
+            <tr id="row-{{ $caseStudy->id }}" 
+            @if(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id == $authUserId) class="bg-gradient-warning text-black" 
+            @elseif(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id != $authUserId) class="bg-gradient-teal text-black" 
+            @endif>
+                <td>
+                    @if(!empty($caseStudy->assigner_id))
+                    <span title="@if($caseStudy->study_status_id==1) Open By: @else Assigned By: @endif{{ $caseStudy->assigner->name }}" class="badge text-black"><i class="fas fa-user"></i></span>
+                    @endif
+                    {{$slNo++}}
+                </td>
+                <td>{{$caseStudy->case_study_id}}</td>
+                <td>{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('jS M Y, g:i a') }}</td>
+                <td>
+                    <div>{{$caseStudy->patient->name}}</div>
+                    @if($caseStudy->is_emergency == 1)
+                    <div class="badge bg-gradient-danger"><i class="fas fa-info-circle me-1"></i> Emergency</div>
+                    @endif
+                    @if($caseStudy->is_post_operative == 1)
+                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Post Operative</div>
+                    @endif
+                    @if($caseStudy->is_follow_up == 1)
+                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Follow Up</div>
+                    @endif
+                    @if($caseStudy->is_subspecialty == 1)
+                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Subspecialty</div>
+                    @endif
+                    @if($caseStudy->is_callback == 1)
+                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Callback</div>
+                    @endif
+                </td>
+                <td>{{ $caseStudy->modality->name }}</td>
+                <td>{{$caseStudy->patient->age."/".strtoupper(substr($caseStudy->patient->gender,0, 1))}}</td>
+                <td>{{$caseStudy->clinical_history}}</td>
+                <td>
+                    <span 
+                    @if($caseStudy->study_status_id ==1)class="badge bg-gradient-info" 
+                    @elseif($caseStudy->study_status_id ==2)class="badge bg-gradient-indigo"
+                    @elseif($caseStudy->study_status_id ==3)class="badge bg-gradient-orange"
+                    @elseif($caseStudy->study_status_id ==4)class="badge bg-gradient-danger"
+                    @elseif($caseStudy->study_status_id ==5)class="badge bg-gradient-success"
+                    @endif>{{$caseStudy->status->name}}</span>
+                </td>
+                <td>{!!$doctor!!}</td>
+                <td>
+                    <button class="btn btn-xs bg-gradient-purple" title="View Images"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-xs bg-gradient-blue view-case-btn" title="View Studies" data-index="{{ $caseStudy->id }}"><i class="fas fa-folder"></i></button>
+                </td>
+                <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
+<script>
+var study_table = $('#study_table').DataTable({
+    "paging": true,
+    "lengthChange": true,
+    "searching": true,
+    "ordering": true,
+    "info": true,
+    "autoWidth": false,
+    "responsive": true,
+    "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]],
+    rowId: function(data) {
+        return 'row-' + data.id; // Ensuring a unique ID for each row
+    }
+});
+</script>

@@ -16,4 +16,8 @@ class Modality extends Model
     public function doctors(){
         return $this->belongsToMany(Doctor::class, 'doctor_modalities');
     }
+
+    public function studyType(){
+        return $this->hasMany(StudyType::class, 'modality_id');
+    }
 }
