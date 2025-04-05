@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Validator;
@@ -12,7 +13,7 @@ use DB;
 use App\Models\study;
 use App\Models\Doctor;
 use App\Models\patient;
-use App\Models\CaseStudy;
+use App\Models\caseStudy;
 use App\Models\studyType;
 use App\Models\Laboratory;
 use App\Models\studyImages;
@@ -33,10 +34,24 @@ class CaseStudyController extends Controller
         $start_date = $end_date = Carbon::now()->startOfDay();;
         $end_date = Carbon::now()->endOfDay();;
         $pageName = $this->pageName;
-        $CaseStudies = CaseStudy::orderBy('created_at', 'desc')
-        ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
-        ->whereBetween('created_at', [$start_date, $end_date])
-        ->get();
+
+        if(in_array(auth()->user()->roles[0]->id, [1, 5, 6])){
+            $CaseStudies = caseStudy::orderBy('created_at', 'desc')
+                ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
+                ->whereBetween('created_at', [$start_date, $end_date])
+                ->get();
+        }
+        elseif(in_array(auth()->user()->roles[0]->id, [4])){
+            $doctor = Doctor::where("user_id", auth()->user()->id)->first();
+            $CaseStudies = caseStudy::orderBy('created_at', 'desc')
+                ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
+                ->whereIn('study_status_id', [2, 4])
+                ->where("doctor_id", $doctor->id)
+                ->get();
+        }
+        else{
+            $CaseStudies = array();
+        }
 
         $authUserId = Auth::user()->id;
         $Labrotories = Laboratory::where("status", 1)
@@ -119,12 +134,15 @@ class CaseStudyController extends Controller
 
             if($request->hasFile('images')){
                 foreach($request->file('images') as $image){
-                    $imageName = time().'_'.$image->getClientOriginalName();
-                    $storagePath = storage_path('app'.DIRECTORY_SEPARATOR.'uploads'.DIRECTORY_SEPARATOR.$labName.DIRECTORY_SEPARATOR.$request->patient_name);
-                    $image->move($storagePath, $imageName);
+                    $imageName = time().'_'.str_replace(" ", "_", $image->getClientOriginalName());
+                    $relativePath = 'uploads/' . str_replace(" ", "_", $labName) . '/' . str_replace(" ", "_", $request->patient_name);
+                    $fullPath = $relativePath . '/' . $imageName;
+                    
+                    Storage::putFileAs('public/' . $relativePath, $image, $imageName);
+                    
                     $studyImage = new studyImages;
-                    $studyImage->study_id = $study->id;
-                    $studyImage->image = $storagePath.DIRECTORY_SEPARATOR.$imageName;
+                    $studyImage->case_study_id = $caseStudy->id;
+                    $studyImage->image = $fullPath;
                     $studyImage->save();
                 }
             }
@@ -231,7 +249,7 @@ class CaseStudyController extends Controller
         $end_date = Carbon::parse($request->end_date)->endOfDay();;
         $centre_id = empty($request->centre_id)?null:$request->centre_id;
 
-        $CaseStudies = CaseStudy::orderBy('created_at', 'desc')
+        $CaseStudies = caseStudy::orderBy('created_at', 'desc')
         ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
         ->whereBetween('created_at', [$start_date, $end_date])
         ->when($centre_id !== null, function($query) use($centre_id){
@@ -242,5 +260,12 @@ class CaseStudyController extends Controller
         $authUserId = Auth::user()->id;
 
         return view('admin.caseStudySearchResult', compact( 'CaseStudies', 'authUserId'));
+    }
+
+    public function getCaseStudyImages(Request $request){
+        $caseStudy = caseStudy::with("study", "images")
+            ->where("id", $request->case_study_id)
+            ->first();
+        return view('admin.doctorCaseImageView', compact( 'caseStudy'));
     }
 }

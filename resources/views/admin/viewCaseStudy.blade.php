@@ -284,6 +284,7 @@
                     <div class="col-12">
                         <div class="card card-purple">
                             <div class="card-header">
+                                @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                 <div class="row">
                                     <div class="col-md-4">
                                         <h3 class="card-title" style="color: #fff;">View {{$pageName}} Data</h3>
@@ -311,6 +312,13 @@
                                     </div>
                                 
                                 </div>
+                                @else
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h3 class="card-title" style="color: #fff;">View {{$pageName}} Data</h3>
+                                    </div>
+                                </div>
+                                @endif
                             </div>
                             <!-- /.card-header -->
                             <div class="card-body" id="main-card-body">
@@ -327,7 +335,9 @@
                                             <th style="width: 6%;">Status</th>
                                             <th>Doctor</th>
                                             <th style="width: 7%;">View</th>
+                                            @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                             <th>Centre</th>
+                                            @endif
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -359,16 +369,16 @@
                                                     <div class="badge bg-gradient-danger"><i class="fas fa-info-circle me-1"></i> Emergency</div>
                                                     @endif
                                                     @if($caseStudy->is_post_operative == 1)
-                                                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Post Operative</div>
+                                                    <div class="badge bg-gradient-orange"><i class="fas fa-info-circle me-1"></i> Post Operative</div>
                                                     @endif
                                                     @if($caseStudy->is_follow_up == 1)
-                                                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Follow Up</div>
+                                                    <div class="badge bg-gradient-orange"><i class="fas fa-info-circle me-1"></i> Follow Up</div>
                                                     @endif
                                                     @if($caseStudy->is_subspecialty == 1)
-                                                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Subspecialty</div>
+                                                    <div class="badge bg-gradient-orange"><i class="fas fa-info-circle me-1"></i> Subspecialty</div>
                                                     @endif
                                                     @if($caseStudy->is_callback == 1)
-                                                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Callback</div>
+                                                    <div class="badge bg-gradient-orange"><i class="fas fa-info-circle me-1"></i> Callback</div>
                                                     @endif
                                                 </td>
                                                 <td>{{ $caseStudy->modality->name }}</td>
@@ -376,19 +386,25 @@
                                                 <td>{{$caseStudy->clinical_history}}</td>
                                                 <td>
                                                     <span 
-                                                    @if($caseStudy->study_status_id ==1)class="badge bg-gradient-info" 
+                                                    @if($caseStudy->study_status_id ==1)class="badge bg-gradient-danger" 
                                                     @elseif($caseStudy->study_status_id ==2)class="badge bg-gradient-indigo"
-                                                    @elseif($caseStudy->study_status_id ==3)class="badge bg-gradient-orange"
-                                                    @elseif($caseStudy->study_status_id ==4)class="badge bg-gradient-danger"
+                                                    @elseif($caseStudy->study_status_id ==3)class="badge bg-gradient-indigo"
+                                                    @elseif($caseStudy->study_status_id ==4)class="badge bg-gradient-orange"
                                                     @elseif($caseStudy->study_status_id ==5)class="badge bg-gradient-success"
                                                     @endif>{{$caseStudy->status->name}}</span>
                                                 </td>
                                                 <td>{!!$doctor!!}</td>
                                                 <td>
-                                                    <button class="btn btn-xs bg-gradient-purple" title="View Images"><i class="fas fa-eye"></i></button>
+                                                    @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
+                                                        <button class="btn btn-xs bg-gradient-purple view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
+                                                    @else
+                                                        <button class="btn btn-xs bg-gradient-purple doc_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
+                                                    @endif
                                                     <button class="btn btn-xs bg-gradient-blue view-case-btn" title="View Studies" data-index="{{ $caseStudy->id }}"><i class="fas fa-folder"></i></button>
                                                 </td>
+                                                @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                                 <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>
+                                                @endif
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -642,6 +658,33 @@
                     </div>
                 </div>
             </div>
+            <!-- /.modal -->
+
+            <div class="modal fade" id="image_view">
+                image_view
+            </div>
+            <!-- /.modal -->
+            
+            <div class="modal fade" id="doc_image_view">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">View Images</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body doc_image_view_body">
+                            DocView
+                        </div>
+                        <div class="modal-footer justify-content-between">
+                            <button type="button" class="btn btn-danger float-right" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                    <!-- /.modal-content -->
+                </div>
+            </div>
+            <!-- /.modal -->
         </section>
         <!-- /.content -->
     </div>
@@ -676,6 +719,32 @@
             let isDragging = false;
             let startAngle = 0;
             let currentAngle = 0;
+            
+            $(document).on('click', '.view_image', function() {
+                $('#image_view').modal('show');
+            });
+
+            $(document).on('click', '.doc_view_image', function() {
+                let case_study_id = $(this).data('index');
+                let type = 'doc';
+                $.ajax({
+                    url: "{{ url('admin/get-case-study-images') }}",
+                    type: "POST",
+                    data: {
+                        "_token": "{{ csrf_token() }}",
+                        "case_study_id": case_study_id,
+                        "type": type
+                    },
+                    success: function(response) {
+                        $(".doc_image_view_body").html(response);
+                        $('#doc_image_view').modal('show');
+                    },
+                    error: function(response){
+                        $("#search_btn").html("Search");
+                    }
+                });
+            });
+
             $('#daterange').daterangepicker({
                 maxDate:moment(),
                 applyButtonClasses: 'btn bg-gradient-purple',
@@ -687,6 +756,7 @@
                 $('#start_date').val(start.format('YYYY-MM-DD'));
                 $('#end_date').val(end.format('YYYY-MM-DD'));
             });
+
             $("#search_btn").click(function () {
                 $(this).html('Search <i class="fas fa-spinner fa-spin"></i>');
                 let start_date = $('#start_date').val();

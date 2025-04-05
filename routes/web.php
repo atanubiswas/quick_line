@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoleController;
@@ -33,6 +34,10 @@ use App\Http\Controllers\PathologyTestController;
 
 Route::get('/', function () {
     return redirect('/admin');
+});
+
+Route::get('/file/{filename}', function ($filename) {
+    return response()->file(storage_path('app/public/' . $filename));
 });
 
 Route::group(['prefix' => 'admin'], function () {
@@ -115,14 +120,16 @@ Route::group(['prefix' => 'admin'], function () {
         Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {
             Route::get('/add-case-study', [CaseStudyController::class, 'addCaseStudy'])->name('admin.addCaseStudy');
             Route::post('/insert-case-study', [CaseStudyController::class, 'insertCaseStudy']);
+            Route::post('/reset-assigner-id', [CaseStudyController::class, 'resetAssignerId'])->name('admin.reset-assigner-id');
+            Route::post('/assign-doctor', [CaseStudyController::class, 'assignDoctor'])->name('admin.assign-doctor');
+        });
+        Route::middleware(['role:Admin,Manager,Assigner,Doctor', '2fa'])->group(function () {
             Route::get('/view-case-study', [CaseStudyController::class, 'viewCaseStudy'])->name('admin.viewCaseStudy');
             Route::post('/get-study-type', [CaseStudyController::class, 'getStudyType'])->name('get-study-type');
             Route::post('/get-patient-details', [CaseStudyController::class, 'getPatientDetails']);
             Route::post('/get-all-studies', [CaseStudyController::class, 'getAllStudies'])->name('admin.get-all-studies');
-            Route::post('/reset-assigner-id', [CaseStudyController::class, 'resetAssignerId'])->name('admin.reset-assigner-id');
-            Route::post('/assign-doctor', [CaseStudyController::class, 'assignDoctor'])->name('admin.assign-doctor');
-           Route::post('/get-case-study-search-result', [CaseStudyController::class, 'getCaseStudySearchResult']);
-        //    Route::post('/update-case-study', [CaseStudyController::class, 'updateCaseStudy']);
+            Route::post('/get-case-study-search-result', [CaseStudyController::class, 'getCaseStudySearchResult']);
+            Route::post('/get-case-study-images', [CaseStudyController::class, 'getCaseStudyImages']);
         });
 
    /*============== TIMELINE CONTROLLER =================*/
@@ -132,10 +139,12 @@ Route::group(['prefix' => 'admin'], function () {
    });
 
    /*============== STUDYLAYOUT CONTROLLER ==============*/
-   Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
+   Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {
         Route::get('/add-study-layout', [StudyLayoutController::class,'addStudyLayout'])->name('admin.addStudyLayout');
         Route::post('/insert-study-layout', [StudyLayoutController::class,'insertStudyLayout']);
         Route::get('/view-study-layout', [StudyLayoutController::class,'viewStudyLayout'])->name('admin.viewStudyLayout');
+        Route::post('/get-study-layout', [StudyLayoutController::class,'getStudyLayout']);
+        Route::post('/get-study-layout-table', [StudyLayoutController::class,'getStudyLayoutTable']);
 
         Route::get('/view-studies', [StudyLayoutController::class,'viewStudies'])->name('admin.viewStudies');
         Route::post('/get-study-details', [StudyLayoutController::class,'getStudyDetails']);

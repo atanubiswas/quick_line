@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use Auth;
 use DB;
 
-use App\Models\doctor;
+use App\Models\Doctor;
 use App\Models\formField;
 use App\Models\Modality;
 use App\Models\DoctorModality;

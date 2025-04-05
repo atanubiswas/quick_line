@@ -13,6 +13,10 @@ class caseStudy extends Model
         return $this->hasMany('App\Models\study', 'case_study_id');
     }
 
+    public function images(){
+        return $this->hasMany('App\Models\studyImages', 'case_study_id');
+    }
+
     public function status(){
         return $this->belongsTo('App\Models\studyStatus', 'study_status_id');
     }

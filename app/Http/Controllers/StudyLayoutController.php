@@ -63,11 +63,9 @@ class StudyLayoutController extends Controller
      */
     public function viewStudyLayout(){
         $pageName = $this->pageName;
-        $studyLayouts = modalityStudyLayout::orderBy('id', 'desc')
-            ->with('studyType', 'doctor')
-            ->get();
+        $modalityes = Modality::all();
             
-        return view('admin.viewStudyLayout', compact('pageName', 'studyLayouts'));
+        return view('admin.viewStudyLayout', compact('pageName', 'modalityes'));
     }
 
     /**
@@ -109,5 +107,21 @@ class StudyLayoutController extends Controller
             return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
         }
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
+    }
+
+    public function getStudyLayout(Request $request){
+        $studyTypes = studyType::where("modality_id", $request->modality)
+            ->orderBy("name")
+            ->get();
+        return view('admin.getStudyLayout', compact('studyTypes'));
+    }
+
+    public function getStudyLayoutTable(Request $request){
+        $studyLayouts = modalityStudyLayout::where("study_type_id", $request->study)
+            ->orderBy('id', 'desc')
+            ->with('studyType', 'doctor')
+            ->get();
+            
+        return view('admin.getStudyLayoutTable', compact('studyLayouts'));
     }
 }

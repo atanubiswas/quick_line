@@ -43,7 +43,14 @@
                 <div class="col-12">
                     <div class="card card-purple">
                         <div class="card-header">
-                            <h3 class="card-title">View {{$pageName}} Data</h3>
+                            <div class="row">
+                                <div class="col-md-10">
+                                    <h3 class="card-title">View {{$pageName}} Data</h3>
+                                </div>
+                                <div class="col-md-2">
+                                    <a href="{{ Route('admin.addLab') }}" style="margin-left:10px;" class="btn bg-gradient-success float-right" id="add_btn" name="add_btn">Add {{$pageName}}</a>
+                                </div>
+                            </div>
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body">

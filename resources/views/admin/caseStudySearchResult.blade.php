@@ -43,16 +43,16 @@
                     <div class="badge bg-gradient-danger"><i class="fas fa-info-circle me-1"></i> Emergency</div>
                     @endif
                     @if($caseStudy->is_post_operative == 1)
-                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Post Operative</div>
+                    <div class="badge bg-gradient-orange"><i class="fas fa-info-circle me-1"></i> Post Operative</div>
                     @endif
                     @if($caseStudy->is_follow_up == 1)
-                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Follow Up</div>
+                    <div class="badge bg-gradient-orange"><i class="fas fa-info-circle me-1"></i> Follow Up</div>
                     @endif
                     @if($caseStudy->is_subspecialty == 1)
-                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Subspecialty</div>
+                    <div class="badge bg-gradient-orange"><i class="fas fa-info-circle me-1"></i> Subspecialty</div>
                     @endif
                     @if($caseStudy->is_callback == 1)
-                    <div class="badge bg-gradient-warning"><i class="fas fa-info-circle me-1"></i> Callback</div>
+                    <div class="badge bg-gradient-orange"><i class="fas fa-info-circle me-1"></i> Callback</div>
                     @endif
                 </td>
                 <td>{{ $caseStudy->modality->name }}</td>
@@ -60,16 +60,21 @@
                 <td>{{$caseStudy->clinical_history}}</td>
                 <td>
                     <span 
-                    @if($caseStudy->study_status_id ==1)class="badge bg-gradient-info" 
-                    @elseif($caseStudy->study_status_id ==2)class="badge bg-gradient-indigo"
-                    @elseif($caseStudy->study_status_id ==3)class="badge bg-gradient-orange"
-                    @elseif($caseStudy->study_status_id ==4)class="badge bg-gradient-danger"
-                    @elseif($caseStudy->study_status_id ==5)class="badge bg-gradient-success"
-                    @endif>{{$caseStudy->status->name}}</span>
+                        @if($caseStudy->study_status_id ==1)class="badge bg-gradient-danger" 
+                        @elseif($caseStudy->study_status_id ==2)class="badge bg-gradient-indigo"
+                        @elseif($caseStudy->study_status_id ==3)class="badge bg-gradient-indigo"
+                        @elseif($caseStudy->study_status_id ==4)class="badge bg-gradient-orange"
+                        @elseif($caseStudy->study_status_id ==5)class="badge bg-gradient-success"
+                        @endif>{{$caseStudy->status->name}}
+                    </span>
                 </td>
                 <td>{!!$doctor!!}</td>
                 <td>
-                    <button class="btn btn-xs bg-gradient-purple" title="View Images"><i class="fas fa-eye"></i></button>
+                    @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
+                        <button class="btn btn-xs bg-gradient-purple" id="view_image" title="View Images"><i class="fas fa-eye"></i></button>
+                    @else
+                        <button class="btn btn-xs bg-gradient-purple" id="doc_view_image" title="View Images"><i class="fas fa-eye"></i></button>
+                    @endif
                     <button class="btn btn-xs bg-gradient-blue view-case-btn" title="View Studies" data-index="{{ $caseStudy->id }}"><i class="fas fa-folder"></i></button>
                 </td>
                 <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>
@@ -78,17 +83,53 @@
     </tbody>
 </table>
 <script>
-var study_table = $('#study_table').DataTable({
-    "paging": true,
-    "lengthChange": true,
-    "searching": true,
-    "ordering": true,
-    "info": true,
-    "autoWidth": false,
-    "responsive": true,
-    "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]],
-    rowId: function(data) {
-        return 'row-' + data.id; // Ensuring a unique ID for each row
-    }
-});
+    var study_table = $('#study_table').DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]],
+        rowId: function(data) {
+            return 'row-' + data.id; // Ensuring a unique ID for each row
+        }
+    });
+    $('#study_table tbody').on('click', '.view-case-btn', function () {
+        var tr = $(this).closest('tr');
+        var row = study_table.row(tr);
+        var case_study_id = $(this).data('index');
+        
+        if (row.child.isShown()) {
+            tr.removeClass('bg-gradient-warning text-black');
+            row.child.hide();
+            $.ajax({
+                url: "{{ route('admin.reset-assigner-id') }}",
+                type: "POST",
+                data: {
+                    "_token": "{{ csrf_token() }}",
+                    "case_id": case_study_id
+                },
+                success: function (response) {
+                    
+                }
+            });
+            $(this).html('<i class="fas fa-folder"></i>');
+        } else {
+            tr.addClass('bg-gradient-warning text-black');
+            $.ajax({
+                url: "{{ route('admin.get-all-studies') }}",
+                type: "POST",
+                data: {
+                    "_token": "{{ csrf_token() }}",
+                    "case_id": case_study_id
+                },
+                success: function (response) {
+                    row.child(response).show();
+                }
+            });
+            $(this).html('<i class="fas fa-folder-open"></i>');
+        }
+    });
 </script>

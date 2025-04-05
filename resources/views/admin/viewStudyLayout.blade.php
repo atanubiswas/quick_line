@@ -37,44 +37,52 @@
     <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
-            <div class="row">
+            <div class="row" id="view_card">
                 <div class="col-12">
                     <div class="card card-purple">
                         <div class="card-header">
-                            <h3 class="card-title">View {{ $pageName }}</h3>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <h3 class="card-title">View {{ $pageName }}</h3>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <select class="form-control select2" required="required" name="modality" id="modality">
+                                            <option value="">Select Modality</option>
+                                            @foreach($modalityes as $modality)
+                                            <option value="{{$modality->id}}">{{$modality->name}}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <select class="form-control select2" required="required" name="study" id="study">
+                                            <option value="">Select Study</option>
+                                        </select>
+                                        <button type="button" style="margin-left:10px;" class="btn bg-gradient-orange float-right" id="search_btn" name="search_btn">Search</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <a href="{{ Route('admin.addStudyLayout') }}" class="btn bg-gradient-success float-right" id="add_btn" name="add_btn">Add Study Layout</a>
+                                </div>
+                            </div>
                         </div>
                         <!-- /.card-header -->
-                        <div class="card-body">
-                            <table id="study_layout_table" class="table table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Sl. No</th>
-                                        <th>Study Name</th>
-                                        <th>Layout</th>
-                                        <th>Assign To</th>
-                                        <th>Controls</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php $count=1; @endphp
-                                    @foreach($studyLayouts as $studyLayout)
-                                        @if($studyLayout->doctor === null)
-                                            @php $doctor = "Global"; @endphp
-                                        @else
-                                            @php $doctor = $studyLayout->doctor->name; @endphp
-                                        @endif
-                                        <tr>
-                                            <td>{{ $count++ }}</td>
-                                            <td>{{ $studyLayout->studyType->name }}</td>
-                                            <td>{!! $studyLayout->layout !!}</td>
-                                            <td>{{ $doctor }}</td>
-                                            <td>
-                                                <button type="button" data-id="{{$studyLayout->id}}" class="btn edit_btn btn-block bg-gradient-warning btn-xs"><i class="fas fa-edit"></i> Edit</button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                        <div class="card-body" id="card-body-main">
+                        <table id="study_layout_table" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sl. No</th>
+                                    <th>Study Name</th>
+                                    <th>Layout</th>
+                                    <th>Assign To</th>
+                                    <th>Controls</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
                         </div>
                         <!-- /.card-body -->
                     </div>
@@ -112,6 +120,47 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"></script>
 <script>
 $(function () {
+    $("#modality").change(function(){
+        var modality = $(this).val();
+        if(modality != ""){
+            $.ajax({
+                url: "{{url('admin/get-study-layout')}}",
+                type: "POST",
+                data: {
+                    "_token": "{{ csrf_token() }}",
+                    "modality": modality
+                },
+                success: function(data){
+                    $("#study").html(data);
+                }
+            });
+        }else{
+            $("#study").html("<option value=''>Select Study</option>");
+        }
+    });
+
+    $("#search_btn").on("click", function(){
+        let modality = $("#modality").val();
+        let study = $("#study").val();
+        console.log(modality, study);
+        $.ajax({
+            url: "{{url('admin/get-study-layout-table')}}",
+            type: "POST",
+            data: {
+                "_token": "{{ csrf_token() }}",
+                "modality": modality,
+                "study" : study
+            },
+            success: function(data){
+                console.log(data);
+                $("#card-body-main").html(data);
+            },
+            error: function(data){
+                $("#card-body-main").html('');
+            }
+        });
+    });
+
     $('#study_layout_table').DataTable({
         "paging": true,
         "lengthChange": true,
@@ -121,31 +170,6 @@ $(function () {
         "autoWidth": false,
         "responsive": true,
         "lengthMenu": [ [10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"] ]
-    });
-
-    $("#study_layout_table tbody").on("click", '.edit_btn',function(){
-        removePreviousDivElements();
-        $(this).html('Opening <i class="fas fa-spinner fa-spin"></i>');
-        var lab_id = $(this).data("id");
-        var form_data = new FormData();
-        form_data.append('lab_id', lab_id);
-
-        $.ajax({
-            url: '{{url("admin/get-edit-study-layout-data")}}',
-            cache: false,
-            contentType: false,
-            processData: false,
-            data: form_data,
-            type: 'post',
-            success: function (data) {
-                $(".edit_btn").html('<i class="fas fa-edit"></i> Edit');
-                $("#edit_study_layout_div").html(data);
-                scrollToAnchor("edit_form");
-            },
-            error: function (data){
-                $(".edit_btn").html('<i class="fas fa-edit"></i> Edit');
-            }
-        });
     });
 });
 </script>
