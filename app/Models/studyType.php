@@ -10,6 +10,10 @@ class studyType extends Model
     use HasFactory;
 
     public function modality(){
-        return $this->belongsTo('App\Models\modality');
+        return $this->belongsTo('App\Models\Modality');
+    }
+
+    public function layout(){
+        return $this->hasMany('App\Models\modalityStudyLayout')->orderBy("name");
     }
 }

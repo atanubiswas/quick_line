@@ -88,7 +88,7 @@
   <aside class="main-sidebar sidebar-dark-purple elevation-4">
     <!-- Brand Logo -->
     <a href="{{Route('admin.dashboard')}}" class="brand-link">
-      <img src="{{asset('dist/img/quick_on_small_icon.png')}}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <img src="{{asset('dist/img/quick_on_small_icon.png')}}" alt="Quick Line Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
       <span class="brand-text font-weight-light">Quick Line</span>
     </a>
 
@@ -100,7 +100,7 @@
           <img src="{!!$user->user_image!!}" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
-          <a href="#" class="d-block">{{$user->name}}</a>
+          <a href="#" class="d-block text-orange">{{$user->name}}</a>
         </div>
       </div>
 

@@ -75,6 +75,7 @@
                                 <tr>
                                     <th>Sl. No</th>
                                     <th>Study Name</th>
+                                    <th>Layout Name</th>
                                     <th>Layout</th>
                                     <th>Assign To</th>
                                     <th>Controls</th>

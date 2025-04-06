@@ -35,7 +35,7 @@
           <div class="col-12 col-sm-6 col-md-12">
               <div class="card card-purple">
               <div class="card-header">
-                <h3 class="card-title">Add {{$pageName}}</h3>
+                <h3 class="card-title">Add {{$pageName}}</h3><span class="float-right">Default Password of the new users is: Quick Line</span>
               </div>
               <!-- /.card-header -->
               <!-- form start -->

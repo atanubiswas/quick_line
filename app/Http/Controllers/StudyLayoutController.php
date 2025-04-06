@@ -9,7 +9,9 @@ use Validator;
 use Auth;
 
 use App\Models\modalityStudyLayout;
+use App\Models\caseStudy;
 use App\Models\Modality;
+use App\Models\study;
 use App\Models\Doctor;
 
 class StudyLayoutController extends Controller
@@ -17,6 +19,18 @@ class StudyLayoutController extends Controller
     use GeneralFunctionTrait;
     private $pageName = "Study Layout";
     
+    private function updateMainCaseStudyDoc($caseStudyId){
+        $caseStudy = caseStudy::find($caseStudyId);
+        $pendingCaseCount = study::where("case_study_id", $caseStudyId)
+            ->where("status", 0)
+            ->count();
+
+        if($pendingCaseCount == 0){
+            $caseStudy->study_status_id = 3;
+            $caseStudy->save();
+        }
+    }
+
     /**
      * Summary of addStudyLayout
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
@@ -34,7 +48,9 @@ class StudyLayoutController extends Controller
      */
     public function insertStudyLayout(Request $request){
         $validator = Validator::make($request->all(), [
+            "layout_name" => "required",
             "study_id" => "required:exists:studies,id",
+            "modality" => "required:exists:modalities,id",
             "doctor_id" => "required",
             "layout" => "required",
         ]);
@@ -43,6 +59,7 @@ class StudyLayoutController extends Controller
         }
         try{
             $studyLayout = new modalityStudyLayout();
+            $studyLayout->name  = $request->layout_name;
             $studyLayout->study_type_id  = $request->study_id;
             $studyLayout->layout = $request->layout;
             if($request->doctor_id != 0){
@@ -123,5 +140,44 @@ class StudyLayoutController extends Controller
             ->get();
             
         return view('admin.getStudyLayoutTable', compact('studyLayouts'));
+    }
+
+    public function getLayouts(Request $request){
+        if($request->layout_id == 0){
+            $study = study::where("id", $request->study_id)
+                ->first();
+            return $study->report;
+        }
+        $layout = modalityStudyLayout::where("id", $request->layout_id)
+            ->first();
+            
+        return $layout->layout;
+    }
+
+    public function saveStudyLayout(Request $request){
+        $validator = Validator::make($request->all(), [
+            "study_id" => "required:exists:studies,id",
+            "layout" =>  ['required', function ($attribute, $value, $fail) {
+                // Strip tags and whitespace
+                if (trim(strip_tags($value)) === '') {
+                    $fail('The ' . $attribute . ' field is required.');
+                }
+            }],
+        ]);
+        if (!$validator->passes()) {
+            return response()->json(['error'=>$validator->errors()]);
+        }
+        try{
+            $studyLayout = study::find($request->study_id);
+            $studyLayout->report = $request->layout;
+            $studyLayout->status = 1;
+            $studyLayout->save();
+            $this->updateMainCaseStudyDoc($studyLayout->case_study_id);
+        }catch(\Exception $ex) {
+            return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
+        } catch(\Illuminate\Database\QueryException $ex){
+            return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
+        }
+        return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
     }
 }

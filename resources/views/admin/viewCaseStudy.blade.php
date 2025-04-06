@@ -55,7 +55,7 @@
         }
 
         /* Make rotation wheel match button size */
-        #rotation-wheel {
+        .rotation-wheel-class {
             width: 80px;
             height: 80px;
             border-radius: 50%;
@@ -246,6 +246,14 @@
             padding: 5px;
             text-align: left;
         }
+        .ui-state-active {
+            background-color: #007bff !important;
+            color: white !important;
+        }
+        .ui-state-default {
+            background-color: #f1f1f1 !important;
+            color: black !important;
+        }
     </style>
 
     <!-- DataTables -->
@@ -254,6 +262,9 @@
     <link rel="stylesheet" href="{{asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css')}}">
     <link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">
     <link rel="stylesheet" href="{{asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css')}}">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+    <!-- summernote -->
+    <link rel="stylesheet" href="{{asset('plugins/summernote/summernote-bs4.min.css')}}">
 
     <!-- CROPPER CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
@@ -607,7 +618,7 @@
                         <div class="modal-body text-center position-relative" id="image-container">
                             <img id="cropImage" style="max-width: 100%; width: 100%;">
                             <div class="crop-toolbar">
-                                <div id="rotation-wheel">
+                                <div id="rotation-wheel" class="rotation-wheel-class">
                                     <!-- Main Line -->
                                     <div class="main-line"></div>
                                     
@@ -660,8 +671,68 @@
             </div>
             <!-- /.modal -->
 
-            <div class="modal fade" id="image_view">
-                image_view
+            <div class="modal fade" id="cropModal-assigner" tabindex="-1" aria-hidden="true" style="overflow: scroll;">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Image</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body text-center position-relative" id="image-container-assigner">
+                            <img id="cropImage-assigner" style="max-width: 100%; width: 100%;">
+                            <div class="crop-toolbar">
+                                <div id="rotation-wheel-assigner">
+                                    <!-- Main Line -->
+                                    <div class="main-line"></div>
+                                    
+                                    <!-- Small Lines -->
+                                    <div class="small-lines"></div>
+                                </div>
+                                
+                                <!-- Manual Rotation Input -->
+                                <input type="number" id="rotation-angle-assigner" class="rotation-input" min="0" max="360" value="0">
+
+                                <button class="toolbar-btn" id="flipHorizontal-assigner" title="Flip Horizontal">
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                </button>
+                                <button class="toolbar-btn" id="flipVertical-assigner" title="Flip Vertical">
+                                    <i class="fas fa-arrows-alt-v"></i>
+                                </button>
+                                <button class="toolbar-btn" id="crop-assigner" title="Crop">
+                                    <i class="fas fa-crop"></i>
+                                </button>
+                                <!-- <button class="toolbar-btn" id="add-rectangle" title="Draw Rectangle">
+                                <i class="fas fa-square"></i>
+                                </button> -->
+                                <button class="toolbar-btn" id="moveLeft-assigner" title="Move Left">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <button class="toolbar-btn" id="moveRight-assigner" title="Move Right">
+                                    <i class="fas fa-arrow-right"></i>
+                                </button>
+                                <button class="toolbar-btn" id="moveUp-assigner" title="Move Up">
+                                    <i class="fas fa-arrow-up"></i>
+                                </button>
+                                <button class="toolbar-btn" id="moveDown-assigner" title="Move Down">
+                                    <i class="fas fa-arrow-down"></i>
+                                </button>
+                                <button class="toolbar-btn" id="zoomOut-assigner" title="Zoom Out">
+                                    <i class="fas fa-search-minus"></i>
+                                </button>
+                                <button class="toolbar-btn" id="zoomIn-assigner" title="Zoom In">
+                                    <i class="fas fa-search-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <canvas id="canvas-assigner" style="display:none;"></canvas>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button class="btn btn-success" id="cropSave-assigner">Save</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- /.modal -->
             
@@ -669,19 +740,18 @@
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h4 class="modal-title">View Images</h4>
+                            <h4 class="modal-title">Case Details</h4>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body doc_image_view_body">
-                            DocView
+                            
                         </div>
-                        <div class="modal-footer justify-content-between">
+                        <div class="modal-footer justify-content-between" style="display: block;">
                             <button type="button" class="btn btn-danger float-right" data-dismiss="modal">Close</button>
                         </div>
                     </div>
-                    <!-- /.modal-content -->
                 </div>
             </div>
             <!-- /.modal -->
@@ -699,6 +769,8 @@
     <script src="{{asset('plugins/datatables-buttons/js/dataTables.buttons.min.js')}}"></script>
     <script src="{{asset('plugins/datatables-buttons/js/buttons.bootstrap4.min.js')}}"></script>
     <script src="{{asset('plugins/select2/js/select2.full.min.js')}}"></script>
+    <!-- Summernote -->
+    <script src="{{asset('plugins/summernote/summernote-bs4.min.js')}}"></script>
 
     <!-- CROPPER JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
@@ -737,7 +809,30 @@
                     },
                     success: function(response) {
                         $(".doc_image_view_body").html(response);
+
                         $('#doc_image_view').modal('show');
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+
+                        let image = document.getElementById("cropImage-doctor");
+                        cropper = new Cropper(image, {
+                            aspectRatio: NaN, // Free cropping
+                            viewMode: 2, // Prevents overflow
+                            autoCropArea: 1, // Ensures image fits well
+                            responsive: true,
+                            restore: false,
+                            scalable: true,
+                            zoomable: true,
+                            rotatable: true,
+                            movable: true,
+                            autoCrop: false
+                        });
+
+                        // Resize Cropper to fit within the modal
+                        setTimeout(() => {
+                            cropper.resize();
+                        }, 300);
                     },
                     error: function(response){
                         $("#search_btn").html("Search");
@@ -957,14 +1052,51 @@
             });
         });
 
-        $(document).on("click", "#flipHorizontal", function () {
+        $(document).on("click", ".image-thumb-doctor", function () {
+            let imgSrc = $(this).attr("src");
+            $("#cropImage-doctor").attr("src", imgSrc);
+
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            let image = document.getElementById("cropImage-doctor");
+            cropper = new Cropper(image, {
+                aspectRatio: NaN, // Free cropping
+                viewMode: 2, // Prevents overflow
+                autoCropArea: 1, // Ensures image fits well
+                responsive: true,
+                restore: false,
+                scalable: true,
+                zoomable: true,
+                rotatable: true,
+                movable: true,
+                autoCrop: false
+            });
+
+            // Resize Cropper to fit within the modal
+            setTimeout(() => {
+                cropper.resize();
+            }, 300);
+        });
+
+        $(document).on("click", "#flipHorizontal, #flipHorizontal-doctor", function () {
             scaleX = scaleX === 1 ? -1 : 1; // Toggle between 1 and -1
             cropper.scaleX(scaleX);
         });
 
-        $(document).on("click", "#flipVertical", function () {
+        $(document).on("click", "#flipVertical, #flipVertical-doctor", function () {
             scaleY = scaleY === 1 ? -1 : 1; // Toggle between 1 and -1
             cropper.scaleY(scaleY);
+        });
+        
+        $(document).on("click", ".cropper-drag-box", function () {
+            if (cropper) {
+                if (isCropping) {
+                    cropper.clear(); // Hide the crop box
+                }
+            }
+            isCropping = !isCropping;
         });
 
         $(document).on("click", "#crop", function () {
@@ -978,27 +1110,27 @@
             }
         });
 
-        $(document).on("click", "#zoomIn", function () {
+        $(document).on("click", "#zoomIn, #zoomIn-doctor", function () {
             cropper.zoom(0.1);
         });
 
-        $(document).on("click", "#zoomOut", function () {
+        $(document).on("click", "#zoomOut, #zoomOut-doctor", function () {
             cropper.zoom(-0.1);
         });
 
-        $(document).on("click", "#moveLeft", function () {
+        $(document).on("click", "#moveLeft, #moveLeft-doctor", function () {
             cropper.move(-10, 0);
         });
 
-        $(document).on("click", "#moveRight", function () {
+        $(document).on("click", "#moveRight, #moveRight-doctor", function () {
             cropper.move(10, 0);
         });
 
-        $(document).on("click", "#moveUp", function () {
+        $(document).on("click", "#moveUp, #moveUp-doctor", function () {
             cropper.move(0, -10);
         });
 
-        $(document).on("click", "#moveDown", function () {
+        $(document).on("click", "#moveDown, #moveDown-doctor", function () {
             cropper.move(0, 10);
         });
 
@@ -1217,7 +1349,7 @@
 
         function startRotation(event) {
             isDragging = true;
-            startAngle = getAngle(event, $("#rotation-wheel")[0]);
+            startAngle = getAngle(event, $(".rotation-wheel-class")[0]);
             event.preventDefault(); // Prevent scrolling on mobile
         }
 
@@ -1227,7 +1359,7 @@
 
         function rotate(event) {
             if (!isDragging) return;
-            let newAngle = getAngle(event, $("#rotation-wheel")[0]);
+            let newAngle = getAngle(event, $(".rotation-wheel-class")[0]);
             let rotation = newAngle - startAngle + currentAngle;
 
             // Normalize the angle to always stay between 0-360
@@ -1237,7 +1369,7 @@
             cropper.rotateTo(fixedAngle);
 
             // Rotate the knob
-            $("#rotation-wheel").css("transform", `rotate(${fixedAngle}deg)`);
+            $(".rotation-wheel-class").css("transform", `rotate(${fixedAngle}deg)`);
 
             // Update textbox with fixed value
             $("#rotation-angle").val(Math.round(fixedAngle));
@@ -1251,7 +1383,8 @@
         }
 
         // **Bind events for both desktop and mobile**
-        $("#rotation-wheel").on("mousedown touchstart", startRotation);
+        // $(".rotation-wheel-class").on("mousedown touchstart", startRotation);
+        $(document).on("mousedown touchstart", ".rotation-wheel-class", startRotation);
         $(document).on("mousemove touchmove", rotate);
         $(document).on("mouseup touchend", stopRotation);
 
@@ -1262,7 +1395,7 @@
 
             // Rotate image & knob
             cropper.rotateTo(angle);
-            $("#rotation-wheel").css("transform", `rotate(${angle}deg)`);
+            $(".rotation-wheel-class").css("transform", `rotate(${angle}deg)`);
         });
     });
     </script>

@@ -45,49 +45,56 @@
               <!-- form start -->
               <form name="study_layout_form" id="study_layout_form" method="post" action="">
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="exampleInputEmail1">Modality <em>*</em></label>
-                                <select class="form-control select2" required="required" name="modality" id="modality">
-                                    <option value="">Select Modality</option>
-                                    @foreach($modalityes as $modality)
-                                    <option value="{{$modality->id}}">{{$modality->name}}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="exampleInputEmail1">Study <em>*</em></label>
-                                <select class="form-control select2 study_id" required="required" name="study_id" id="study_id">
-                                    <option value="">Select Study</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="exampleInputEmail1">Layout For <em>*</em></label>
-                                <select class="form-control select2 doctor_id" required="required" name="doctor_id" id="doctor_id">
-                                    <option value="0" selected="selected">All Doctors</option>
-                                    @foreach($doctors as $doctor)
-                                    <option value="{{$doctor->user_id}}">{{$doctor->name}}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                            <label for="exampleInputEmail1">Layout <em>*</em></label>
-                                <textarea id="layout" name="layout"></textarea>
-                            </div>
-                        </div>
-                    </div>
+                  <div class="row">
+                      <div class="col-md-6">
+                          <div class="form-group">
+                              <label for="exampleInputEmail1">Layout Name <em>*</em></label>
+                              <input type="text" class="form-control" required="required" name="layout_name" id="layout_name" placeholder="Enter Layout Name">
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="form-group">
+                              <label for="exampleInputEmail1">Layout For <em>*</em></label>
+                              <select class="form-control select2 doctor_id" required="required" name="doctor_id" id="doctor_id">
+                                  <option value="0" selected="selected">All Doctors</option>
+                                  @foreach($doctors as $doctor)
+                                  <option value="{{$doctor->user_id}}">{{$doctor->name}}</option>
+                                  @endforeach
+                              </select>
+                          </div>
+                      </div>
+                  </div>      
+                  <div class="row">
+                      <div class="col-md-6">
+                          <div class="form-group">
+                              <label for="exampleInputEmail1">Modality <em>*</em></label>
+                              <select class="form-control select2" required="required" name="modality" id="modality">
+                                  <option value="">Select Modality</option>
+                                  @foreach($modalityes as $modality)
+                                  <option value="{{$modality->id}}">{{$modality->name}}</option>
+                                  @endforeach
+                              </select>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="form-group">
+                              <label for="exampleInputEmail1">Study <em>*</em></label>
+                              <select class="form-control select2 study_id" required="required" name="study_id" id="study_id">
+                                  <option value="">Select Study</option>
+                              </select>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="row">
+                      <div class="col-md-12">
+                          <div class="form-group">
+                          <label for="exampleInputEmail1">Layout <em>*</em></label>
+                              <textarea id="layout" name="layout"></textarea>
+                          </div>
+                      </div>
+                  </div>
                 </div>
                 <!-- /.card-body -->
-
                 <div class="card-footer">
                     <button type="button" id="save_btn" class="btn btn-success save_btn float-right">Save</button>
                 </div>
@@ -125,7 +132,9 @@ $(function(){
       selectionCssClass: 'bg-purple'
     });
 
-    $('#layout').summernote();
+    $('#layout').summernote({
+        height: 300
+    });
 
     $("#modality").on("change", function (e) {
         var modality =  $(this).val();

@@ -101,10 +101,11 @@ Route::group(['prefix' => 'admin'], function () {
        Route::post('/get-assigned-collectors', [LaboratoryController::class, 'getAssignedCollectors']);
        Route::get('/view-laboratory', [LaboratoryController::class, 'viewLab'])->name('admin.viewLab');
        Route::post('/get-preferred-doc', [LaboratoryController::class, 'getPreferredDoctors']);
-       Route::post('/get-modality', [LaboratoryController::class, 'getModality'])->name('get-modality');
        Route::post('/update-preferred-doctors', [LaboratoryController::class, 'updatePreferredDoctors']);
        Route::post('/update-black-listed-doctors', [LaboratoryController::class, 'updateBlackListedDoctors']);
    });
+
+   Route::post('/get-modality', [LaboratoryController::class, 'getModality'])->name('get-modality');
 
       /*================ DOCTOR CONTROLLER ====================*/
       Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
@@ -150,7 +151,8 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('/get-study-details', [StudyLayoutController::class,'getStudyDetails']);
         Route::post('/insert-new-case-study', [StudyLayoutController::class,'insertNewCaseStudy']);
    });
-
+        Route::post('/get-layout', [StudyLayoutController::class,'getLayouts'])->name('admin.getLayout');
+        Route::post('/save-study-layout', [StudyLayoutController::class,'saveStudyLayout'])->name('admin.saveStudyLayout');
    /*============== DOCUMENT CONTROLLER =================*/
     Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
        Route::post('/get-documents', [DocumentController::class, 'getDocuments']);

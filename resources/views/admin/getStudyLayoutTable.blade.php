@@ -3,6 +3,7 @@
         <tr>
             <th>Sl. No</th>
             <th>Study Name</th>
+            <th>Layout Name</th>
             <th>Layout</th>
             <th>Assign To</th>
             <th>Controls</th>
@@ -19,6 +20,7 @@
             <tr>
                 <td>{{ $count++ }}</td>
                 <td>{{ $studyLayout->studyType->name }}</td>
+                <td>{{ $studyLayout->name }}</td>
                 <td>{!! $studyLayout->layout !!}</td>
                 <td>{{ $doctor }}</td>
                 <td>

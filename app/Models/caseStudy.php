@@ -30,7 +30,7 @@ class caseStudy extends Model
     }
 
     public function doctor(){
-        return $this->belongsTo('App\Models\doctor');
+        return $this->belongsTo('App\Models\Doctor');
     }
 
     public function assigner(){
@@ -38,6 +38,6 @@ class caseStudy extends Model
     }
 
     public function modality(){
-        return $this->belongsTo('App\Models\modality');
+        return $this->belongsTo('App\Models\Modality');
     }
 }

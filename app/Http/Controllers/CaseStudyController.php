@@ -78,7 +78,7 @@ class CaseStudyController extends Controller
                 'modality' => 'required|exists:modalities,id',
                 'patient_id' => 'required_if:existing_patient,1|nullable|string|exists:patients,patient_id',
                 'patient_name' => 'required',
-                'age'=> 'required|numeric',
+                'age'=> 'required',
                 'gender' => 'required',
                 'study_id' => 'required|array',
                 'study_id.*' => 'required|exists:study_types,id',
@@ -263,9 +263,11 @@ class CaseStudyController extends Controller
     }
 
     public function getCaseStudyImages(Request $request){
-        $caseStudy = caseStudy::with("study", "images")
+        $caseStudy = caseStudy::with("modality", "study.type", "images")
             ->where("id", $request->case_study_id)
             ->first();
-        return view('admin.doctorCaseImageView', compact( 'caseStudy'));
+        $authUser = Auth::user();
+        
+        return view('admin.doctorCaseImageView', compact( 'caseStudy', 'authUser'));
     }
 }

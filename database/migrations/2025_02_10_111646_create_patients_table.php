@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('patient_id')->unique();
             $table->string('name');
-            $table->smallInteger('age');
+            $table->string('age');
             $table->string('gender');
             $table->text('clinical_history')->nullable();
             $table->timestamps();
