@@ -58,6 +58,9 @@ class Handler extends ExceptionHandler
         elseif ($exception instanceof BindingResolutionException) {
             return response()->json(['error' => 'Dependency resolution error'], 200);
         }
+        elseif ($exception instanceof TokenMismatchException) {
+            return response()->json(['error' => 'Your session has expired. Please refresh the page and try again.'], 200);
+        }
 
         return parent::render($request, $exception);
     }

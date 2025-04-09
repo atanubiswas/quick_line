@@ -365,6 +365,8 @@
                                             <tr id="row-{{ $caseStudy->id }}" 
                                             @if(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id == $authUserId) class="bg-gradient-warning text-black" 
                                             @elseif(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id != $authUserId) class="bg-gradient-teal text-black" 
+                                            @elseif(!empty($caseStudy->qc_id) && $caseStudy->study_status_id == 3 && $caseStudy->qc_id == $authUserId) class="bg-gradient-warning text-black"
+                                            @elseif(!empty($caseStudy->qc_id) && $caseStudy->study_status_id == 3 && $caseStudy->qc_id != $authUserId) class="bg-gradient-teal text-black" 
                                             @endif>
                                                 <td>
                                                     @if(!empty($caseStudy->assigner_id))
@@ -836,6 +838,21 @@
                     },
                     error: function(response){
                         $("#search_btn").html("Search");
+                    }
+                });
+            });
+
+            $(document).on('hidden.bs.modal', '#doc_image_view', function () {
+                case_study_id = $('#unique_case_study_id').val();
+                $.ajax({
+                    url: "{{ route('admin.reset-assigner-id') }}",
+                    type: "POST",
+                    data: {
+                        "_token": "{{ csrf_token() }}",
+                        "case_id": case_study_id
+                    },
+                    success: function (response) {
+                        
                     }
                 });
             });

@@ -19,14 +19,18 @@ class StudyLayoutController extends Controller
     use GeneralFunctionTrait;
     private $pageName = "Study Layout";
     
-    private function updateMainCaseStudyDoc($caseStudyId){
+    private function updateMainCaseStudyDoc($caseStudyId, $status){
         $caseStudy = caseStudy::find($caseStudyId);
         $pendingCaseCount = study::where("case_study_id", $caseStudyId)
             ->where("status", 0)
             ->count();
 
         if($pendingCaseCount == 0){
-            $caseStudy->study_status_id = 3;
+            $caseStudy->study_status_id = $status;
+            if($status != 3){
+                $authUser = Auth::user();
+                $caseStudy->qc_id = $authUser->id;
+            }
             $caseStudy->save();
         }
     }
@@ -154,9 +158,10 @@ class StudyLayoutController extends Controller
         return $layout->layout;
     }
 
-    public function saveStudyLayout(Request $request){
+    public function saveCaseSingleStudy(Request $request){
         $validator = Validator::make($request->all(), [
             "study_id" => "required:exists:studies,id",
+            "qc_status" => "sometimes|nullable",
             "layout" =>  ['required', function ($attribute, $value, $fail) {
                 // Strip tags and whitespace
                 if (trim(strip_tags($value)) === '') {
@@ -168,11 +173,19 @@ class StudyLayoutController extends Controller
             return response()->json(['error'=>$validator->errors()]);
         }
         try{
-            $studyLayout = study::find($request->study_id);
-            $studyLayout->report = $request->layout;
-            $studyLayout->status = 1;
-            $studyLayout->save();
-            $this->updateMainCaseStudyDoc($studyLayout->case_study_id);
+            $study = study::find($request->study_id);
+            $study->report = $request->layout;
+            $study->status = 1;
+            $study->save();
+
+            $caseStudyStatus = 3;
+            $caseStudy = caseStudy::find($study->case_study_id);
+            
+            if($caseStudy->study_status_id == 3){
+                $caseStudyStatus = $request->qc_status;
+            }
+            
+            $this->updateMainCaseStudyDoc($study->case_study_id, $caseStudyStatus);
         }catch(\Exception $ex) {
             return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
         } catch(\Illuminate\Database\QueryException $ex){

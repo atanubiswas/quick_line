@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Validator;
@@ -47,6 +48,13 @@ class CaseStudyController extends Controller
                 ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
                 ->whereIn('study_status_id', [2, 4])
                 ->where("doctor_id", $doctor->id)
+                ->get();
+        }
+        elseif(in_array(auth()->user()->roles[0]->id, [2])){
+            $doctor = Doctor::where("user_id", auth()->user()->id)->first();
+            $CaseStudies = caseStudy::orderBy('created_at', 'desc')
+                ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
+                ->whereIn('study_status_id', [3])
                 ->get();
         }
         else{
@@ -133,13 +141,22 @@ class CaseStudyController extends Controller
             }
 
             if($request->hasFile('images')){
+                $oldUmask = umask(0002);
                 foreach($request->file('images') as $image){
                     $imageName = time().'_'.str_replace(" ", "_", $image->getClientOriginalName());
                     $relativePath = 'uploads/' . str_replace(" ", "_", $labName) . '/' . str_replace(" ", "_", $request->patient_name);
+                    $directoryPath = storage_path('app/public/' . $relativePath);
+
+                    // Manually create directory with correct permissions
+                    if (!File::exists($directoryPath)) {
+                        File::makeDirectory($directoryPath, 0755, true);
+                    }
+
                     $fullPath = $relativePath . '/' . $imageName;
                     
                     Storage::putFileAs('public/' . $relativePath, $image, $imageName);
-                    
+                    umask($oldUmask); 
+
                     $studyImage = new studyImages;
                     $studyImage->case_study_id = $caseStudy->id;
                     $studyImage->image = $fullPath;
@@ -184,6 +201,12 @@ class CaseStudyController extends Controller
             if($caseStudy->study_status_id == 1){
                 $caseStudy->assigner_id = Auth::user()->id;
                 $caseStudy->save();
+            }
+            else if($caseStudy->study_status_id == 3){
+                if(Auth::user()->roles[0]->pivot->role_id == 2){
+                    $caseStudy->qc_id = Auth::user()->id;
+                    $caseStudy->save();
+                }
             }
 
             $allStudies = study::where("case_study_id", $request->case_id)
@@ -231,6 +254,10 @@ class CaseStudyController extends Controller
             $study->assigner_id = null;
             $study->save();
         }
+        else if($study->study_status_id == 3 && $study->qc_id == Auth::user()->id){
+            $study->qc_id = null;
+            $study->save();
+        }
     }
 
     public function assignDoctor(Request $request){
@@ -267,7 +294,13 @@ class CaseStudyController extends Controller
             ->where("id", $request->case_study_id)
             ->first();
         $authUser = Auth::user();
+        $roleId = Auth::user()->roles[0]->pivot->role_id;
         
+        if($roleId == 2 && $caseStudy->study_status_id == 3){
+            $caseStudy->qc_id = Auth::user()->id;
+            $caseStudy->save();
+        }
+
         return view('admin.doctorCaseImageView', compact( 'caseStudy', 'authUser'));
     }
 }

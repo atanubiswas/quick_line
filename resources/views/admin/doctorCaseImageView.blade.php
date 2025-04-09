@@ -12,6 +12,7 @@
         color: #fff !important;
     }
 </style>
+<input type="hidden" id="unique_case_study_id" value="{{ $caseStudy->id }}" />
 <div id="tabs">
     <ul>
         <li><a href="#tabs-images">Images</a></li>
@@ -122,17 +123,28 @@
                                         @if($study->status == '1')
                                             <option value="0" selected="selected">Saved Report</option>
                                         @endif
-                                        @foreach($study->type->layout as $layout)
-                                            <option value="{{ $layout->id }}">{{ $layout->name }}</option>
-                                        @endforeach
+                                        @if($caseStudy->study_status_id != '3')
+                                            @foreach($study->type->layout as $layout)
+                                                <option value="{{ $layout->id }}">{{ $layout->name }}</option>
+                                            @endforeach
+                                        @endif
                                     </select>
                                 </div>
                                 <div class="form-group">
                                     <label for="exampleInputEmail1">Layout</label>
                                     <textarea class="layout-doctor" id="layout_{{ $study->id }}" name="layout">@if($study->status == '1') {{ $study->report }} @elseif(isset($study->type->layout[0])) {{ $study->type->layout[0]->layout }} @endif</textarea>
                                 </div>
+                                @if($caseStudy->study_status_id == '3')
                                 <div class="form-group">
-                                    <button type="button" class="btn btn-success save_btn float-right save-study" id="save_btn_{{ $study->id }}" data-index="{{ $study->id }}">Save</button>
+                                    <label for="exampleInputEmail1">Status</label>
+                                    <select id="qc_status_{{ $study->id }}" name="qc_status_{{ $study->id }}" class="form-control select2" style="width: 100%;">
+                                        <option value="4">Re-Work</option>
+                                        <option value="5" selected="selected">Complete</option>
+                                    </select>
+                                </div>
+                                @endif
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-success float-right save-study" id="save_btn_{{ $study->id }}" data-index="{{ $study->id }}">Save</button>
                                 </div>
                             </div>
                         </form>
@@ -180,14 +192,16 @@
                 $(this).html('Saving <i class="fas fa-spinner fa-spin"></i>');
                 var studyId = $(this).data('index');
                 var layout = $('#layout_' + studyId).val();
+                var qcStatus = $('#qc_status_' + studyId).val();
 
                 $.ajax({
-                    url: "{{ route('admin.saveStudyLayout') }}",
+                    url: "{{ route('admin.saveCaseSingleStudy') }}",
                     type: "POST",
                     data: {
                         "_token": "{{ csrf_token() }}",
                         "study_id": studyId,
-                        "layout": layout
+                        "layout": layout,
+                        "qc_status": qcStatus
                     },
                     success: function (data) {
                         $('.save-study').html('Save');
