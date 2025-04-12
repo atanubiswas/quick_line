@@ -32,9 +32,11 @@ class CaseStudyController extends Controller
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
     public function viewCaseStudy(Request $request){
-        $start_date = $end_date = Carbon::now()->startOfDay();;
+        $start_date = $end_date = Carbon::now()->startOfDay();
         $end_date = Carbon::now()->endOfDay();;
         $pageName = $this->pageName;
+        $centre_id = 0;
+        $centre_name = "";
 
         if(in_array(auth()->user()->roles[0]->id, [1, 5, 6])){
             $CaseStudies = caseStudy::orderBy('created_at', 'desc')
@@ -57,15 +59,28 @@ class CaseStudyController extends Controller
                 ->whereIn('study_status_id', [3])
                 ->get();
         }
+        elseif(in_array(auth()->user()->roles[0]->id, [3])){
+            $centre = Laboratory::where("user_id", auth()->user()->id)->first();
+            $centre_id = $centre->id;
+            $centre_name = $centre->lab_name;
+            $CaseStudies = caseStudy::orderBy('created_at', 'desc')
+                ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
+                ->where('laboratory_id', $centre->id)
+                ->whereBetween('created_at', [$start_date, $end_date])
+                ->get();
+        }
         else{
             $CaseStudies = array();
         }
 
-        $authUserId = Auth::user()->id;
+        $authUser = Auth::user();
+        $authUserId = $authUser->id;
+        $roleId = $authUser->roles[0]->pivot->role_id;
+        
         $Labrotories = Laboratory::where("status", 1)
             ->orderBy("lab_name")
             ->get();
-        return view('admin.viewCaseStudy', compact('pageName', 'CaseStudies', 'Labrotories', 'authUserId'));
+        return view('admin.viewCaseStudy', compact('pageName', 'CaseStudies', 'Labrotories', 'roleId', 'centre_id', 'centre_name'));
     }
 
     /**
@@ -197,9 +212,11 @@ class CaseStudyController extends Controller
             $lab_id = $caseStudy->laboratory_id;
 
             $caseDetails = caseStudy::find($caseId);
+            $authUser = Auth::user();
+            $roleId = Auth::user()->roles[0]->pivot->role_id;
 
-            if($caseStudy->study_status_id == 1){
-                $caseStudy->assigner_id = Auth::user()->id;
+            if($caseStudy->study_status_id == 1 && $roleId != 3){
+                $caseStudy->assigner_id = $authUser->id;
                 $caseStudy->save();
             }
             else if($caseStudy->study_status_id == 3){
@@ -236,8 +253,10 @@ class CaseStudyController extends Controller
                 ->orderBy('count', 'desc')
                 ->take(5)
                 ->get();
-                
-            return view('admin.getAllStudies', compact( 'caseId','allStudies', 'doctors', 'caseStudy', 'assignedDoctor', 'faveriteDoctors'));
+            
+            $authUser = Auth::user();
+            $roleId = Auth::user()->roles[0]->pivot->role_id;
+            return view('admin.getAllStudies', compact( 'caseId','allStudies', 'doctors', 'caseStudy', 'assignedDoctor', 'faveriteDoctors', 'roleId'));
         }catch (\Exception $e){
             $allStudies['error'] = $e->getMessage();
             return view('admin.getAllStudies', compact('allStudies'));
@@ -276,10 +295,17 @@ class CaseStudyController extends Controller
         $end_date = Carbon::parse($request->end_date)->endOfDay();;
         $centre_id = empty($request->centre_id)?null:$request->centre_id;
 
+        $authUser = Auth::user();
+        $roleId = Auth::user()->roles[0]->pivot->role_id;
+        $centre_id = Laboratory::where("user_id", $authUser->id)->first()->id;
+        
         $CaseStudies = caseStudy::orderBy('created_at', 'desc')
         ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
         ->whereBetween('created_at', [$start_date, $end_date])
         ->when($centre_id !== null, function($query) use($centre_id){
+            $query->where("laboratory_id", $centre_id);
+        })
+        ->when($roleId == 3, function($query) use($centre_id){
             $query->where("laboratory_id", $centre_id);
         })
         ->get();
@@ -301,6 +327,6 @@ class CaseStudyController extends Controller
             $caseStudy->save();
         }
 
-        return view('admin.doctorCaseImageView', compact( 'caseStudy', 'authUser'));
+        return view('admin.doctorCaseImageView', compact( 'caseStudy', 'authUser', 'roleId'));
     }
 }

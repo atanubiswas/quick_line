@@ -557,4 +557,14 @@ class LaboratoryController extends Controller
         }
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
     }
+
+    public function labPageSetup(Request $request){
+        // $validator = Validator::make($request->all(), [
+        //     'lab_id' => 'required|numeric|exists:laboratories,id'
+        // ]);
+        // if (!$validator->passes()) {
+        //     return response()->json(['error' => $validator->errors()]);
+        // }
+        return view("admin.labPageSetup");
+    }
 }

@@ -295,12 +295,13 @@
                     <div class="col-12">
                         <div class="card card-purple">
                             <div class="card-header">
-                                @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
+                                @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]))
                                 <div class="row">
                                     <div class="col-md-4">
                                         <h3 class="card-title" style="color: #fff;">View {{$pageName}} Data</h3>
                                     </div>
                                     <div class="col-md-3">
+                                        @if($roleId != 3)
                                         <div class="input-group">
                                             <select id="centre" name="centre" class="form-control select2" style="width: 100%;">
                                                 <option value="">All Centres</option>
@@ -308,9 +309,10 @@
                                                     <option value="{{$Labrotory->id}}">{{$Labrotory->lab_name}}</option>
                                                 @endforeach
                                             </select>
-                                            <input type="hidden" id="start_date" name="start_date" value="{{ Carbon\Carbon::now()->format('Y-m-d') }}">
-                                            <input type="hidden" id="end_date" name="end_date" value="{{ Carbon\Carbon::now()->format('Y-m-d') }}">
                                         </div>
+                                        @endif
+                                        <input type="hidden" id="start_date" name="start_date" value="{{ Carbon\Carbon::now()->format('Y-m-d') }}">
+                                        <input type="hidden" id="end_date" name="end_date" value="{{ Carbon\Carbon::now()->format('Y-m-d') }}">
                                     </div>
                                     <div class="col-md-3">
                                         <div class="input-group">
@@ -362,8 +364,9 @@
                                                     $doctor = "Not Assigned.";
                                                 }
                                             @endphp
-                                            <tr id="row-{{ $caseStudy->id }}" 
-                                            @if(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id == $authUserId) class="bg-gradient-warning text-black" 
+                                            <tr id="row-{{ $caseStudy->id }}"
+                                            @if($roleId == 3) class="" 
+                                            @elseif(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id == $authUserId) class="bg-gradient-warning text-black" 
                                             @elseif(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id != $authUserId) class="bg-gradient-teal text-black" 
                                             @elseif(!empty($caseStudy->qc_id) && $caseStudy->study_status_id == 3 && $caseStudy->qc_id == $authUserId) class="bg-gradient-warning text-black"
                                             @elseif(!empty($caseStudy->qc_id) && $caseStudy->study_status_id == 3 && $caseStudy->qc_id != $authUserId) class="bg-gradient-teal text-black" 
@@ -447,6 +450,13 @@
                                 @csrf
                                 <div class="row">
                                     <div class="col-md-9">
+                                        @if($roleId == 3)
+                                        <div class="form-group">
+                                            <label for="centre">Centre Name</label>
+                                            <input type="hidden" name="centre_id" id="centre_id" value="{{$centre_id}}">
+                                            <label class="form-control"> {{ $centre_name }}</label>
+                                        </div>
+                                        @else
                                         <div class="form-group">
                                             <label for="centre">Select Centre <em>*</em></label>
                                             <select name="centre_id" id="centre_id" class="form-control" style="width: 100%;">
@@ -456,6 +466,7 @@
                                                 @endforeach
                                             </select>
                                         </div>
+                                        @endIf
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
@@ -794,6 +805,20 @@
             let startAngle = 0;
             let currentAngle = 0;
             
+            @if($roleId == 3)
+                $.ajax({
+                    url: "{{ route('get-modality') }}",
+                    type: "POST",
+                    data: {
+                        "_token": "{{ csrf_token() }}",
+                        "lab_id": {{ $centre_id }}
+                    },
+                    success: function (response) {
+                        $('#modality').html(response).trigger('change');
+                    }
+                });
+            @endif
+
             $(document).on('click', '.view_image', function() {
                 $('#image_view').modal('show');
             });
@@ -1301,6 +1326,7 @@
             });
         }
 
+        @if($roleId != 3)
         $('#centre_id').select2({
             dropdownParent: $('#add-case-study-modal'),
             theme: 'bootstrap4',
@@ -1308,6 +1334,7 @@
             tags: true,
             allowClear: true
         });
+        @endif
 
         $('#study_id').select2({
             theme: 'bootstrap4',

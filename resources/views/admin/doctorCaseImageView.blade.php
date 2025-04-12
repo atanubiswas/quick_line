@@ -16,9 +16,11 @@
 <div id="tabs">
     <ul>
         <li><a href="#tabs-images">Images</a></li>
-        @foreach($caseStudy->study as $study)
-            <li><a href="#tabs-{{ $study->id }}">{{ $study->type->name }}</a></li>
-        @endforeach
+        @if($roleId != '3')
+            @foreach($caseStudy->study as $study)
+                <li><a href="#tabs-{{ $study->id }}">CASE - {{ $study->type->name }}</a></li>
+            @endforeach
+        @endif
     </ul>
     <div id="tabs-images">
         <div class="row" style="padding: 10px; margin-bottom: 5px;">
@@ -42,6 +44,8 @@
                             <strong>Study @php echo $i++; @endphp </strong>@if($study->status=='1')<span class="right badge badge-success">Done</span> @else <span class="right badge badge-danger">Pending</span> @endif
                             <p class="text-muted">
                                 <strong>Type: </strong>{{ $study->type->name }}
+                            </p>
+                            <p class="text-muted">
                                 <strong>Description: </strong>{{ $study->description }}
                             </p>
                             <hr>
@@ -107,6 +111,7 @@
             </div>
         </div>
     </div>
+    @if($roleId != '3')
     @foreach($caseStudy->study as $study)
         <div id="tabs-{{ $study->id }}">
             <div class="row" style="padding: 10px; margin-bottom: 5px;">
@@ -153,6 +158,7 @@
             </div>
         </div>
     @endforeach
+    @endif
 </div>
 <script>
     $( function() {

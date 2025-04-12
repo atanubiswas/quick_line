@@ -106,6 +106,7 @@ Route::group(['prefix' => 'admin'], function () {
    });
 
    Route::post('/get-modality', [LaboratoryController::class, 'getModality'])->name('get-modality');
+   Route::get('/lab-page-setup', [LaboratoryController::class, 'labPageSetup'])->name('admin.labPageSetup');
 
       /*================ DOCTOR CONTROLLER ====================*/
       Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
@@ -118,13 +119,15 @@ Route::group(['prefix' => 'admin'], function () {
     });
 
        /*================ CASE STUDY CONTROLLER ===================*/
-        Route::middleware(['role:Admin,Manager,Assigner,Quality Controller', '2fa'])->group(function () {
+        Route::middleware(['role:Admin,Manager,Assigner,Quality Controller,Centre', '2fa'])->group(function () {
             Route::get('/add-case-study', [CaseStudyController::class, 'addCaseStudy'])->name('admin.addCaseStudy');
             Route::post('/insert-case-study', [CaseStudyController::class, 'insertCaseStudy']);
+        });
+        Route::middleware(['role:Admin,Manager,Assigner,Quality Controller', '2fa'])->group(function () {
             Route::post('/reset-assigner-id', [CaseStudyController::class, 'resetAssignerId'])->name('admin.reset-assigner-id');
             Route::post('/assign-doctor', [CaseStudyController::class, 'assignDoctor'])->name('admin.assign-doctor');
         });
-        Route::middleware(['role:Admin,Manager,Assigner,Doctor,Quality Controller', '2fa'])->group(function () {
+        Route::middleware(['role:Admin,Manager,Assigner,Doctor,Quality Controller,Centre', '2fa'])->group(function () {
             Route::get('/view-case-study', [CaseStudyController::class, 'viewCaseStudy'])->name('admin.viewCaseStudy');
             Route::post('/get-study-type', [CaseStudyController::class, 'getStudyType'])->name('get-study-type');
             Route::post('/get-patient-details', [CaseStudyController::class, 'getPatientDetails']);

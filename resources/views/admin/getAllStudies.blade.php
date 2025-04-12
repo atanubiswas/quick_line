@@ -3,7 +3,7 @@
         @if(isset($study['error']))
                 <th>Error</th>
             @else
-                @if(!isset($caseStudy->doctor->name))
+                @if(!isset($caseStudy->doctor->name) && $roleId != 3)
                     <tr>
                         <th>Assign Doctor</th>
                         <th colspan="2">
@@ -29,6 +29,11 @@
                                 </optgroup>
                             </select>
                         </th>
+                    </tr>
+                @elseif(!isset($caseStudy->doctor->name) && $roleId == 3)
+                    <tr>
+                        <th>Assigned Doctor</th>
+                        <th colspan="2">Not Assigned</th>
                     </tr>
                 @else
                 <tr>
