@@ -141,6 +141,10 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('/get-lab-timeline', [TimeLineController::class,'getLabTimeline']);
         Route::post('/get-doc-timeline', [TimeLineController::class,'getDocTimeline']);
    });
+   
+   Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
+        Route::post('/case-study-timeline', [TimeLineController::class, 'caseStudyTimeline']);
+    });
 
    /*============== STUDYLAYOUT CONTROLLER ==============*/
    Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {

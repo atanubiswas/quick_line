@@ -1360,7 +1360,7 @@ INSERT INTO `study_statuses` (`id`, `name`, `created_at`, `updated_at`) VALUES
 (1, 'Unread', NULL, NULL),
 (2, 'Pending', NULL, NULL),
 (3, 'QA Pending', NULL, NULL),
-(4, 'Re-Open', NULL, NULL),
+(4, 'Re-Work', NULL, NULL),
 (5, 'Finished', NULL, NULL);
 
 -- --------------------------------------------------------

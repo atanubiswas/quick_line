@@ -36,7 +36,7 @@
                         <span class="time"><i class="fas fa-clock"></i> {{$timeLine->event_time}}</span>
                         <h3 class="timeline-header"><img src="{{$timeLine->users->user_image}}" class="img-circle elevation-2 timeline-user-image" alt="User Image" /><a href="#">{{$timeLine->users->name}}</a> {{$timeLine->min_text}}</h3>
                         <div class="timeline-body">
-                            {{str_replace("_", " ", $timeLine->log)}}
+                            {!! str_replace("_", " ", $timeLine->log) !!}
                         </div>
                     </div>
                 </div>

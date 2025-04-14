@@ -7,7 +7,9 @@ use Validator;
 
 use App\Models\Doctor;
 use App\Models\DoctorLog;
+use App\Models\caseStudy;
 use App\Models\Laboratory;
+use App\Models\caseStudyLog;
 use App\Models\laboratoryLog;
 
 use App\Traits\GeneralFunctionTrait;
@@ -27,25 +29,31 @@ class TimeLineController extends Controller
     private function getTimeLine($model, $column_name, $element_id){
         $timeLines = $model::selectRaw("*, date(created_at) as created_at_date, 
         case when 
-            `type`='add' then 'fas fa-file-import' when 
+            `type` = 'add' then 'fas fa-file-import' when 
             `type` = 'update' then 'fas fa-edit' when 
             `type` = 'delete' then 'fas fa-times-circle' when
             `type` = 'active' then 'fa fa-play' when
-            `type` = 'inactive' then 'fa fa-pause'
+            `type` = 'inactive' then 'fa fa-pause' when
+            `type` = 'view' then 'fa fa-eye' when
+            `type` = 'statusChange' then 'fa fa-cog'
         end as icon, 
         case when 
-            `type`='add' then 'bg-success' when 
+            `type` = 'add' then 'bg-success' when 
             `type` = 'update' then 'bg-warning' when 
             `type` = 'delete' then 'bg-danger' when
             `type` = 'active' then 'bg-success' when
-            `type` = 'inactive' then 'bg-danger'
+            `type` = 'inactive' then 'bg-danger' when
+            `type` = 'view' then 'bg-info' when
+            `type` = 'statusChange' then 'bg-warning'
         end as icon_color, 
         case when 
             `type`='add' then 'Added an Item' when 
             `type` = 'update' then 'Update an Item' when 
             `type` = 'delete' then 'Deleted an Item' when
             `type` = 'active' then 'Active an Item' when
-            `type` = 'inactive' then 'Inactive an Item'
+            `type` = 'inactive' then 'Inactive an Item' when
+            `type` = 'view' then 'View an Item' when
+            `type` = 'statusChange' then 'Status Changed'
         end as min_text")
             ->where($column_name, $element_id)
             ->with('users')
@@ -94,6 +102,17 @@ class TimeLineController extends Controller
             $timeLine->event_time = $eventTime;
         }
 
+        return view("admin.viewTimeline", compact("timeLines", "element_name"));
+    }
+
+    public function caseStudyTimeline(Request $request){
+        $caseStudy = caseStudy::find($request->case_study_id);
+        $element_name = $caseStudy->patient->name;
+        $timeLines = $this->getTimeLine(caseStudyLog::class, 'case_study_id', $request->case_study_id);
+        foreach($timeLines as $timeLine) {
+            $eventTime = $this->getHumanReadableTime($timeLine->created_at);
+            $timeLine->event_time = $eventTime;
+        }
         return view("admin.viewTimeline", compact("timeLines", "element_name"));
     }
 }

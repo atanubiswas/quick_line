@@ -17,6 +17,7 @@ use App\Models\role_user;
 use App\Models\WalletUser;
 use App\Models\Transaction;
 use App\Models\LabModality;
+use App\Models\caseStudyLog;
 use App\Models\FormFieldRole;
 use App\Models\laboratoryLog;
 use App\Models\DoctorModality;
@@ -128,7 +129,8 @@ trait GeneralFunctionTrait{
             '_DBERROR' => 'Something Wrong happen to the Database, Please reload this page.',
             '_SVSUMSG' => 'Success! Data Saved.',
             '_UPSUMSG' => 'Success! Data Updated.',
-            '_STUPMSG' => 'Success! Status Updated'
+            '_STUPMSG' => 'Success! Status Updated',
+            '_IMERROR' => 'Please select some image.',
         );
         
         return isset($messages[$code])?$messages[$code]:"Error.";
@@ -408,6 +410,7 @@ trait GeneralFunctionTrait{
             'old_value'     => $old_data,
             'new_value'     => $new_data
         );
+        
         switch($modelName){
             case 'laboratory':
                 laboratoryLog::create($inputArray);
@@ -416,25 +419,48 @@ trait GeneralFunctionTrait{
             case 'doctor':
                 DoctorLog::create($inputArray);
                 break;
+
+            case 'case_study':
+                caseStudyLog::create($inputArray);
+                break;
         }
     }
 
     /**
      * Summary of generateLoggedMessage
      * @param mixed $type
-     * @param mixed $unit
-     * @param mixed $unitName
-     * @param mixed $columnName
-     * @param mixed $old_data
-     * @param mixed $new_data
+     * @param string $unit
+     * @param string $unitName
+     * @param string $columnName
+     * @param string $old_data
+     * @param string $new_data
+     * @param string $patientName
+     * @param array $studyType
      * @return string
      */
-    private function generateLoggedMessage($type, $unit='', $unitName='', $columnName='', $old_data='', $new_data=''): string{
+    private function generateLoggedMessage($type, $unit='', $unitName='', $columnName='', $old_data='', $new_data='', $labName = "", $patientName="", $studyType = array(), $isEmergency = false): string{
         $loggedInUser = $this->getLoggedInUser();
         $currentDate = Carbon::now()->format('jS \o\f M, Y \a\t g:i A');
         switch ($type){
             case 'add':
                 return "New ".ucwords($unit)." added by ".ucwords($loggedInUser->name)." on ".$currentDate;
+            case 'addCaseStudy':
+                $studyTypes = implode(", ", $studyType);
+                $proNoun = (count($studyType) > 1) ? 'are' : 'is';
+                $endString = ($isEmergency) ? " and is an emergency case." : ".";
+                return "New ".ucwords($unit)." added by ".ucwords($loggedInUser->name)." on ".$currentDate." for the centre ".$labName.", Patient is ".$patientName.". The study type(s) ".$proNoun." ".$studyTypes.$endString;
+            case 'view':
+                return "The ".ucwords($unit)." was viewed by ".ucwords($loggedInUser->name)." on ".$currentDate;
+            case 'assignDoctor':
+                return "The ".ucwords($unit)." was assigned to ".ucwords($unitName)." by ".ucwords($loggedInUser->name)." on ".$currentDate;
+            case 'saveStudy':
+                return "The ".ucwords($unit)." was saved by ".ucwords($loggedInUser->name)." on ".$currentDate;
+            case 'saveCaseStudy':
+                return "The ".ucwords($unit)." was saved by ".ucwords($loggedInUser->name)." on ".$currentDate." This Case is Now Reday for QC.";
+            case 'saveCaseStudyQC':
+                return "The ".ucwords($unit)." was saved by ".ucwords($loggedInUser->name)." on ".$currentDate." Status is ".$unitName.".";
+            case 'updateStudy':
+                return "The ".ucwords($unit)." was updated from '".$old_data."' to '".$new_data."' by ".ucwords($loggedInUser->name)." on ".$currentDate;
             case 'add_document':
                     return "New ".ucwords($unit).", ".$unitName." added by ".ucwords($loggedInUser->name)." on ".$currentDate;
             case 'update':

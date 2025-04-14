@@ -19,7 +19,6 @@ use App\Models\studyType;
 use App\Models\Laboratory;
 use App\Models\studyImages;
 
-
 use App\Traits\GeneralFunctionTrait;
 
 class CaseStudyController extends Controller
@@ -37,7 +36,7 @@ class CaseStudyController extends Controller
         $pageName = $this->pageName;
         $centre_id = 0;
         $centre_name = "";
-
+        
         if(in_array(auth()->user()->roles[0]->id, [1, 5, 6])){
             $CaseStudies = caseStudy::orderBy('created_at', 'desc')
                 ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
@@ -80,7 +79,7 @@ class CaseStudyController extends Controller
         $Labrotories = Laboratory::where("status", 1)
             ->orderBy("lab_name")
             ->get();
-        return view('admin.viewCaseStudy', compact('pageName', 'CaseStudies', 'Labrotories', 'roleId', 'centre_id', 'centre_name'));
+        return view('admin.viewCaseStudy', compact('pageName', 'CaseStudies', 'Labrotories', 'roleId', 'centre_id', 'centre_name', 'authUserId'));
     }
 
     /**
@@ -115,6 +114,10 @@ class CaseStudyController extends Controller
             if (!$validator->passes()) {
                 return response()->json(['error'=>$validator->errors()]);
             }
+            
+            if(!$request->hasFile('images')){
+                return response()->json(['error'=>[$this->getMessages('_IMERROR')]]);
+            }
 
             $lab = Laboratory::find($request->centre_id);
             $labName = $lab->lab_name;
@@ -131,6 +134,7 @@ class CaseStudyController extends Controller
                 ]
             );
             $addedBy = Auth::user()->id;
+            $isEmergency = $request->emergency===null?false:true;
             $caseStudy = new CaseStudy();
             $caseStudy->laboratory_id = $request->centre_id;
             $caseStudy->patient_id = $patient->id;
@@ -147,12 +151,14 @@ class CaseStudyController extends Controller
             $caseStudy->added_by = $addedBy;
             $caseStudy->save();
 
+            $studyTypeArray = array();
             foreach($request->study_id as $key=>$studyId){
                 $study = new Study();
                 $study->case_study_id = $caseStudy->id;
                 $study->study_type_id = $studyId;
                 $study->description = $request->description[$key];
                 $study->save();
+                $studyTypeArray[] =$study->type->name;
             }
 
             if($request->hasFile('images')){
@@ -178,6 +184,9 @@ class CaseStudyController extends Controller
                     $studyImage->save();
                 }
             }
+
+            $msg = $this->generateLoggedMessage("addCaseStudy", 'Case Study', "", "", "", "", $labName, $patient->name, $studyTypeArray, $isEmergency);
+            $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'add', $msg);
             DB::commit();
         }catch(\Exception $ex) {
             DB::rollback();
@@ -201,7 +210,6 @@ class CaseStudyController extends Controller
     /**
      * Summary of getAllStudies
      * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
     public function getAllStudies(Request $request){
         $allStudies = array();
@@ -256,14 +264,14 @@ class CaseStudyController extends Controller
             
             $authUser = Auth::user();
             $roleId = Auth::user()->roles[0]->pivot->role_id;
+            $msg = $this->generateLoggedMessage("view", 'Case Study');
+            $this->addLog('case_study', 'case_study_id', $caseDetails->id, 'view', $msg);
             return view('admin.getAllStudies', compact( 'caseId','allStudies', 'doctors', 'caseStudy', 'assignedDoctor', 'faveriteDoctors', 'roleId'));
         }catch (\Exception $e){
-            $allStudies['error'] = $e->getMessage();
-            return view('admin.getAllStudies', compact('allStudies'));
+            return $this->getMessages('_GNERROR');
         }
         catch(\Illuminate\Database\QueryException $ex){
-            $allStudies['error'] = $e->getMessage();
-            return view('admin.getAllStudies', compact('allStudies'));
+            return $this->getMessages('_DBERROR');
         }
     }
 
@@ -282,22 +290,35 @@ class CaseStudyController extends Controller
     public function assignDoctor(Request $request){
         $caseId = $request->case_id;
         $doctorId = $request->doctor_id;
+        $doctor = Doctor::find($doctorId);
+
         $study = caseStudy::find($caseId);
         $study->doctor_id = $doctorId;
         $study->study_status_id = 2;
         $study->status_updated_on = Carbon::now();
         $study->save();
+        $msg = $this->generateLoggedMessage("assignDoctor", 'Case Study', "Dr. ".$doctor->name);
+        $this->addLog('case_study', 'case_study_id', $study->id, 'statusChange', $msg);
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
     }
 
     public function getCaseStudySearchResult(Request $request){
         $start_date = Carbon::parse($request->start_date)->startOfDay();;
-        $end_date = Carbon::parse($request->end_date)->endOfDay();;
-        $centre_id = empty($request->centre_id)?null:$request->centre_id;
+        $end_date = Carbon::parse($request->end_date)->endOfDay();
 
         $authUser = Auth::user();
         $roleId = Auth::user()->roles[0]->pivot->role_id;
-        $centre_id = Laboratory::where("user_id", $authUser->id)->first()->id;
+
+        $centre_id = null;
+        if(empty($request->centre_id)){
+            $centre_id = Laboratory::where("user_id", $authUser->id)->first();
+            if($centre_id){
+                $centre_id = $centre_id->id;
+            }
+        }
+        else{
+            $centre_id = $request->centre_id;
+        }
         
         $CaseStudies = caseStudy::orderBy('created_at', 'desc')
         ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
@@ -326,6 +347,8 @@ class CaseStudyController extends Controller
             $caseStudy->qc_id = Auth::user()->id;
             $caseStudy->save();
         }
+        $msg = $this->generateLoggedMessage("view", 'Case Study');
+        $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'view', $msg);
 
         return view('admin.doctorCaseImageView', compact( 'caseStudy', 'authUser', 'roleId'));
     }

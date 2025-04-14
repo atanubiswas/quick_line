@@ -1,7 +1,7 @@
 <table id="study_table" class="table table-bordered table-hover">
     <thead>
         <tr>
-            <th style="width: 2%;">Sl. No</th>
+            <th style="width: 2%;">Sl. #</th>
             <th style="width: 6%;">Case Id</th>
             <th style="width: 7%;">Date & Time</th>
             <th style="width: 15%;">Patient Name</th>
@@ -10,7 +10,7 @@
             <th style="width: 6%;">History</th>
             <th style="width: 6%;">Status</th>
             <th>Doctor</th>
-            <th style="width: 7%;">View</th>
+            <th style="width: 10%;">Controls</th>
             <th>Centre</th>
         </tr>
     </thead>
@@ -76,6 +76,9 @@
                         <button class="btn btn-xs bg-gradient-purple doc_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                     @endif
                     <button class="btn btn-xs bg-gradient-blue view-case-btn" title="View Studies" data-index="{{ $caseStudy->id }}"><i class="fas fa-folder"></i></button>
+                    @if(in_array(auth()->user()->roles[0]->id, [1, 5]))
+                    <button class="btn btn-xs bg-gradient-orange view-timeline-btn" title="View Timeline" data-index="{{ $caseStudy->id }}"><i class="fas fa-history"></i></button>
+                    @endif
                 </td>
                 <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>
             </tr>

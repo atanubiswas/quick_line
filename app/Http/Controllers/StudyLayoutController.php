@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\studyStatus;
 use App\Models\studyType;
 use App\Traits\GeneralFunctionTrait;
 use Illuminate\Http\Request;
@@ -31,7 +32,17 @@ class StudyLayoutController extends Controller
                 $authUser = Auth::user();
                 $caseStudy->qc_id = $authUser->id;
             }
+            
             $caseStudy->save();
+            if($status == 3){
+                $msg = $this->generateLoggedMessage("saveCaseStudy", "Case Study");
+                $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'update', $msg);
+            }
+            else{
+                $studyStatus = studyStatus::find($status);
+                $msg = $this->generateLoggedMessage("saveCaseStudyQC", "Case Study", $studyStatus->name);
+                $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'update', $msg);
+            }
         }
     }
 
@@ -174,17 +185,26 @@ class StudyLayoutController extends Controller
         }
         try{
             $study = study::find($request->study_id);
+            $oldLayout = $study->report;
             $study->report = $request->layout;
             $study->status = 1;
             $study->save();
-
+            
             $caseStudyStatus = 3;
             $caseStudy = caseStudy::find($study->case_study_id);
             
             if($caseStudy->study_status_id == 3){
                 $caseStudyStatus = $request->qc_status;
             }
-            
+
+            if(empty($oldLayout) || (!empty($request->qc_status) && $oldLayout == $request->layout)){
+                $msg = $this->generateLoggedMessage("saveStudy", "Study ".$study->type->name);
+                $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'statusChange', $msg);
+            }
+            else{
+                $msg = $this->generateLoggedMessage("updateStudy", "Study ".$study->type->name, "", "", $oldLayout, $request->layout);
+                $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'update', $msg);
+            }
             $this->updateMainCaseStudyDoc($study->case_study_id, $caseStudyStatus);
         }catch(\Exception $ex) {
             return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);

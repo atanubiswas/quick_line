@@ -338,7 +338,7 @@
                                 <table id="study_table" class="table table-bordered table-hover">
                                     <thead>
                                         <tr>
-                                            <th style="width: 2%;">Sl. No</th>
+                                            <th style="width: 2%;">Sl. #</th>
                                             <th style="width: 6%;">Case Id</th>
                                             <th style="width: 7%;">Date & Time</th>
                                             <th style="width: 15%;">Patient Name</th>
@@ -347,7 +347,7 @@
                                             <th style="width: 6%;">History</th>
                                             <th style="width: 6%;">Status</th>
                                             <th>Doctor</th>
-                                            <th style="width: 7%;">View</th>
+                                            <th style="width: 10%;">Controls</th>
                                             @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                             <th>Centre</th>
                                             @endif
@@ -417,6 +417,9 @@
                                                         <button class="btn btn-xs bg-gradient-purple doc_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                                                     @endif
                                                     <button class="btn btn-xs bg-gradient-blue view-case-btn" title="View Studies" data-index="{{ $caseStudy->id }}"><i class="fas fa-folder"></i></button>
+                                                    @if(in_array(auth()->user()->roles[0]->id, [1, 5]))
+                                                    <button class="btn btn-xs bg-gradient-orange view-timeline-btn" title="View Timeline" data-index="{{ $caseStudy->id }}"><i class="fas fa-history"></i></button>
+                                                    @endif
                                                 </td>
                                                 @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                                 <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>
@@ -768,6 +771,9 @@
                 </div>
             </div>
             <!-- /.modal -->
+            <div class="row" id="timeline_div">
+
+            </div>
         </section>
         <!-- /.content -->
     </div>
@@ -1440,6 +1446,32 @@
             // Rotate image & knob
             cropper.rotateTo(angle);
             $(".rotation-wheel-class").css("transform", `rotate(${angle}deg)`);
+        });
+        
+        $(document).on("click", '.view-timeline-btn',function () {
+            $("#timeline_div").html('');
+            $(this).html('<i class="fas fa-spinner fa-spin"></i>');
+            var case_study_id = $(this).data("index");
+            var form_data = new FormData();
+            form_data.append('case_study_id', case_study_id);
+
+            $.ajax({
+                url: '{{url("admin/case-study-timeline")}}',
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,
+                type: 'post',
+                success: function (data) {
+                    $(".view-timeline-btn").html('<i class="fas fa-history"></i>');
+                    $("#timeline_div").html(data);
+                    scrollToAnchor("view_timeline");
+                },
+                error: function (data) {
+                    $(".view-timeline-btn").html('<i class="fas fa-history"></i>');
+                    printErrorMsg("Somthing went wrong! Reload the page.");
+                }
+            });
         });
     });
     </script>
