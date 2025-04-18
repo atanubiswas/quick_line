@@ -347,7 +347,7 @@
                                             <th style="width: 6%;">History</th>
                                             <th style="width: 6%;">Status</th>
                                             <th>Doctor</th>
-                                            <th style="width: 10%;">Controls</th>
+                                            <th style="width: 12%;">Controls</th>
                                             @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                             <th>Centre</th>
                                             @endif
@@ -417,8 +417,11 @@
                                                         <button class="btn btn-xs bg-gradient-purple doc_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                                                     @endif
                                                     <button class="btn btn-xs bg-gradient-blue view-case-btn" title="View Studies" data-index="{{ $caseStudy->id }}"><i class="fas fa-folder"></i></button>
-                                                    @if(in_array(auth()->user()->roles[0]->id, [1, 5]))
+                                                    @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                                     <button class="btn btn-xs bg-gradient-orange view-timeline-btn" title="View Timeline" data-index="{{ $caseStudy->id }}"><i class="fas fa-history"></i></button>
+                                                    @endif
+                                                    @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && $caseStudy->study_status_id == 5)
+                                                    <button class="btn btn-xs bg-gradient-success view-report-btn" title="View Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-file-pdf"></i></button>
                                                     @endif
                                                 </td>
                                                 @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
@@ -452,7 +455,7 @@
                             <form method="post" id="case_study_form" enctype="multipart/form-data">
                                 @csrf
                                 <div class="row">
-                                    <div class="col-md-9">
+                                    <div class="col-md-7">
                                         @if($roleId == 3)
                                         <div class="form-group">
                                             <label for="centre">Centre Name</label>
@@ -472,6 +475,12 @@
                                         @endIf
                                     </div>
                                     <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="modality">Referred by</label>
+                                            <input type="text" name="ref_by" id="ref_by" class="form-control" placeholder="Enter Referred By">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
                                         <div class="form-group">
                                             <label for="modality">Select Modality <em>*</em></label>
                                             <select name="modality" id="modality" class="form-control" style="width: 100%;">
@@ -773,6 +782,17 @@
             <!-- /.modal -->
             <div class="row" id="timeline_div">
 
+            </div>
+
+            <div class="row" id="report-row" style="display: none;">
+                <div class="col-md-12">
+                    <div class="card card-purple">
+                        <div class="card-header">Report</div>
+                        <div class="card-body" id="report_div">
+
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
         <!-- /.content -->
@@ -1448,6 +1468,33 @@
             $(".rotation-wheel-class").css("transform", `rotate(${angle}deg)`);
         });
         
+        $(document).on("click", '.view-report-btn', function(){
+            $("#report-row").show(500);
+            $("#report_div").html('');
+            $(this).html('<i class="fas fa-spinner fa-spin"></i>');
+            var case_study_id = $(this).data("index");
+            var form_data = new FormData();
+            form_data.append('case_study_id', case_study_id);
+
+            $.ajax({
+                url: '{{url("admin/case-study-report")}}',
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,
+                type: 'post',
+                success: function (data) {
+                    $(".view-report-btn").html('<i class="fas fa-file-pdf"></i>');
+                    $("#report_div").html(data);
+                    scrollToAnchor("view_report");
+                },
+                error: function (data) {
+                    $(".view-report-btn").html('<i class="fas fa-file-pdf"></i>');
+                    printErrorMsg("Somthing went wrong! Reload the page.");
+                }
+            });
+        });
+
         $(document).on("click", '.view-timeline-btn',function () {
             $("#timeline_div").html('');
             $(this).html('<i class="fas fa-spinner fa-spin"></i>');

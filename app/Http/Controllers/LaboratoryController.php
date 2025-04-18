@@ -198,7 +198,11 @@ class LaboratoryController extends Controller
         ];
         foreach ($formFields as $formField) {
             if ($formField->FormField->required == 1) {
-                $validationArray[$formField->FormField->field_name] = 'required';
+                $validation = 'required';
+                if (in_array($formField->FormField->id, [12,13,141,15])) {
+                    $validation .= '|numeric';
+                }
+                $validationArray[$formField->FormField->field_name] = $validation;
             }
         }
         $validator = Validator::make($request->all(), $validationArray);
@@ -343,7 +347,11 @@ class LaboratoryController extends Controller
         ];
         foreach ($formFields as $formField) {
             if ($formField->FormField->required == 1) {
-                $validationArray[$formField->FormField->field_name] = 'required';
+                $validation = 'required';
+                if (in_array($formField->FormField->id, [12,13,141,15])) {
+                    $validation .= '|numeric';
+                }
+                $validationArray[$formField->FormField->field_name] = $validation;
             }
         }
         $validator = Validator::make($request->all(), $validationArray);

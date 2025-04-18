@@ -10,7 +10,7 @@
             <th style="width: 6%;">History</th>
             <th style="width: 6%;">Status</th>
             <th>Doctor</th>
-            <th style="width: 10%;">Controls</th>
+            <th style="width: 12%;">Controls</th>
             <th>Centre</th>
         </tr>
     </thead>
@@ -78,6 +78,9 @@
                     <button class="btn btn-xs bg-gradient-blue view-case-btn" title="View Studies" data-index="{{ $caseStudy->id }}"><i class="fas fa-folder"></i></button>
                     @if(in_array(auth()->user()->roles[0]->id, [1, 5]))
                     <button class="btn btn-xs bg-gradient-orange view-timeline-btn" title="View Timeline" data-index="{{ $caseStudy->id }}"><i class="fas fa-history"></i></button>
+                    @endif
+                    @if(in_array(auth()->user()->roles[0]->id, [1, 5, 3]) && $caseStudy->study_status_id == 5)
+                    <button class="btn btn-xs bg-gradient-success view-report-btn" title="View Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-file-pdf"></i></button>
                     @endif
                 </td>
                 <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>

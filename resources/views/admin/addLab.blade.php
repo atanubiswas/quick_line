@@ -44,19 +44,19 @@
               <form name="laboratory_form" id="laboratory_form" method="post" action="">
                 <div class="card-body">
                     <div class="form-group">
-                      <label for="exampleInputEmail1">Centre Name <em>*</em></label>
+                      <label for="lab_name">Centre Name <em>*</em></label>
                       <input type="text" class="form-control" required="required" name="lab_name" id="lab_name" placeholder="Enter Centre Name">
                     </div>
                     <div class="form-group">
-                      <label for="exampleInputEmail1">Centre Email <em>*</em></label>
+                      <label for="lab_login_email">Centre Email <em>*</em></label>
                       <input type="text" class="form-control" inputmode="email" required="required" name="lab_login_email" id="lab_login_email" placeholder="Centre Login Email">
                     </div>
                     <div class="form-group">
-                      <label for="exampleInputEmail1">Centre Phone Number <em>*</em></label>
+                      <label for="lab_phone_number">Centre Phone Number <em>*</em></label>
                       <input type="text" class="form-control" required="required" name="lab_phone_number" id="lab_phone_number" placeholder="Centre Phone Number">
                     </div>
                     <div class="form-group">
-                      <label for="exampleInputEmail1">Modality <em>*</em></label>
+                      <label for="modality">Modality <em>*</em></label>
                       <select class="form-control select2" required="required" multiple="multiple" name="modality[]" id="modality">
                         @foreach($modalityes as $modality)
                         <option value="{{$modality->id}}">{{$modality->name}}</option>
@@ -64,7 +64,7 @@
                       </select>
                     </div>
                     <div class="form-group">
-                      <label for="exampleInputEmail1">Centre Location <em>*</em></label>
+                      <label for="lab_primary_location">Centre Location <em>*</em></label>
                       <input type="text" class="form-control" required="required" name="lab_primary_location" id="lab_primary_location" placeholder="Centre Primary Location">
                     </div>
                     @include('admin.includes.extra_fields')

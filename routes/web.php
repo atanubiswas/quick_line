@@ -119,6 +119,9 @@ Route::group(['prefix' => 'admin'], function () {
     });
 
        /*================ CASE STUDY CONTROLLER ===================*/
+        Route::middleware(['role:Admin,Manager,Centre', '2fa'])->group(function () {
+            Route::post('/case-study-report', [CaseStudyController::class, 'caseStudyReport']);
+        });
         Route::middleware(['role:Admin,Manager,Assigner,Quality Controller,Centre', '2fa'])->group(function () {
             Route::get('/add-case-study', [CaseStudyController::class, 'addCaseStudy'])->name('admin.addCaseStudy');
             Route::post('/insert-case-study', [CaseStudyController::class, 'insertCaseStudy']);

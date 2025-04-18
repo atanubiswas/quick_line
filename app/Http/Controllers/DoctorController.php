@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
-use Validator;
 use Carbon\Carbon;
+use Validator;
 use Auth;
 use DB;
 
@@ -23,20 +25,22 @@ class DoctorController extends Controller
     private $pageName = "Doctor";
     
     /**
-     * Summary of insertDocData
+     * Summary of insertUserData
      * @param mixed $doc_name
      * @param mixed $doc_login_email
      * @param mixed $doc_phone_number
      * @param mixed $user_id
-     * @return doctor
+     * @param mixed $doc_signature
+     * @return \App\Models\Doctor
      */
-    private function insertDocData($doc_name,$doc_login_email, $doc_phone_number, $user_id){
+    private function insertDocData($doc_name,$doc_login_email, $doc_phone_number, $user_id, $doc_signature){
         $doctor = new doctor;
         $doctor->name           = $doc_name;
         $doctor->email          = $doc_login_email;
         $doctor->phone_number   = $doc_phone_number;
         $doctor->user_id        = $user_id;
         $doctor->status         = '1';
+        $doctor->signature      = $doc_signature;
         $doctor->save();
         
         $msg = $this->generateLoggedMessage("add", 'Doctor', $doctor->name);
@@ -79,7 +83,7 @@ class DoctorController extends Controller
      * @param mixed $doc_id
      * @return void
      */
-    private function updateDocData($name, $phone_number, $modalityes, $doc_id){
+    private function updateDocData($name, $phone_number, $modalityes, $doc_id, $doc_signature){
         $docOldData = doctor::find($doc_id);
         if ($docOldData->name !== $name) {
             $msg = $this->generateLoggedMessage("update", "Doctor", $docOldData->name, "Doctor Name", $docOldData->name, $name);
@@ -92,7 +96,8 @@ class DoctorController extends Controller
         doctor::where("id", $doc_id)
             ->update([
                 "name"         => $name,
-                "phone_number" => $phone_number
+                "phone_number" => $phone_number,
+                "signature"    => $doc_signature
             ]);
         /*============= ADD DATE TO DOCTOR MODALITY TABLE ===============*/
         $oldModality = $this->getDoctorModalityList($doc_id, 0);
@@ -181,6 +186,7 @@ class DoctorController extends Controller
             'doctor_login_email' => 'required|email|unique:users,email',
             'doctor_phone_number' => 'required',
             'modality'=> 'required',
+            'doctor_signature' => 'required|file|mimes:jpg,jpeg,png|max:2048',
         ];
         foreach($formFields as $formField){
             if($formField->FormField->required == 1){
@@ -193,6 +199,25 @@ class DoctorController extends Controller
         }
         
         try{
+            /*================ UPLOAD SIGNATURE =============== */
+            if($request->hasFile('doctor_signature')){
+                $oldUmask = umask(0002);
+                $image = $request->file('doctor_signature');
+                $imageName = time().'_'.str_replace(" ", "_", $image->getClientOriginalName());
+                $relativePath = 'uploads/doctor_signatures/' . str_replace(" ", "_", $request->doctor_name);
+                $directoryPath = storage_path('app/public/' . $relativePath);
+
+                // Manually create directory with correct permissions
+                if (!File::exists($directoryPath)) {
+                    File::makeDirectory($directoryPath, 0755, true);
+                }
+
+                $fullPath = $relativePath . '/' . $imageName;
+                
+                Storage::putFileAs('public/' . $relativePath, $image, $imageName);
+                umask($oldUmask); 
+            }
+            /*================ UPLOAD SIGNATURE =============== */
             /*============== ADD DATA TO USER TABLE ============*/
             $user = $this->insertUserData($request->doctor_name, $request->doctor_login_email, 'Doctor');
             /*============== ADD DATA TO USER TABLE ============*/
@@ -202,7 +227,7 @@ class DoctorController extends Controller
             /*============== ADD DATA TO ROLE USER TABLE ============*/
 
             /*============== ADD DATA TO DOCTORS TABLE ============*/
-            $doctor = $this->insertDocData($request->doctor_name, $request->doctor_login_email, $request->doctor_phone_number, $user->id);
+            $doctor = $this->insertDocData($request->doctor_name, $request->doctor_login_email, $request->doctor_phone_number, $user->id, $fullPath);
             /*============== ADD DATA TO DOCTORS TABLE ============*/
 
             /*============== ADD DATA TO FORM_FIELD_VALUES TABLE ============*/
@@ -310,6 +335,7 @@ class DoctorController extends Controller
             'name' => 'required|min:3',
             'phone_number' => 'required',
             'modality' => 'required',
+            'doctor_signature' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         ];
         foreach($formFields as $formField){
             if($formField->FormField->required == 1){
@@ -323,12 +349,32 @@ class DoctorController extends Controller
         
         $doctor = doctor::find($request->doc_id);
         try{
+            /*================ UPLOAD SIGNATURE =============== */
+            $fullPath = $doctor->signature;
+            if($request->hasFile('doctor_signature')){
+                $oldUmask = umask(0002);
+                $image = $request->file('doctor_signature');
+                $imageName = time().'_'.str_replace(" ", "_", $image->getClientOriginalName());
+                $relativePath = 'uploads/doctor_signatures/' . str_replace(" ", "_", $request->doctor_name);
+                $directoryPath = storage_path('app/public/' . $relativePath);
+
+                // Manually create directory with correct permissions
+                if (!File::exists($directoryPath)) {
+                    File::makeDirectory($directoryPath, 0755, true);
+                }
+
+                $fullPath = $relativePath . '/' . $imageName;
+                
+                Storage::putFileAs('public/' . $relativePath, $image, $imageName);
+                umask($oldUmask); 
+            }
+            /*================ UPLOAD SIGNATURE =============== */
             /*============== ADD DATA TO USER TABLE ============*/
             $this->updateUserData($request->name, $doctor->user_id);
             /*============== ADD DATA TO USER TABLE ============*/
             
             /*============== UPDATE DATA TO DOCTOR TABLE ============*/
-            $this->updateDocData($request->name, $request->phone_number, $request->modality, $request->doc_id);
+            $this->updateDocData($request->name, $request->phone_number, $request->modality, $request->doc_id, $fullPath);
             /*============== UPDATE DATA TO DOCTOR TABLE ============*/
 
             /*============== UPDATE DATA TO FORM_FIELD_VALUES TABLE ============*/

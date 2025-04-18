@@ -104,7 +104,8 @@ class CaseStudyController extends Controller
                 'gender' => 'required',
                 'study_id' => 'required|array',
                 'study_id.*' => 'required|exists:study_types,id',
-                'clinical_history' => 'required'
+                'clinical_history' => 'required',
+                'ref_by' => 'nullable|sometimes|string',
             ];
             $customMessages = [
                 'patient_id.required_if' => 'The Patient ID is required when Existing Patient is selected.',
@@ -149,6 +150,7 @@ class CaseStudyController extends Controller
             $caseStudy->case_study_id = $this->generateCaseStudyId();
             $caseStudy->modality_id = $request->modality;
             $caseStudy->added_by = $addedBy;
+            $caseStudy->ref_by = $request->ref_by;
             $caseStudy->save();
 
             $studyTypeArray = array();
@@ -351,5 +353,20 @@ class CaseStudyController extends Controller
         $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'view', $msg);
 
         return view('admin.doctorCaseImageView', compact( 'caseStudy', 'authUser', 'roleId'));
+    }
+
+    public function caseStudyReport(Request $request){
+        $caseStudy = caseStudy::with("modality", "study.type", "images", "patient", "laboratory")
+            ->where("id", $request->case_study_id)
+            ->first();
+        $doctorQualification = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "9")->first();
+        $registrationNumber = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "11")->first();
+        
+        $top = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value."mm" : "30mm";
+        $right = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value."mm" : "30mm";
+        $bottom = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value."mm" : "30mm";
+        $left = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value."mm" : "30mm";
+        
+        return view('admin.caseStudyReport', compact( 'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left'));
     }
 }

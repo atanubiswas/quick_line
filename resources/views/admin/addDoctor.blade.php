@@ -41,7 +41,7 @@
               </div>
               <!-- /.card-header -->
               <!-- form start -->
-              <form name="doctor_form" id="doctor_form" method="post" action="">
+              <form name="doctor_form" id="doctor_form" method="post" action="" accept="multipart/form-data">
                 <div class="card-body">
                     <div class="form-group">
                       <label for="exampleInputEmail1">Name <em>*</em></label>
@@ -62,6 +62,10 @@
                         <option value="{{$modality->id}}">{{$modality->name}}</option>
                         @endforeach
                       </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="exampleInputEmail1">Signature <em>*</em></label>
+                      <input type="file" class="form-control"  accept="image/*" required="required" name="doctor_signature" id="doctor_signature" accept=".png, .jpg, .jpeg">
                     </div>
                     @include('admin.includes.extra_fields')
                 </div>
@@ -101,6 +105,7 @@ $(function(){
           $(this).val('');         // Clear field if input is incomplete
       }
     });
+
     $('#save_btn').on('click', function () {
         $(this).html('Saving <i class="fas fa-spinner fa-spin"></i>');
         $(".form-control").removeClass("is-invalid");
@@ -111,6 +116,11 @@ $(function(){
             form_data.append(input.name, input.value);
         });
         
+        var fileInput = $('#doctor_signature')[0];
+        if (fileInput.files.length > 0) {
+            form_data.append('doctor_signature', fileInput.files[0]);
+        }
+
         $.ajax({
             url: '{{url("admin/insert-doctor")}}',
             cache: false,
