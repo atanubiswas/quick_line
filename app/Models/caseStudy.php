@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class caseStudy extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     public function study(){
         return $this->hasMany('App\Models\study', 'case_study_id');

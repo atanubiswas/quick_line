@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Validator;
 use Auth;
+use Str;
 use DB;
 
 
@@ -135,6 +138,7 @@ class CaseStudyController extends Controller
                 ]
             );
             $addedBy = Auth::user()->id;
+            $uuid = Str::uuid()->toString();
             $isEmergency = $request->emergency===null?false:true;
             $caseStudy = new CaseStudy();
             $caseStudy->laboratory_id = $request->centre_id;
@@ -151,6 +155,7 @@ class CaseStudyController extends Controller
             $caseStudy->modality_id = $request->modality;
             $caseStudy->added_by = $addedBy;
             $caseStudy->ref_by = $request->ref_by;
+            $caseStudy->uuid = $uuid;
             $caseStudy->save();
 
             $studyTypeArray = array();
@@ -361,12 +366,82 @@ class CaseStudyController extends Controller
             ->first();
         $doctorQualification = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "9")->first();
         $registrationNumber = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "11")->first();
+        $studyNames = "";
+        foreach($caseStudy->study as $study){
+            $studyNames .= $study->type->name.", ";
+        }
+        $studyNames = rtrim($studyNames, ", ");
+        $pdfUrl = urlencode(url('case-study/pdf/'.$caseStudy->case_study_id));
         
         $top = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value."mm" : "30mm";
         $right = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value."mm" : "30mm";
         $bottom = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value."mm" : "30mm";
         $left = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value."mm" : "30mm";
+        return view('admin.caseStudyReport', compact( 'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left', 'studyNames', 'pdfUrl'));
+    }
+
+    public function generatePdf($case_study_id){
+        $caseStudy = caseStudy::with("modality", "study.type", "images", "patient", "laboratory")
+            ->where("case_study_id", $case_study_id)
+            ->first();
+            
+        $doctorQualification = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "9")->first();
+        $registrationNumber = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "11")->first();
+        $studyNames = "";
+        $signature = public_path('storage'. DIRECTORY_SEPARATOR .$caseStudy->doctor->signature);
+        $signature = str_replace("\\", '/', $signature);
+        foreach($caseStudy->study as $study){
+            $studyNames .= $study->type->name.", ";
+        }
+        $studyNames = rtrim($studyNames, ", ");
+        $qrData = urlencode(url('case-study/pdf/'.$caseStudy->case_study_id));
+        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&color=02013c&data={$qrData}";
+        $qrImage = Http::withoutVerifying()->get($qrUrl)->body();
+        $qrFilename = $caseStudy->case_study_id . '.png';
+        $qrPath = 'qr-codes' . DIRECTORY_SEPARATOR . $qrFilename;
+        Storage::disk('public')->put($qrPath, $qrImage);
+        $qrLocalPath = public_path('storage'. DIRECTORY_SEPARATOR . $qrPath);
         
-        return view('admin.caseStudyReport', compact( 'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left'));
+        $top = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value."mm" : "30mm";
+        $right = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value."mm" : "30mm";
+        $bottom = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value."mm" : "30mm";
+        $left = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value."mm" : "30mm";
+        // return view('admin.generatePDF', compact( 'caseStudy', 'doctorQualification', 'registrationNumber', 'studyNames', 'qrLocalPath', 'signature', 'top', 'right', 'bottom', 'left'));
+        $pdf = Pdf::loadView('admin.generatePDF', compact( 'caseStudy', 'doctorQualification', 'registrationNumber', 'studyNames', 'qrLocalPath', 'signature', 'top', 'right', 'bottom', 'left'));
+        $pdf->setPaper('A4', 'portrait');
+        $pdfContent = $pdf->output();
+        // Delete the QR code image
+        Storage::disk('public')->delete($qrPath);
+
+        return response()->streamDownload(function () use ($pdfContent) {
+            echo $pdfContent;
+        }, str_replace(" ", "-", $caseStudy->patient->name) . '.pdf');
+    }
+
+    public function deleteCaseStudy(Request $request){
+        $caseStudy = CaseStudy::find($request->case_study_id);
+        try{
+            if($caseStudy){
+                if(!in_array($caseStudy->study_status_id, [1,2])){
+                    return response()->json(['status'=>'error', 'message'=> 'You can\'t delete This Case Study Now, Status has Changed.'], 200);
+                }
+                $caseStudy->study_status_id = 6;
+                $caseStudy->status_updated_on = Carbon::now();
+                $caseStudy->save();
+                
+                $caseStudy->delete();
+                $msg = $this->generateLoggedMessage("delete", 'Case Study');
+                $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'delete', $msg);
+                return response()->json(['status'=>'success', 'message' => [$this->getMessages('_DELSUMSG')]]);
+            }
+            else{
+                return response()->json(['status'=>'error', 'message'=>[$this->getMessages('_GNERROR')]]);
+            }
+        }catch (\Exception $e){
+            return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
+        }
+        catch(\Illuminate\Database\QueryException $ex){
+            return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
+        }
     }
 }

@@ -6,7 +6,9 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "barryvdh/laravel-dompdf": "^3.1",
         "codeboxr/coupondiscount": "^1.0",
+        "endroid/qr-code": "^5.1",
         "guzzlehttp/guzzle": "^7.8",
         "laravel/fortify": "^1.20",
         "laravel/framework": "^10.10",

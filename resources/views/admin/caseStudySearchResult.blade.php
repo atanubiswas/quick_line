@@ -25,9 +25,12 @@
                     $doctor = "Not Assigned.";
                 }
             @endphp
-            <tr id="row-{{ $caseStudy->id }}" 
-            @if(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id == $authUserId) class="bg-gradient-warning text-black" 
+            <tr id="row-{{ $caseStudy->id }}"
+            @if(!empty($caseStudy->deleted_at)) class="delete_case_study_row" 
+            @elseif(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id == $authUserId) class="bg-gradient-warning text-black" 
             @elseif(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id != $authUserId) class="bg-gradient-teal text-black" 
+            @elseif(!empty($caseStudy->qc_id) && $caseStudy->study_status_id == 3 && $caseStudy->qc_id == $authUserId) class="bg-gradient-warning text-black"
+            @elseif(!empty($caseStudy->qc_id) && $caseStudy->study_status_id == 3 && $caseStudy->qc_id != $authUserId) class="bg-gradient-teal text-black" 
             @endif>
                 <td>
                     @if(!empty($caseStudy->assigner_id))
@@ -65,6 +68,7 @@
                         @elseif($caseStudy->study_status_id ==3)class="badge bg-gradient-indigo"
                         @elseif($caseStudy->study_status_id ==4)class="badge bg-gradient-orange"
                         @elseif($caseStudy->study_status_id ==5)class="badge bg-gradient-success"
+                        @elseif($caseStudy->study_status_id ==6)class="badge bg-gradient-danger"
                         @endif>{{$caseStudy->status->name}}
                     </span>
                 </td>
@@ -76,10 +80,13 @@
                         <button class="btn btn-xs bg-gradient-purple doc_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                     @endif
                     <button class="btn btn-xs bg-gradient-blue view-case-btn" title="View Studies" data-index="{{ $caseStudy->id }}"><i class="fas fa-folder"></i></button>
-                    @if(in_array(auth()->user()->roles[0]->id, [1, 5]))
+                    @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                     <button class="btn btn-xs bg-gradient-orange view-timeline-btn" title="View Timeline" data-index="{{ $caseStudy->id }}"><i class="fas fa-history"></i></button>
                     @endif
-                    @if(in_array(auth()->user()->roles[0]->id, [1, 5, 3]) && $caseStudy->study_status_id == 5)
+                    @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && in_array($caseStudy->study_status_id, [1, 2]))
+                    <button class="btn btn-xs bg-gradient-danger delete-case-btn" title="Delete Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-trash"></i></button>
+                    @endif
+                    @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && $caseStudy->study_status_id == 5)
                     <button class="btn btn-xs bg-gradient-success view-report-btn" title="View Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-file-pdf"></i></button>
                     @endif
                 </td>

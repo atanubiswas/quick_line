@@ -2,6 +2,9 @@
 @section('title', "View Case Studies")
 @section('extra_css')
     <style type="text/css">
+        .delete_case_study_row{
+            background-color: #ffcece;
+        }
         label em {
             color: #FF0000;
         }
@@ -365,7 +368,7 @@
                                                 }
                                             @endphp
                                             <tr id="row-{{ $caseStudy->id }}"
-                                            @if($roleId == 3) class="" 
+                                            @if(!empty($caseStudy->deleted_at)) class="delete_case_study_row" 
                                             @elseif(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id == $authUserId) class="bg-gradient-warning text-black" 
                                             @elseif(!empty($caseStudy->assigner_id) && $caseStudy->study_status_id == 1 && $caseStudy->assigner_id != $authUserId) class="bg-gradient-teal text-black" 
                                             @elseif(!empty($caseStudy->qc_id) && $caseStudy->study_status_id == 3 && $caseStudy->qc_id == $authUserId) class="bg-gradient-warning text-black"
@@ -402,12 +405,14 @@
                                                 <td>{{$caseStudy->clinical_history}}</td>
                                                 <td>
                                                     <span 
-                                                    @if($caseStudy->study_status_id ==1)class="badge bg-gradient-danger" 
-                                                    @elseif($caseStudy->study_status_id ==2)class="badge bg-gradient-indigo"
-                                                    @elseif($caseStudy->study_status_id ==3)class="badge bg-gradient-indigo"
-                                                    @elseif($caseStudy->study_status_id ==4)class="badge bg-gradient-orange"
-                                                    @elseif($caseStudy->study_status_id ==5)class="badge bg-gradient-success"
-                                                    @endif>{{$caseStudy->status->name}}</span>
+                                                        @if($caseStudy->study_status_id ==1)class="badge bg-gradient-danger" 
+                                                        @elseif($caseStudy->study_status_id ==2)class="badge bg-gradient-indigo"
+                                                        @elseif($caseStudy->study_status_id ==3)class="badge bg-gradient-indigo"
+                                                        @elseif($caseStudy->study_status_id ==4)class="badge bg-gradient-orange"
+                                                        @elseif($caseStudy->study_status_id ==5)class="badge bg-gradient-success"
+                                                        @elseif($caseStudy->study_status_id ==6)class="badge bg-gradient-danger"
+                                                        @endif>{{$caseStudy->status->name}}
+                                                    </span>
                                                 </td>
                                                 <td>{!!$doctor!!}</td>
                                                 <td>
@@ -422,6 +427,9 @@
                                                     @endif
                                                     @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && $caseStudy->study_status_id == 5)
                                                     <button class="btn btn-xs bg-gradient-success view-report-btn" title="View Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-file-pdf"></i></button>
+                                                    @endif
+                                                    @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && in_array($caseStudy->study_status_id, [1, 2]))
+                                                    <button class="btn btn-xs bg-gradient-danger delete-case-btn" title="Delete Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-trash"></i></button>
                                                     @endif
                                                 </td>
                                                 @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
@@ -1517,6 +1525,73 @@
                 error: function (data) {
                     $(".view-timeline-btn").html('<i class="fas fa-history"></i>');
                     printErrorMsg("Somthing went wrong! Reload the page.");
+                }
+            });
+        });
+
+        $(document).on("click", '.delete-case-btn',function () {
+            console.log("Delete button clicked");
+            var case_study_id = $(this).data("index");
+            Swal.fire({
+                icon: 'error',
+                title: "Are you sure?",
+                text: "Write 'Delete' on the Box and Click Confirm Delete, To Delete The Case Study.",
+                input: "text",
+                inputAttributes: {
+                    autocapitalize: "off"
+                },
+                showCancelButton: true,
+                confirmButtonText: "Confirm Delete",
+                showLoaderOnConfirm: true,
+                preConfirm: async (login) => {
+                    if(login !== 'Delete'){
+                        Swal.showValidationMessage(`
+                            To Delete The Case Study, You need to Write 'Delete' in the Box.
+                        `);
+                    }
+                }
+            }).then((result) => {
+                if(result.isConfirmed === true && result.value === 'Delete'){
+                    $.ajax({
+                        url: '{{url("admin/delete-case-study")}}',
+                        type: 'POST',
+                        data: {
+                            "_token": "{{ csrf_token() }}",
+                            "case_study_id": case_study_id
+                        },
+                        success: function (data) {
+                            if(data.status == 'success'){
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: data.message,
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                                setTimeout(function(){
+                                    location.reload();
+                                }, 2000);
+                            }else{
+                                Swal.fire({
+                                    title: 'Error!',
+                                    html: data.message,
+                                    icon: 'error',
+                                    confirmButtonText: 'Close',
+                                    timer: 5000,
+                                    timerProgressBar: true,
+                                }).then((result) => {
+                                    location.reload();
+                                });
+                            }
+                        },
+                        error: function (data) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: "Somthing went wrong! Reload the page.",
+                            });
+                        }
+                    });
                 }
             });
         });

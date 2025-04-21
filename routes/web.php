@@ -39,7 +39,7 @@ Route::get('/', function () {
 Route::get('/file/{filename}', function ($filename) {
     return response()->file(storage_path('app/public/' . $filename));
 });
-
+Route::get('/case-study/pdf/{case_study_id}', [CaseStudyController::class, 'generatePdf'])->name('case-study.pdf');
 Route::group(['prefix' => 'admin'], function () {
     /*============= GOOGLE 2FA ROUTES ================*/
     Route::group(['prefix'=>'2fa'], function(){
@@ -119,8 +119,9 @@ Route::group(['prefix' => 'admin'], function () {
     });
 
        /*================ CASE STUDY CONTROLLER ===================*/
-        Route::middleware(['role:Admin,Manager,Centre', '2fa'])->group(function () {
+        Route::middleware(['role:Admin,Manager,Centre,Assigner', '2fa'])->group(function () {
             Route::post('/case-study-report', [CaseStudyController::class, 'caseStudyReport']);
+            Route::post('/delete-case-study', [CaseStudyController::class, 'deleteCaseStudy']);
         });
         Route::middleware(['role:Admin,Manager,Assigner,Quality Controller,Centre', '2fa'])->group(function () {
             Route::get('/add-case-study', [CaseStudyController::class, 'addCaseStudy'])->name('admin.addCaseStudy');
@@ -143,9 +144,6 @@ Route::group(['prefix' => 'admin'], function () {
    Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {
         Route::post('/get-lab-timeline', [TimeLineController::class,'getLabTimeline']);
         Route::post('/get-doc-timeline', [TimeLineController::class,'getDocTimeline']);
-   });
-   
-   Route::middleware(['role:Admin,Manager', '2fa'])->group(function () {
         Route::post('/case-study-timeline', [TimeLineController::class, 'caseStudyTimeline']);
     });
 

@@ -30,6 +30,33 @@
                             </select>
                         </th>
                     </tr>
+                    @elseif(isset($caseStudy->doctor->name) && $caseStudy->study_status_id <= 2 && $roleId != 3)
+                    <tr>
+                        <th>Update Doctor</th>
+                        <th colspan="2">
+                            <select name="doctor_id" date-case-id="{{ $caseId }}" class="form-control select2 assign_doctor">
+                            <option value="">Select Doctor</option>
+                                @if($assignedDoctor !== null)
+                                    <optgroup label="Preferred Doctor">
+                                        <option value="{{ $assignedDoctor->id }}">{{ $assignedDoctor->name }}</option>
+                                    </optgroup>
+                                @endif
+                                
+                                <optgroup label="Faverite Doctors">
+                                @if($faveriteDoctors !== null)
+                                    @foreach($faveriteDoctors as $doctor)
+                                        <option value="{{ $doctor->id }}">{{ $doctor->name }}</option>
+                                    @endforeach
+                                @endif
+                                </optgroup>
+                                <optgroup label="All Doctors">
+                                @foreach ($doctors as $doctor)
+                                    <option value="{{ $doctor->id }}" @if($caseStudy->doctor->id == $doctor->id) selected="selected" @endif)>{{ $doctor->name }}</option>
+                                @endforeach
+                                </optgroup>
+                            </select>
+                        </th>
+                    </tr>
                 @elseif(!isset($caseStudy->doctor->name) && $roleId == 3)
                     <tr>
                         <th>Assigned Doctor</th>

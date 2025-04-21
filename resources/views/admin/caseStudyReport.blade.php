@@ -1,31 +1,29 @@
 <a name="view_report"></a>
 <div class="print_block">
-<table style="border-collapse: collapse; width: 100%;">
-  <tr>
-    <th style="border: 1px solid black; padding: 4px;">Patient Name:</th>
-    <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->patient->name }}</th>
-    <th style="border: 1px solid black; padding: 4px;">Age / Gender:</th>
-    <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->patient->age }} / {{ ucwords($caseStudy->patient->gender) }}</th>
-  </tr>
-  <tr>
-    <th style="border: 1px solid black; padding: 4px;">Patient Id:</th>
-    <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->patient->patient_id }}</th>
-    <th style="border: 1px solid black; padding: 4px;">Date & Time:</th>
-    <th style="border: 1px solid black; padding: 4px;">{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('jS \\of F Y')}}</th>
-  </tr>
-  <tr>
-    <th style="border: 1px solid black; padding: 4px;">Refd By:</th>
-    <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->ref_by }}</th>
-    <th style="border: 1px solid black; padding: 4px;">Modality:</th>
-    <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->modality->name }}</th>
-  </tr>
-</table>
+  @php $count = 1; @endphp
+  @foreach($caseStudy->study as $study)
+    <table style="border-collapse: collapse; width: 100%;">
+      <tr>
+        <th style="border: 1px solid black; padding: 4px;">Patient Name:</th>
+        <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->patient->name }}</th>
+        <th style="border: 1px solid black; padding: 4px;">Age / Gender:</th>
+        <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->patient->age }} / {{ ucwords($caseStudy->patient->gender) }}</th>
+      </tr>
+      <tr>
+        <th style="border: 1px solid black; padding: 4px;">Patient Id:</th>
+        <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->patient->patient_id }}</th>
+        <th style="border: 1px solid black; padding: 4px;">Date & Time:</th>
+        <th style="border: 1px solid black; padding: 4px;">{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('jS \o\f M Y, h:i A')}}</th>
+      </tr>
+      <tr>
+        <th style="border: 1px solid black; padding: 4px;">Refd By:</th>
+        <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->ref_by }}</th>
+        <th style="border: 1px solid black; padding: 4px;">Study:</th>
+        <th style="border: 1px solid black; padding: 4px;">{{ $study->type->name }}</th>
+      </tr>
+    </table>
 
-@php $count = 1; @endphp
-@foreach($caseStudy->study as $study)
-    <p style="font-size: 22px; font-weight: bold; margin-top: 20px;">{{ $study->type->name }}</p>
     <div class="main_study_result" id="main_study_result_{{ $study->id }}">
-      <!-- <textarea id="study_result_{{ $study->id }}" name="study_result_{{ $study->id }}" class="study_result">{!! $study->report !!}</textarea> -->
       {!! $study->report !!}
     </div>
     <div style="display: none;" id="text_area_div_{{ $study->id }}">  
@@ -39,30 +37,45 @@
         <button type="button" class="btn btn-block bg-gradient-primary btn-xs edit_b4_print" data-index="{{ $study->id }}"><i class="fas fa-edit"></i>Edit</button>
       </div>
     </div>
-    @if(count($caseStudy['study'])>$count++)
-    <hr>
-    @endif
-@endforeach
+    
+    <div style="display: flex; align-items: flex-start; margin-top: 20px;">
+      <!-- Left: Signature + Doctor Info (60%) -->
+      <div style="width: 60%;">
+        <img src="{{ url('storage/'.$caseStudy->doctor->signature) }}" alt="Doctor Signature" style="width: 100%; max-width: 250px; margin-bottom: 10px;">
+        <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+          <strong style="font-size: 18px;">Doctor {{ $caseStudy->doctor->name }}</strong><br>
+          <strong>{{ $doctorQualification->value }}</strong><br>
+          @if(isset($registrationNumber->value))
+            <strong>{{ $registrationNumber->value }}</strong><br>
+          @endif
+        </p>
+      </div>
 
-<img src="{{ url('storage/'.$caseStudy->doctor->signature) }}" alt="Doctor Signature" class="img-fluid" style="width: 100%; max-width: 250px; margin-top: 20px;">
-<p>
-  <strong style="font-size: 18px;">Doctor {{ $caseStudy->doctor->name }}</strong><br>
-  <strong>{{ $doctorQualification->value }}</strong><br>
-  @if(isset($registrationNumber->value))
-    <strong>{{ $registrationNumber->value }}</strong><br>
-  @endif
-</p>
-<div style="display: flex; justify-content: center; align-items: center; height: 100px; font-family: Arial, sans-serif;">
-    <div>
-        @php echo str_repeat('-', 20); @endphp
-        <strong> &nbsp;&nbsp;End Of Report&nbsp;&nbsp; </strong>
-        @php echo str_repeat('-', 20); @endphp
+      <!-- Right: QR Code with Dashed Border -->
+      <div style="width: 40%; display: flex; justify-content: flex-start; align-items: center; padding-left: 20px;">
+        <div style="border: 2px dashed #333; padding: 10px;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&color=02013c&data={{$pdfUrl}}" alt="QR Code" style="width: 150px; height: 150px;">
+        </div>
+      </div>
     </div>
-</div>
-<p style="font-size: 14px; margin-top: 20px;"><strong>Disclaimer</strong>: The science of radiology is based upon interpretation of shadows of normal and abnormal 
-tissue. This is neither complete nor accurate; hence, findings should always be interpreted in to the light of 
-clinico-pathological correlation. This is a professional opinion, not a diagnosis. Not meant for medico 
-legal purposes.</p>
+
+
+    <div style="display: flex; justify-content: center; align-items: center; height: 100px; font-family: Arial, sans-serif;">
+        <div>
+            @php echo str_repeat('-', 20); @endphp
+            <strong> &nbsp;&nbsp;End Of Report&nbsp;&nbsp; </strong>
+            @php echo str_repeat('-', 20); @endphp
+        </div>
+    </div>
+    <p style="font-size: 14px; margin-top: 20px;"><strong>Disclaimer</strong>: The science of radiology is based upon interpretation of shadows of normal and abnormal 
+    tissue. This is neither complete nor accurate; hence, findings should always be interpreted in to the light of 
+    clinico-pathological correlation. This is a professional opinion, not a diagnosis. Not meant for medico 
+    legal purposes.</p>
+    @if(count($caseStudy['study'])>$count++)
+      <div class="b4-page-break" style="margin-top: 250px;"></div>
+      <div style="page-break-before: always; break-before: page;"></div>
+    @endif
+  @endforeach
 </div>
 <div style="width:150px; float: right;">
 <button type="button" class="btn btn-block bg-gradient-warning btn-small print_button" id="print_report"><i class="fas fa-print"></i>Print Report</button>
@@ -117,54 +130,55 @@ legal purposes.</p>
       $(".edit_b4_print").prop('disabled', true);
     });
 
-      $('.print_button').on('click', function () {
-        const content = $('.print_block').clone();
-        const printWindow = window.open('', '', 'width=800,height=1000');
+    $('.print_button').on('click', function () {
+      const content = $('.print_block').clone();
+      const printWindow = window.open('', '', 'width=800,height=1000');
 
-        const top = '{{ $top }}';
-        const right = '{{ $right }}';
-        const bottom = '{{ $bottom }}';
-        const left = '{{ $left }}';
+      const top = '{{ $top }}';
+      const right = '{{ $right }}';
+      const bottom = '{{ $bottom }}';
+      const left = '{{ $left }}';
 
-        printWindow.document.write('<head> <title>Print</title> <style> @page {size: A4; margin: ${top} ${right} ${bottom} ${left}; } body {margin: 0; padding: 0; font-family: Arial, sans-serif; } img {max-width: 100%; height: auto; display: block; } .edit_b4_print {display: none; } </style> </head> <body> <div class="print-content"></div></body>');
+      printWindow.document.write(`<head> <title>Print</title> <style> @page {size: A4; margin: ${top} ${right} ${bottom} ${left}; } body {margin: 0; padding: 0; font-family: Arial, sans-serif; } img {max-width: 100%; height: auto; display: block; } .edit_b4_print, .b4-page-break {display: none; } </style> </head> <body> <div class="print-content"></div></body>`);
 
-        printWindow.document.close();
+      printWindow.document.close();
 
-        printWindow.onload = function () {
-            const printBody = printWindow.document.querySelector('.print-content');
-            printBody.innerHTML = content.html();
+      printWindow.onload = function () {
+        const printBody = printWindow.document.querySelector('.print-content');
+        printBody.innerHTML = content.html();
 
-            const images = printBody.querySelectorAll('img');
-            let loaded = 0;
+        const images = printBody.querySelectorAll('img');
+        let loaded = 0;
 
-            if (images.length === 0) {
-                printWindow.focus();
-                printWindow.print();
-                printWindow.close();
-                return;
-            }
+        if (images.length === 0) {
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+            return;
+        }
 
-            images.forEach(function (img) {
-                // Check if already loaded
-                if (img.complete) {
-                    loaded++;
-                    if (loaded === images.length) {
-                        printWindow.focus();
-                        printWindow.print();
-                        printWindow.close();
-                    }
-                } else {
-                    img.onload = img.onerror = function () {
-                        loaded++;
-                        if (loaded === images.length) {
-                            printWindow.focus();
-                            printWindow.print();
-                            printWindow.close();
-                        }
-                    };
-                }
-            });
-        };
+        images.forEach(function (img) {
+          // Check if already loaded
+          if (img.complete) {
+              loaded++;
+              if (loaded === images.length) {
+                  printWindow.focus();
+                  printWindow.print();
+                  printWindow.close();
+              }
+          }
+          else {
+              img.onload = img.onerror = function () {
+                  loaded++;
+                  if (loaded === images.length) {
+                      printWindow.focus();
+                      printWindow.print();
+                      printWindow.close();
+                  }
+              };
+          }
+        });
+      }
     });
   });
 </script>

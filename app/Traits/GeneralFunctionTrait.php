@@ -129,6 +129,7 @@ trait GeneralFunctionTrait{
             '_DBERROR' => 'Something Wrong happen to the Database, Please reload this page.',
             '_SVSUMSG' => 'Success! Data Saved.',
             '_UPSUMSG' => 'Success! Data Updated.',
+            '_DELSUMSG' => 'Success! Data Deleted.',
             '_STUPMSG' => 'Success! Status Updated',
             '_IMERROR' => 'Please select some image.',
         );
@@ -451,6 +452,8 @@ trait GeneralFunctionTrait{
                 return "New ".ucwords($unit)." added by ".ucwords($loggedInUser->name)." on ".$currentDate." for the centre ".$labName.", Patient is ".$patientName.". The study type(s) ".$proNoun." ".$studyTypes.$endString;
             case 'view':
                 return "The ".ucwords($unit)." was viewed by ".ucwords($loggedInUser->name)." on ".$currentDate;
+            case 'delete':
+                return "The ".ucwords($unit)." was deleted by ".ucwords($loggedInUser->name)." on ".$currentDate;
             case 'assignDoctor':
                 return "The ".ucwords($unit)." was assigned to ".ucwords($unitName)." by ".ucwords($loggedInUser->name)." on ".$currentDate;
             case 'saveStudy':
