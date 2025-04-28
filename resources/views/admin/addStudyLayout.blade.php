@@ -133,7 +133,19 @@ $(function(){
     });
 
     $('#layout').summernote({
-        height: 300
+      height: 300,
+        fontNames: ['Arial', 'Arial Black', 'Comic Sans MS', 'Courier New', 'Merriweather'],
+        fontNamesIgnoreCheck: ['Merriweather'],
+        toolbar: [
+          // [groupName, [list of button]]
+          ['style', ['bold', 'italic', 'underline', 'clear']],
+          ['font', ['strikethrough', 'superscript', 'subscript']],
+          ['fontname', ['fontname']],
+          ['fontsize', ['fontsize']],
+          ['color', ['color']],
+          ['para', ['ul', 'ol', 'paragraph']],
+          ['height', ['height']]
+        ]
     });
 
     $("#modality").on("change", function (e) {

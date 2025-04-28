@@ -23,7 +23,7 @@
       </tr>
     </table>
 
-    <div class="main_study_result" id="main_study_result_{{ $study->id }}">
+    <div class="main_study_result" style="margin-top: 30px;" id="main_study_result_{{ $study->id }}">
       {!! $study->report !!}
     </div>
     <div style="display: none;" id="text_area_div_{{ $study->id }}">  
@@ -33,35 +33,39 @@
       <div style="width:100px; display: none; margin-right: 20px;" id="save_b4_print_div_{{ $study->id }}">
         <button type="button" class="btn btn-block bg-gradient-orange btn-xs save_b4_print" id="save_b4_print_{{ $study->id }}" data-index="{{ $study->id }}"><i class="fas fa-save"></i>Save</button>
       </div>
-      <div style="width:100px; float: right;">
+      <div style="width:100px; float: right; @if($isPdf === true) display: none; @endif">
         <button type="button" class="btn btn-block bg-gradient-primary btn-xs edit_b4_print" data-index="{{ $study->id }}"><i class="fas fa-edit"></i>Edit</button>
       </div>
     </div>
     
-    <div style="display: flex; align-items: flex-start; margin-top: 20px;">
-      <!-- Left: Signature + Doctor Info (60%) -->
-      <div style="width: 60%;">
-        <img src="{{ url('storage/'.$caseStudy->doctor->signature) }}" alt="Doctor Signature" style="width: 100%; max-width: 250px; margin-bottom: 10px;">
-        <p style="margin: 0; font-size: 14px; line-height: 1.5;">
-          <strong style="font-size: 18px;">Doctor {{ $caseStudy->doctor->name }}</strong><br>
-          <strong>{{ $doctorQualification->value }}</strong><br>
-          @if(isset($registrationNumber->value))
-            <strong>{{ $registrationNumber->value }}</strong><br>
+    <table style="width: 100%; margin-top: 20px;">
+      <tr>
+        <td style="width: 50%; vertical-align: top;">
+          @if($isPdf === true)
+            <img src="{{ public_path('storage'.DIRECTORY_SEPARATOR.$caseStudy->doctor->signature) }}" alt="Doctor Signature" style="width: 100%; max-width: 250px; margin-bottom: 10px;">
+          @else
+            <img src="{{ url('storage/'.$caseStudy->doctor->signature) }}" alt="Doctor Signature" style="width: 100%; max-width: 250px; margin-bottom: 10px;">
           @endif
-        </p>
-      </div>
+          <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+            <strong style="font-size: 18px;">Doctor {{ $caseStudy->doctor->name }}</strong><br>
+            <strong>{{ $doctorQualification->value }}</strong><br>
+            @if(isset($registrationNumber->value))
+              <strong>{{ $registrationNumber->value }}</strong><br>
+            @endif
+          </p>
+        </td>
+        <td style="width: 50%; vertical-align: top; text-align: left;">
+          @if($isPdf === true)
+            <img src="{{$qrLocalPath}}" alt="QR Code" style="width: 150px; height: 150px; border: 2px dashed #333; padding: 10px;">
+          @else
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&color=02013c&data={{$pdfPublicUrl}}" alt="QR Code" style="width: 150px; height: 150px; border: 2px dashed #333; padding: 10px;">
+          @endif
+        </td>
+      </tr>
+    </table>
 
-      <!-- Right: QR Code with Dashed Border -->
-      <div style="width: 40%; display: flex; justify-content: flex-start; align-items: center; padding-left: 20px;">
-        <div style="border: 2px dashed #333; padding: 10px;">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&color=02013c&data={{$pdfUrl}}" alt="QR Code" style="width: 150px; height: 150px;">
-        </div>
-      </div>
-    </div>
-
-
-    <div style="display: flex; justify-content: center; align-items: center; height: 100px; font-family: Arial, sans-serif;">
-        <div>
+    <div style="width:100%;margin: 50px 0;">
+        <div style="text-align: center;">
             @php echo str_repeat('-', 20); @endphp
             <strong> &nbsp;&nbsp;End Of Report&nbsp;&nbsp; </strong>
             @php echo str_repeat('-', 20); @endphp
@@ -78,8 +82,9 @@
   @endforeach
 </div>
 <div style="width:150px; float: right;">
-<button type="button" class="btn btn-block bg-gradient-warning btn-small print_button" id="print_report"><i class="fas fa-print"></i>Print Report</button>
+<button type="button" @if($isPdf === true) style="display: none;" @endif class="btn btn-block bg-gradient-warning btn-small print_button" id="print_report"><i class="fas fa-print"></i>Print Report</button>
 </div>
+@if($isPdf !== true)
 <script>
   $(function () {
     $('.study_result').summernote({
@@ -182,3 +187,4 @@
     });
   });
 </script>
+@endif

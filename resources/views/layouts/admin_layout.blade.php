@@ -160,6 +160,22 @@
 <!-- Input Mask -->
 <script src="{{asset('plugins/inputmask/jquery.inputmask.min.js')}}"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
+        if (jqxhr.status === 419) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Session Expired',
+                text: jqxhr.responseJSON?.message || 'Session has expired. Please reload the page.',
+                confirmButtonText: 'Reload'
+            }).then(() => {
+                window.location.reload();
+            });
+        }
+    });
+</script>
 <script type="text/javascript">
     $(function(){
         $.ajaxSetup({
@@ -301,7 +317,7 @@
         });
     }
 
-    function printSuccessMsg(msg) {
+    function printSuccessMsg(msg, urlParameters = null) {
         Swal.fire({
             title: 'Great!',
             html: msg,
@@ -310,8 +326,16 @@
             timer: 5000,
             timerProgressBar: true,
         }).then((result) => {
-            if (result.isConfirmed || result.isDismissed) {
+            if (urlParameters === null) {
                 location.reload();
+            }
+            else{
+              const url = new URL(window.location.href);
+              Object.entries(urlParameters).forEach(([key, value]) => {
+                url.searchParams.set(key, value);
+              });
+              url.searchParams.set('_', Date.now());
+              window.location.href = url.toString();
             }
         });
     }

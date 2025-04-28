@@ -75,7 +75,7 @@
                 <td>{!!$doctor!!}</td>
                 <td>
                     @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
-                        <button class="btn btn-xs bg-gradient-purple" id="view_image" title="View Images"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-xs bg-gradient-purple assigner_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                     @else
                         <button class="btn btn-xs bg-gradient-purple doc_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                     @endif

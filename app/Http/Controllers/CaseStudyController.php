@@ -34,8 +34,8 @@ class CaseStudyController extends Controller
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
     public function viewCaseStudy(Request $request){
-        $start_date = $end_date = Carbon::now()->startOfDay();
-        $end_date = Carbon::now()->endOfDay();;
+        $start_date = !isset($request->sdt)?Carbon::now()->startOfDay():Carbon::parse($request->sdt)->startOfDay();
+        $end_date = !isset($request->edt)?Carbon::now()->endOfDay():Carbon::parse($request->edt)->endOfDay();
         $pageName = $this->pageName;
         $centre_id = 0;
         $centre_name = "";
@@ -138,7 +138,6 @@ class CaseStudyController extends Controller
                 ]
             );
             $addedBy = Auth::user()->id;
-            $uuid = Str::uuid()->toString();
             $isEmergency = $request->emergency===null?false:true;
             $caseStudy = new CaseStudy();
             $caseStudy->laboratory_id = $request->centre_id;
@@ -155,7 +154,6 @@ class CaseStudyController extends Controller
             $caseStudy->modality_id = $request->modality;
             $caseStudy->added_by = $addedBy;
             $caseStudy->ref_by = $request->ref_by;
-            $caseStudy->uuid = $uuid;
             $caseStudy->save();
 
             $studyTypeArray = array();
@@ -172,17 +170,17 @@ class CaseStudyController extends Controller
                 $oldUmask = umask(0002);
                 foreach($request->file('images') as $image){
                     $imageName = time().'_'.str_replace(" ", "_", $image->getClientOriginalName());
-                    $relativePath = 'uploads/' . str_replace(" ", "_", $labName) . '/' . str_replace(" ", "_", $request->patient_name);
-                    $directoryPath = storage_path('app/public/' . $relativePath);
-
+                    $relativePath = 'uploads'.DIRECTORY_SEPARATOR . str_replace(" ", "_", $labName) . DIRECTORY_SEPARATOR . str_replace(" ", "_", $request->patient_name);
+                    $directoryPath = storage_path('app'.DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR. $relativePath);
+                    
                     // Manually create directory with correct permissions
                     if (!File::exists($directoryPath)) {
                         File::makeDirectory($directoryPath, 0755, true);
                     }
 
-                    $fullPath = $relativePath . '/' . $imageName;
+                    $fullPath = $relativePath . DIRECTORY_SEPARATOR . $imageName;
                     
-                    Storage::putFileAs('public/' . $relativePath, $image, $imageName);
+                    Storage::putFileAs('public'.DIRECTORY_SEPARATOR. $relativePath, $image, $imageName);
                     umask($oldUmask); 
 
                     $studyImage = new studyImages;
@@ -347,6 +345,7 @@ class CaseStudyController extends Controller
         $caseStudy = caseStudy::with("modality", "study.type", "images")
             ->where("id", $request->case_study_id)
             ->first();
+            
         $authUser = Auth::user();
         $roleId = Auth::user()->roles[0]->pivot->role_id;
         
@@ -357,65 +356,125 @@ class CaseStudyController extends Controller
         $msg = $this->generateLoggedMessage("view", 'Case Study');
         $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'view', $msg);
 
-        return view('admin.doctorCaseImageView', compact( 'caseStudy', 'authUser', 'roleId'));
+        if($request->type=='doc'){
+            return view('admin.doctorCaseImageView', compact( 'caseStudy', 'authUser', 'roleId'));
+        }
+        if($request->type=='assigner'){
+            $studyTypes = studyType::where("modality_id", $caseStudy->modality_id)->orderBy("name")->get();
+            return view('admin.assignerCaseImageView', compact( 'caseStudy', 'authUser', 'roleId', 'studyTypes'));
+        }
     }
 
     public function caseStudyReport(Request $request){
-        $caseStudy = caseStudy::with("modality", "study.type", "images", "patient", "laboratory")
+        $caseStudy = caseStudy::with("modality", "study.type", "images", "patient", "laboratory", "doctor.doctorFormFieldValue")
             ->where("id", $request->case_study_id)
             ->first();
+    
         $doctorQualification = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "9")->first();
         $registrationNumber = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "11")->first();
+    
         $studyNames = "";
         foreach($caseStudy->study as $study){
-            $studyNames .= $study->type->name.", ";
+            $studyNames .= $study->type->name . ", ";
         }
         $studyNames = rtrim($studyNames, ", ");
-        $pdfUrl = urlencode(url('case-study/pdf/'.$caseStudy->case_study_id));
+    
+        $top = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value) 
+            ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value."mm" 
+            : "30mm";
+        $right = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value) 
+            ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value."mm" 
+            : "30mm";
+        $bottom = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value) 
+            ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value."mm" 
+            : "30mm";
+        $left = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value) 
+            ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value."mm" 
+            : "30mm";
         
-        $top = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value."mm" : "30mm";
-        $right = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value."mm" : "30mm";
-        $bottom = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value."mm" : "30mm";
-        $left = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value."mm" : "30mm";
-        return view('admin.caseStudyReport', compact( 'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left', 'studyNames', 'pdfUrl'));
+        // Define filename and save to storage
+        $fileName = 'case-study-report-' . $caseStudy->case_study_id . '-'. str_replace(" ", "-", $caseStudy->patient->name).'.pdf';
+        $filePath = 'pdfs'.DIRECTORY_SEPARATOR. $fileName;
+        // Get the public URL
+        $pdfPublicUrl = asset("storage".DIRECTORY_SEPARATOR."{$filePath}");
+        
+        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&color=02013c&data={$pdfPublicUrl}";
+        $qrImage = Http::withoutVerifying()->get($qrUrl)->body();
+        $qrFilename = $caseStudy->case_study_id . '.png';
+        $qrPath = 'qr-codes'.DIRECTORY_SEPARATOR. $qrFilename;
+        Storage::disk('public')->put($qrPath, $qrImage);
+        $qrLocalPath = public_path('storage'.DIRECTORY_SEPARATOR. $qrPath);
+        
+        // Create PDF from the same view
+        $isPdf = true;
+        $pdf = Pdf::loadView('admin.caseStudyReport', compact(
+            'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left', 'studyNames', 'pdfPublicUrl', 'isPdf', 'qrLocalPath'
+        ))
+        ->setPaper('A4', 'portrait');
+        // ->setOptions([
+        //     'isHtml5ParserEnabled' => true,
+        //     'isRemoteEnabled' => true,
+        //     'defaultFont' => 'sans-serif',
+        //     'margin_top' => (int) $top,      // margin values in mm or points
+        //     'margin_right' => (int) $right,
+        //     'margin_bottom' => (int) $bottom,
+        //     'margin_left' => (int) $left,
+        // ]);
+        Storage::disk('public')->put($filePath, $pdf->output());
+        $isPdf = false;
+    
+        return view('admin.caseStudyReport', compact(
+            'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left', 'studyNames', 'pdfPublicUrl', 'isPdf', 'qrLocalPath'
+        ));
     }
 
-    public function generatePdf($case_study_id){
+    public function generatePdf($case_study_id) {
         $caseStudy = caseStudy::with("modality", "study.type", "images", "patient", "laboratory")
             ->where("case_study_id", $case_study_id)
             ->first();
-            
+    
         $doctorQualification = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "9")->first();
         $registrationNumber = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "11")->first();
         $studyNames = "";
-        $signature = public_path('storage'. DIRECTORY_SEPARATOR .$caseStudy->doctor->signature);
+        $signature = public_path('storage' . DIRECTORY_SEPARATOR . $caseStudy->doctor->signature);
         $signature = str_replace("\\", '/', $signature);
-        foreach($caseStudy->study as $study){
-            $studyNames .= $study->type->name.", ";
+    
+        foreach ($caseStudy->study as $study) {
+            $studyNames .= $study->type->name . ", ";
         }
         $studyNames = rtrim($studyNames, ", ");
-        $qrData = urlencode(url('case-study/pdf/'.$caseStudy->case_study_id));
+    
+        $qrData = urlencode(url('case-study/pdf/' . $caseStudy->case_study_id));
         $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&color=02013c&data={$qrData}";
         $qrImage = Http::withoutVerifying()->get($qrUrl)->body();
         $qrFilename = $caseStudy->case_study_id . '.png';
-        $qrPath = 'qr-codes' . DIRECTORY_SEPARATOR . $qrFilename;
+        $qrPath = 'qr-codes/' . $qrFilename;
         Storage::disk('public')->put($qrPath, $qrImage);
-        $qrLocalPath = public_path('storage'. DIRECTORY_SEPARATOR . $qrPath);
-        
-        $top = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value."mm" : "30mm";
-        $right = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value."mm" : "30mm";
-        $bottom = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value."mm" : "30mm";
-        $left = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value) ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value."mm" : "30mm";
-        // return view('admin.generatePDF', compact( 'caseStudy', 'doctorQualification', 'registrationNumber', 'studyNames', 'qrLocalPath', 'signature', 'top', 'right', 'bottom', 'left'));
-        $pdf = Pdf::loadView('admin.generatePDF', compact( 'caseStudy', 'doctorQualification', 'registrationNumber', 'studyNames', 'qrLocalPath', 'signature', 'top', 'right', 'bottom', 'left'));
+        $qrLocalPath = public_path('storage/' . $qrPath);
+    
+        $top = optional($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first())->value ?? "30";
+        $right = optional($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first())->value ?? "30";
+        $bottom = optional($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first())->value ?? "30";
+        $left = optional($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first())->value ?? "30";
+    
+        $pdf = Pdf::loadView('admin.generatePDF', compact(
+            'caseStudy', 'doctorQualification', 'registrationNumber',
+            'studyNames', 'qrLocalPath', 'signature',
+            'top', 'right', 'bottom', 'left'
+        ));
         $pdf->setPaper('A4', 'portrait');
-        $pdfContent = $pdf->output();
-        // Delete the QR code image
+    
+        // Save the PDF
+        $pdfFilename = str_replace(" ", "-", $caseStudy->patient->patient_id."_".$caseStudy->patient->name) . '-' . time() . '.pdf';
+        $pdfPath = 'pdfs/' . $pdfFilename;
+        Storage::disk('public')->put($pdfPath, $pdf->output());
+    
+        // Clean up QR code
         Storage::disk('public')->delete($qrPath);
-
-        return response()->streamDownload(function () use ($pdfContent) {
-            echo $pdfContent;
-        }, str_replace(" ", "-", $caseStudy->patient->name) . '.pdf');
+    
+        // Return the public URL
+        $pdfUrl = asset('storage/' . $pdfPath);
+        return $pdfUrl;
     }
 
     public function deleteCaseStudy(Request $request){
@@ -443,5 +502,169 @@ class CaseStudyController extends Controller
         catch(\Illuminate\Database\QueryException $ex){
             return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
         }
+    }
+
+    public function deleteExistingStudy(Request $request){
+        $caseStudy = caseStudy::find($request->case_study_id);
+        if(count($caseStudy->study) == 1){
+            return response()->json(['status'=>'error', 'message'=>['You can\'t delete this Study, at least one study is required.']]);
+        }
+        if($caseStudy->study_status_id > 2){
+            return response()->json(['status'=>'error', 'message'=>['You can\'t delete this Study, Status has Changed.']]);
+        }
+
+        $study = study::find($request->study_id);
+        try{
+            if($study){
+                $study->delete();
+                $msg = $this->generateLoggedMessage("delete", 'Study');
+                $this->addLog('study', 'id', $study->id, 'delete', $msg);
+                return response()->json(['status'=>'success', 'message' => [$this->getMessages('_DELSUMSG')]]);
+            }
+            else{
+                return response()->json(['status'=>'error', 'message'=>[$this->getMessages('_GNERROR')]]);
+            }
+        }catch (\Exception $e){
+            return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
+        }
+        catch(\Illuminate\Database\QueryException $ex){
+            return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
+        }
+    }
+
+    public function addMoreStudy(Request $request){
+        $caseStudy = caseStudy::find($request->case_study_id);
+        if($caseStudy->study_status_id > 2){
+            return response()->json(['status'=>'error', 'message'=>['You can\'t delete this Study, Status has Changed.']]);
+        }
+        $studyCount = study::where("case_study_id", $request->case_study_id)->where("study_type_id", $request->study_type_id)->count();
+        
+        if($studyCount > 0){
+            return response()->json(['status'=>'error', 'message'=>['This Study Type is already added.']]);
+        }
+        $study = new study();
+        $study->case_study_id = $request->case_study_id;
+        $study->study_type_id = $request->study_type_id;
+        $study->description = $request->description;
+        $study->save();
+
+        $studyTypes = studyType::where("modality_id", $caseStudy->modality_id)->get();
+        $msg = $this->generateLoggedMessage("addMoreStudy", 'Study Type', $study->type->name);
+        $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'add', $msg);
+        $allStudies = study::where("case_study_id", $request->case_study_id)
+            ->orderBy("id", "asc")
+            ->get();
+            
+        return view('admin.assignerStudies', compact('allStudies', 'studyTypes'));
+    }
+
+    public function updateExistingStudy(Request $request){
+        $caseStudy = caseStudy::find($request->case_study_id);
+        if($caseStudy->study_status_id > 2){
+            return response()->json(['status'=>'error', 'message'=>['You can\'t update this Study, Status has Changed.']]);
+        }
+
+        $study = study::find($request->study_id);
+        
+        $studyCount = study::where("study_type_id", $request->study_type_id)
+            ->where("case_study_id", $request->case_study_id)
+            ->count();
+        if($studyCount > 0 && $study->study_type_id != $request->study_type_id){
+            return response()->json(['status'=>'error', 'message'=>['This Study Type is already added.']]);
+        }
+        $oldStudyName = $study->type->name;
+
+        $study->study_type_id = $request->study_type_id;
+        $study->description = $request->description;
+        $study->save();
+        $study->refresh();
+        
+        if($oldStudyName != $study->type->name){
+            $msg = $this->generateLoggedMessage("updateExistingStudy", 'Study Type', '', '', $oldStudyName, $study->type->name);
+            $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'update', $msg);
+        }
+        return response()->json(['status'=>'success', 'message' => [$this->getMessages('_UPSUMSG')]]);
+    }
+
+    public function updateCaseStudy(Request $request){
+        $validationArray = [
+            'patient_name' => 'required',
+            'age'=> 'required',
+            'gender' => 'required',
+            'clinical_history' => 'required',
+            'ref_by' => 'nullable|sometimes|string',
+        ];
+        $customMessages = [
+            'patient_id.required_if' => 'The Patient ID is required when Existing Patient is selected.',
+            'study_id.*.required' => 'All the Study Type fields are required.',
+        ];
+        $validator = Validator::make($request->all(), $validationArray, $customMessages);
+        if (!$validator->passes()) {
+            return response()->json(['error'=>$validator->errors()]);
+        }
+
+        $caseStudy = caseStudy::find($request->case_study_id);
+        if($caseStudy->study_status_id > 2){
+            return response()->json(['status'=>'error', 'message'=>['You can\'t update this Study, Status has Changed.']]);
+        }
+        $caseStudy->clinical_history = $request->clinical_history;
+        $caseStudy->is_emergency = $request->emergency===null?0:1;
+        $caseStudy->is_post_operative = $request->post_operative===null?0:1;
+        $caseStudy->is_follow_up = $request->follow_up===null?0:1;
+        $caseStudy->is_subspecialty = $request->subspecialty===null?0:1;
+        $caseStudy->is_callback = $request->callback===null?0:1;
+        $caseStudy->ref_by = $request->ref_by;
+        $caseStudy->save();
+        
+        $patient = Patient::updateOrCreate(
+            ['patient_id' => $caseStudy->patient_id],
+            [
+                'name' => $request->patient_name,
+                'age' => $request->age,
+                'gender' => $request->gender,
+                'clinical_history' => $request->clinical_history,
+            ]
+        );
+        return response()->json(['status'=>'success', 'message' => [$this->getMessages('_UPSUMSG')]]);
+    }
+
+    public function updateCaseStudyImage(Request $request){
+        if(!$request->hasFile('images')){
+            return response()->json(['error'=>[$this->getMessages('_IMERROR')]]);
+        }
+
+        $studyImages = studyImages::where("case_study_id", $request->case_study_id)->get();
+        if(count($studyImages) > 0){
+            foreach($studyImages as $image){
+                $image->delete();
+                $imagePath = public_path('storage/' . $image->image);
+                if (File::exists($imagePath)) {
+                    File::delete($imagePath);
+                }
+            }
+        }
+
+
+        $caseStudy = caseStudy::find($request->case_study_id);
+        $labName = $caseStudy->laboratory->lab_name;
+        $patient_name = $caseStudy->patient->name;
+        
+        $oldUmask = umask(0002);
+        foreach($request->file('images') as $image){
+            $imageName = time().'_'.str_replace(" ", "_", $image->getClientOriginalName());
+            $relativePath = 'uploads'.DIRECTORY_SEPARATOR . str_replace(" ", "_", $labName) . DIRECTORY_SEPARATOR . str_replace(" ", "_", $patient_name);
+            $directoryPath = storage_path('app'.DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR. $relativePath);
+            
+            // Manually create directory with correct permissions
+            if (!File::exists($directoryPath)) {
+                File::makeDirectory($directoryPath, 0755, true);
+            }
+
+            $fullPath = $relativePath . DIRECTORY_SEPARATOR . $imageName;
+            
+            Storage::putFileAs('public'.DIRECTORY_SEPARATOR. $relativePath, $image, $imageName);
+            umask($oldUmask); 
+        }
+        return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
     }
 }

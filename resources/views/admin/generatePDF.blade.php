@@ -23,7 +23,7 @@
         </tr>
       </table>
 
-      <div class="main_study_result" id="main_study_result_{{ $study->id }}">
+      <div class="main_study_result" style="margin-top: 30px;" id="main_study_result_{{ $study->id }}">
         {!! $study->report !!}
       </div>
 
@@ -47,7 +47,6 @@
           </div>
         </div>
       </div>
-
 
       <div style="text-align: center; margin: 0 auto; width: 100%; font-family: Arial, sans-serif;">
               @php echo str_repeat('-', 20); @endphp

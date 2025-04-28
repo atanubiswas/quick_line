@@ -122,6 +122,11 @@ Route::group(['prefix' => 'admin'], function () {
         Route::middleware(['role:Admin,Manager,Centre,Assigner', '2fa'])->group(function () {
             Route::post('/case-study-report', [CaseStudyController::class, 'caseStudyReport']);
             Route::post('/delete-case-study', [CaseStudyController::class, 'deleteCaseStudy']);
+            Route::post('/add-more-study', [CaseStudyController::class, 'addMoreStudy'])->name('admin.addMoreStudy');
+            Route::post('/update-existing-study', [CaseStudyController::class, 'updateExistingStudy'])->name('admin.updateExistingStudy');
+            Route::post('/delete-existing-study', [CaseStudyController::class, 'deleteExistingStudy'])->name('admin.deleteExistingStudy');
+            Route::post('/update-case-study', [CaseStudyController::class, 'updateCaseStudy'])->name('admin.updateCaseStudy');
+            Route::post('/update-case-study-image', [CaseStudyController::class, 'updateCaseStudyImage'])->name('admin.updateCaseStudyImage');
         });
         Route::middleware(['role:Admin,Manager,Assigner,Quality Controller,Centre', '2fa'])->group(function () {
             Route::get('/add-case-study', [CaseStudyController::class, 'addCaseStudy'])->name('admin.addCaseStudy');

@@ -4,6 +4,8 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Illuminate\Session\TokenMismatchException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class Handler extends ExceptionHandler
 {
@@ -25,6 +27,19 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
             //
+        });
+
+        $this->renderable(function (TokenMismatchException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Session ended. Please reload the page.',
+                ], 419);
+            }
+    
+            return redirect()
+                ->back()
+                ->withInput($request->except('_token'))
+                ->with('error', 'Session ended. Please reload the page.');
         });
     }
     
@@ -59,7 +74,17 @@ class Handler extends ExceptionHandler
             return response()->json(['error' => 'Dependency resolution error'], 200);
         }
         elseif ($exception instanceof TokenMismatchException) {
-            return response()->json(['error' => 'Your session has expired. Please refresh the page and try again.'], 200);
+            if ($request->ajax()) {
+                return response()->json([
+                    'message' => 'Session ended. Please reload the page.',
+                ], 419);
+            }
+    
+            // For normal web requests
+            return redirect()
+                ->back()
+                ->withInput($request->except('_token'))
+                ->with('error', 'Session ended. Please reload the page.');
         }
 
         return parent::render($request, $exception);

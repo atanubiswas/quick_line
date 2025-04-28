@@ -8,8 +8,13 @@
         label em {
             color: #FF0000;
         }
+
         .modal-dialog {
             max-width: 80%;
+        }
+
+        #doc_image_view .modal-dialog {
+            max-width: 100%;
         }
 
         /* Crop image constraints */
@@ -209,7 +214,7 @@
         .ui-resizable-se { bottom: -5px; right: -5px; cursor: se-resize; }
         .ui-resizable-sw { bottom: -5px; left: -5px; cursor: sw-resize; }
 
-        .study-section {
+        .assigner-study-section, .current-study-section, .study-section {
             position: relative;
             border: 1px solid #ccc;
             padding: 15px;
@@ -218,7 +223,7 @@
             background-color: #f9f9f9;
         }
 
-        .study-section .buttons {
+        .assigner-study-section .buttons, .study-section .buttons {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -232,10 +237,10 @@
 
         /* Responsive adjustments */
         @media (max-width: 576px) {
-            .study-section {
+            .assigner-study-section, .study-section {
                 padding-top: 40px; /* Ensure space for buttons */
             }
-            .study-section .buttons {
+            .assigner-study-section .buttons, .study-section .buttons {
                 top: 5px;
                 right: 5px;
             }
@@ -417,7 +422,7 @@
                                                 <td>{!!$doctor!!}</td>
                                                 <td>
                                                     @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
-                                                        <button class="btn btn-xs bg-gradient-purple view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
+                                                        <button class="btn btn-xs bg-gradient-purple assigner_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                                                     @else
                                                         <button class="btn btn-xs bg-gradient-purple doc_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                                                     @endif
@@ -704,65 +709,20 @@
             </div>
             <!-- /.modal -->
 
-            <div class="modal fade" id="cropModal-assigner" tabindex="-1" aria-hidden="true" style="overflow: scroll;">
+            <div class="modal fade" id="assigner_image_view">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">Edit Image</h5>
+                            <h4 class="modal-title">Case Details</h4>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
-                        <div class="modal-body text-center position-relative" id="image-container-assigner">
-                            <img id="cropImage-assigner" style="max-width: 100%; width: 100%;">
-                            <div class="crop-toolbar">
-                                <div id="rotation-wheel-assigner">
-                                    <!-- Main Line -->
-                                    <div class="main-line"></div>
-                                    
-                                    <!-- Small Lines -->
-                                    <div class="small-lines"></div>
-                                </div>
-                                
-                                <!-- Manual Rotation Input -->
-                                <input type="number" id="rotation-angle-assigner" class="rotation-input" min="0" max="360" value="0">
-
-                                <button class="toolbar-btn" id="flipHorizontal-assigner" title="Flip Horizontal">
-                                    <i class="fas fa-arrows-alt-h"></i>
-                                </button>
-                                <button class="toolbar-btn" id="flipVertical-assigner" title="Flip Vertical">
-                                    <i class="fas fa-arrows-alt-v"></i>
-                                </button>
-                                <button class="toolbar-btn" id="crop-assigner" title="Crop">
-                                    <i class="fas fa-crop"></i>
-                                </button>
-                                <!-- <button class="toolbar-btn" id="add-rectangle" title="Draw Rectangle">
-                                <i class="fas fa-square"></i>
-                                </button> -->
-                                <button class="toolbar-btn" id="moveLeft-assigner" title="Move Left">
-                                    <i class="fas fa-arrow-left"></i>
-                                </button>
-                                <button class="toolbar-btn" id="moveRight-assigner" title="Move Right">
-                                    <i class="fas fa-arrow-right"></i>
-                                </button>
-                                <button class="toolbar-btn" id="moveUp-assigner" title="Move Up">
-                                    <i class="fas fa-arrow-up"></i>
-                                </button>
-                                <button class="toolbar-btn" id="moveDown-assigner" title="Move Down">
-                                    <i class="fas fa-arrow-down"></i>
-                                </button>
-                                <button class="toolbar-btn" id="zoomOut-assigner" title="Zoom Out">
-                                    <i class="fas fa-search-minus"></i>
-                                </button>
-                                <button class="toolbar-btn" id="zoomIn-assigner" title="Zoom In">
-                                    <i class="fas fa-search-plus"></i>
-                                </button>
-                            </div>
+                        <div class="modal-body assigner_image_view_body">
+                            
                         </div>
-                        <canvas id="canvas-assigner" style="display:none;"></canvas>
-                        <div class="modal-footer">
-                            <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button class="btn btn-success" id="cropSave-assigner">Save</button>
+                        <div class="modal-footer justify-content-between" style="display: block;">
+                            <button type="button" class="btn btn-danger float-right" data-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
@@ -853,8 +813,71 @@
                 });
             @endif
 
-            $(document).on('click', '.view_image', function() {
-                $('#image_view').modal('show');
+            $(document).on('click', '.assigner_view_image', function() {
+                allFiles = []; // Reset allFiles array
+                const thisButton = $(this);
+                thisButton.html('<i class="fas fa-spinner fa-spin"></i>');
+                let case_study_id = $(this).data('index');
+                let type = 'assigner';
+                $.ajax({
+                    url: "{{ url('admin/get-case-study-images') }}",
+                    type: "POST",
+                    data: {
+                        "_token": "{{ csrf_token() }}",
+                        "case_study_id": case_study_id,
+                        "type": type
+                    },
+                    success: function(response) {
+                        thisButton.html('<i class="fas fa-eye"></i>');
+                        $(".assigner_image_view_body").html(response);
+
+                        $('#assigner_image_view').modal({
+                            backdrop: 'static',
+                            keyboard: false
+                        });
+
+                        $(".image-thumb-assigner").each(function() {
+                            let imgSrc = $(this).attr("src");
+                            fetch(imgSrc)
+                                .then(response => response.blob())
+                                .then(blob => {
+                                    let filename = imgSrc.split('/').pop(); // extract filename from URL
+                                    let file = new File([blob], filename, { type: blob.type });
+                                    allFiles.push(file);
+                                })
+                                .catch(error => {
+                                    console.error("Error fetching image:", error);
+                                });
+                        });
+                        currentFile = 0;
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+
+                        let image = document.getElementById("cropImage-assigner");
+                        cropper = new Cropper(image, {
+                            aspectRatio: NaN, // Free cropping
+                            viewMode: 2, // Prevents overflow
+                            autoCropArea: 1, // Ensures image fits well
+                            responsive: true,
+                            restore: false,
+                            scalable: true,
+                            zoomable: true,
+                            rotatable: true,
+                            movable: true,
+                            autoCrop: false
+                        });
+
+                        // Resize Cropper to fit within the modal
+                        setTimeout(() => {
+                            cropper.resize();
+                        }, 300);
+                    },
+                    error: function(response){
+                        thisButton.html('<i class="fas fa-eye"></i>');
+                        $("#search_btn").html("Search");
+                    }
+                });
             });
 
             $(document).on('click', '.doc_view_image', function() {
@@ -887,7 +910,8 @@
                             zoomable: true,
                             rotatable: true,
                             movable: true,
-                            autoCrop: false
+                            autoCrop: false,
+                            dragMode: 'move'
                         });
 
                         // Resize Cropper to fit within the modal
@@ -916,14 +940,33 @@
                 });
             });
 
+            function getUrlParam(param) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(param);
+            }
+
+            const startDateVal = getUrlParam('sdt');
+            const endDateVal = getUrlParam('edt');
+
+            // Always FORMAT the moment before using
+            const sdt = startDateVal ? moment(startDateVal, 'YYYY-MM-DD').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+            const edt = endDateVal ? moment(endDateVal, 'YYYY-MM-DD').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+
+            // Set the formatted values into inputs
+            $('#start_date').val(sdt);
+            $('#end_date').val(edt);
+
+            // Initialize daterangepicker
             $('#daterange').daterangepicker({
-                maxDate:moment(),
+                startDate: startDateVal ? moment(startDateVal, 'YYYY-MM-DD') : moment(),
+                endDate: endDateVal ? moment(endDateVal, 'YYYY-MM-DD') : moment(),
+                maxDate: moment(),
                 applyButtonClasses: 'btn bg-gradient-purple',
                 cancelButtonClasses: 'btn bg-gradient-danger',
                 locale: {
                     format: 'DD/MM/YYYY'
                 }
-            },function(start, end, label) {
+            }, function(start, end, label) {
                 $('#start_date').val(start.format('YYYY-MM-DD'));
                 $('#end_date').val(end.format('YYYY-MM-DD'));
             });
@@ -971,6 +1014,31 @@
             $("#study-sections").on("click", ".remove-study", function () {
                 if ($(".study-section").length > 1) { // Prevent removing the last section
                     $(this).closest(".study-section").fadeOut(300, function () {
+                        $(this).remove();
+                    });
+                } else {
+                    alert("At least one study section is required!");
+                }
+            });
+
+            $(document).on("click", ".assigner-add-study", function () {
+                let newSection = $(".assigner-study-section").first().clone(); // Clone the first section
+
+                // Clear values in the cloned section
+                newSection.find("select").val(""); // Reset dropdown
+                newSection.find("textarea").val(""); // Reset textareas
+
+                // Show the minus button in the new section
+                newSection.find(".assigner-remove-study").removeClass("d-none");
+
+                // Append new section with animation
+                newSection.hide().appendTo("#assigner-study-sections").fadeIn(300);
+            });
+
+            // Function to remove a study section
+            $(document).on("click", ".assigner-remove-study", function () {
+                if ($(".assigner-study-section").length > 1) { // Prevent removing the last section
+                    $(this).closest(".assigner-study-section").fadeOut(300, function () {
                         $(this).remove();
                     });
                 } else {
@@ -1051,7 +1119,45 @@
                 allFiles[index] = null; // Mark file as removed
             });
 
-            $("#save_study").on("click", function (event) {
+            $(document).on("click", ".existing-img-close-btn", function () {
+                let index = $(this).data("index");
+                $("#existing-img-preview-" + index).remove();
+                allFiles[index] = null; // Mark file as removed
+                let isNoImage = true;
+                allFiles.forEach((file, index) => {
+                    if (file !== null) {
+                        noImage = false;
+                    }
+                });
+                console.log(isNoImage);
+                if(isNoImage === true){
+                    const noImage = '{{ asset('images/no-img.jpg')}}'; 
+                    $("#cropImage-assigner").attr("src", noImage);
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+                    let image = document.getElementById("cropImage-assigner");
+                    cropper = new Cropper(image, {
+                        aspectRatio: NaN, // Free cropping
+                        viewMode: 2, // Prevents overflow
+                        autoCropArea: 1, // Ensures image fits well
+                        responsive: true,
+                        restore: false,
+                        scalable: true,
+                        zoomable: true,
+                        rotatable: true,
+                        movable: true,
+                        autoCrop: false
+                    });
+
+                    // Resize Cropper to fit within the modal
+                    setTimeout(() => {
+                        cropper.resize();
+                    }, 300);
+                }
+            });
+
+        $("#save_study").on("click", function (event) {
                 $(this).html('Saving <i class="fas fa-spinner fa-spin"></i>');
                 $(".form-control").removeClass("is-invalid");
                 $(".error").remove();
@@ -1064,8 +1170,6 @@
                     form_data.append(input.name, input.value);
                 });
                 allFiles.forEach((file, index) => {
-                    console.log(file);
-                    console.log(index);
                     if (file) {
                         form_data.append("images[]", file);
                     }
@@ -1128,6 +1232,35 @@
             });
         });
 
+        $(document).on("click", ".image-thumb-assigner", function () {
+            let imgSrc = $(this).attr("src");
+            $("#cropImage-assigner").attr("src", imgSrc);
+
+            if (cropper) {
+                cropper.destroy();
+            }
+            currentFile = $(this).data("file-index");
+            
+            let image = document.getElementById("cropImage-assigner");
+            cropper = new Cropper(image, {
+                aspectRatio: NaN, // Free cropping
+                viewMode: 2, // Prevents overflow
+                autoCropArea: 1, // Ensures image fits well
+                responsive: true,
+                restore: false,
+                scalable: true,
+                zoomable: true,
+                rotatable: true,
+                movable: true,
+                autoCrop: false
+            });
+
+            // Resize Cropper to fit within the modal
+            setTimeout(() => {
+                cropper.resize();
+            }, 300);
+        });
+
         $(document).on("click", ".image-thumb-doctor", function () {
             let imgSrc = $(this).attr("src");
             $("#cropImage-doctor").attr("src", imgSrc);
@@ -1147,7 +1280,8 @@
                 zoomable: true,
                 rotatable: true,
                 movable: true,
-                autoCrop: false
+                autoCrop: false,
+                dragMode: 'move'
             });
 
             // Resize Cropper to fit within the modal
@@ -1210,6 +1344,26 @@
             cropper.move(0, 10);
         });
 
+        $(document).off("keydown").on("keydown", function (e) {
+            if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+                e.preventDefault();
+            }
+            switch (e.key) {
+                case "ArrowLeft":
+                    $("#moveLeft, #moveLeft-doctor").click();
+                    break;
+                case "ArrowRight":
+                    $("#moveRight, #moveRight-doctor").click();
+                    break;
+                case "ArrowUp":
+                    $("#moveUp, #moveUp-doctor").click();
+                    break;
+                case "ArrowDown":
+                    $("#moveDown, #moveDown-doctor").click();
+                    break;
+            }
+        });
+
         $("#add-rectangle").click(function () {
             let rect = $('<div class="resizable-rect" tabindex="0"></div>');
             rect.css({ width: "100px", height: "50px", top: "250px", left: "150px" });
@@ -1248,10 +1402,7 @@
             let canvas = cropper.getCroppedCanvas(); // Get the cropped canvas
             let croppedImage = canvas.toDataURL("image/png"); // Convert to Base64
 
-            console.log(croppedImage);
-
             let imgSelector = `#img-${currentFile}`;
-            console.log(imgSelector);
             $(imgSelector).attr("src", croppedImage);
             $("#cropModal").modal("hide");
 
@@ -1463,11 +1614,11 @@
         // **Bind events for both desktop and mobile**
         // $(".rotation-wheel-class").on("mousedown touchstart", startRotation);
         $(document).on("mousedown touchstart", ".rotation-wheel-class", startRotation);
-        $(document).on("mousemove touchmove", rotate);
-        $(document).on("mouseup touchend", stopRotation);
+        $(document).on("mousemove touchmove", ".rotation-wheel-class", rotate);
+        $(document).on("mouseup touchend", ".rotation-wheel-class", stopRotation);
 
         // **Manual Angle Input**
-        $("#rotation-angle").on("input", function () {
+        $(document).on("input", "#rotation-angle",function () {
             let angle = parseInt($(this).val()) || 0;
             angle = Math.min(360, Math.max(0, angle)); // Keep within 0-360
 
@@ -1504,8 +1655,9 @@
         });
 
         $(document).on("click", '.view-timeline-btn',function () {
+            const thisButton = $(this);
+            thisButton.html('<i class="fas fa-spinner fa-spin"></i>');
             $("#timeline_div").html('');
-            $(this).html('<i class="fas fa-spinner fa-spin"></i>');
             var case_study_id = $(this).data("index");
             var form_data = new FormData();
             form_data.append('case_study_id', case_study_id);
@@ -1518,12 +1670,12 @@
                 data: form_data,
                 type: 'post',
                 success: function (data) {
-                    $(".view-timeline-btn").html('<i class="fas fa-history"></i>');
+                    thisButton.html('<i class="fas fa-spinner fa-spin"></i>');
                     $("#timeline_div").html(data);
                     scrollToAnchor("view_timeline");
                 },
                 error: function (data) {
-                    $(".view-timeline-btn").html('<i class="fas fa-history"></i>');
+                    thisButton.html('<i class="fas fa-spinner fa-spin"></i>');
                     printErrorMsg("Somthing went wrong! Reload the page.");
                 }
             });
@@ -1592,6 +1744,105 @@
                             });
                         }
                     });
+                }
+            });
+        });
+
+        $(document).on("click", '#save_this_image', function() {
+            cropper.crop(); // Ensure cropping is active
+            let canvas = cropper.getCroppedCanvas(); // Get the cropped canvas
+            let croppedImage = canvas.toDataURL("image/png"); // Convert to Base64
+
+            let imgSelector = `#existing_image_${currentFile}`;
+            console.log("Image Selector:", imgSelector);
+            $(imgSelector).attr("src", croppedImage);
+            $("#cropImage-assigner").attr("src", croppedImage);
+
+            if (cropper) {
+                cropper.destroy();
+            }
+            let image = document.getElementById("cropImage-assigner");
+            cropper = new Cropper(image, {
+                aspectRatio: NaN, // Free cropping
+                viewMode: 2, // Prevents overflow
+                autoCropArea: 1, // Ensures image fits well
+                responsive: true,
+                restore: false,
+                scalable: true,
+                zoomable: true,
+                rotatable: true,
+                movable: true,
+                autoCrop: false
+            });
+
+            // Find the original file from allFiles
+            let originalFile = allFiles[currentFile];
+            if (!originalFile) {
+                console.error("Original file not found!");
+                return;
+            }
+
+            // Convert Base64 to Blob
+            let croppedBlob = dataURLtoBlob(croppedImage);
+            // Create a new File object with the original name and same type
+            let croppedFile = new File([croppedBlob], originalFile.name, { type: originalFile.type });
+
+            // Replace the original file in allFiles with the cropped file
+            allFiles[currentFile] = croppedFile;
+            
+        });
+
+        $(document).on("change", "#existingUploadImages",function (event) {
+            let files = event.target.files;
+
+            $.each(files, function (index, file) {
+                let fileIndex = allFiles.length; // Unique index
+                allFiles.push(file); // Store file in array
+
+                let reader = new FileReader();
+                reader.onload = function (e) {
+                    let imgId = "img-" + fileIndex;
+                    $(".existing-image-contener").append(`
+                        <div class="m-2 position-relative d-inline-block" id="existing-img-preview-${fileIndex}">
+                            <img src="${e.target.result}" data-file-index="${fileIndex}" id="existing_image_${fileIndex}" height="160px" style="padding:5px; cursor:pointer" class="image-thumb-assigner" />
+                            <button type="button"class="existing-img-close-btn btn btn-danger btn-sm"data-index="${fileIndex}" style="position: absolute; top: 5px; right: 5px; border-radius: 30px; height: 20px; width: 20px; display: flex; justify-content: center; align-items: center; padding: 0; font-size: 14px; "> × </button>
+                        </div>
+                    `);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Reset file input to allow re-selection of the same files
+            $(this).val("");
+        });
+
+        $(document).on("click", "#update_study_image", function () {
+            $(this).html('Uploading <i class="fas fa-spinner fa-spin"></i>');
+            case_study_id = $(this).data("index");
+            let form_data = new FormData();
+            allFiles.forEach((file, index) => {
+                if (file) {
+                    form_data.append("images[]", file);
+                }
+            });
+            form_data.append("case_study_id", case_study_id);
+            $.ajax({
+                url: '{{url("admin/update-case-study-image")}}',
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,
+                type: 'post',
+                success: function (data) {
+                    $('#update_study_image').html('Update Images');
+                    if ($.isEmptyObject(data.error)) {
+                        printSuccessMsg(data.success);
+                    } else {
+                        printErrorMsg(data.error);
+                    }
+                },
+                error: function (data) {
+                    $('#update_study_image').html('Update Images');
                 }
             });
         });

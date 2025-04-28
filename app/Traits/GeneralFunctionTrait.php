@@ -450,6 +450,10 @@ trait GeneralFunctionTrait{
                 $proNoun = (count($studyType) > 1) ? 'are' : 'is';
                 $endString = ($isEmergency) ? " and is an emergency case." : ".";
                 return "New ".ucwords($unit)." added by ".ucwords($loggedInUser->name)." on ".$currentDate." for the centre ".$labName.", Patient is ".$patientName.". The study type(s) ".$proNoun." ".$studyTypes.$endString;
+            case 'addMoreStudy':
+                return "New ".ucwords($unit).", ".$unitName." added by ".ucwords($loggedInUser->name)." on ".$currentDate.".";
+            case 'updateExistingStudy':
+                return "The ".ucwords($unit)." was updated from '".$old_data."' to '".$new_data."' by ".ucwords($loggedInUser->name)." on ".$currentDate.".";
             case 'view':
                 return "The ".ucwords($unit)." was viewed by ".ucwords($loggedInUser->name)." on ".$currentDate;
             case 'delete':
