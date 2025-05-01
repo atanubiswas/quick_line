@@ -422,7 +422,7 @@
                                                 <td>{!!$doctor!!}</td>
                                                 <td>
                                                     @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
-                                                        <button class="btn btn-xs bg-gradient-purple assigner_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
+                                                        <button class="btn btn-xs bg-gradient-purple assigner_view_image" title="View Images" data-pt-name="{{ $caseStudy->patient->name }}" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                                                     @else
                                                         <button class="btn btn-xs bg-gradient-purple doc_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                                                     @endif
@@ -436,6 +436,7 @@
                                                     @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && in_array($caseStudy->study_status_id, [1, 2]))
                                                     <button class="btn btn-xs bg-gradient-danger delete-case-btn" title="Delete Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-trash"></i></button>
                                                     @endif
+                                                    <a href="{{ route('admin.downloadImagesZip', ['id' => $caseStudy->id]) }}" class="btn btn-xs bg-gradient-dark download-zip"><i class="fas fa-file-archive"></i></a>
                                                 </td>
                                                 @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                                 <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>
@@ -713,7 +714,7 @@
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h4 class="modal-title">Case Details</h4>
+                            <h4 class="modal-title assigner-modal-title">Case Details</h4>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -782,6 +783,9 @@
     <!-- CROPPER JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     
+    <!--COMPRESS JS -->
+    <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
+
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script>
         $(function () {
@@ -819,6 +823,7 @@
                 thisButton.html('<i class="fas fa-spinner fa-spin"></i>');
                 let case_study_id = $(this).data('index');
                 let type = 'assigner';
+                let patient_name = $(this).data('pt-name');
                 $.ajax({
                     url: "{{ url('admin/get-case-study-images') }}",
                     type: "POST",
@@ -830,7 +835,7 @@
                     success: function(response) {
                         thisButton.html('<i class="fas fa-eye"></i>');
                         $(".assigner_image_view_body").html(response);
-
+                        $(".assigner-modal-title").html("Case Details of: " + patient_name);
                         $('#assigner_image_view').modal({
                             backdrop: 'static',
                             keyboard: false
@@ -1093,24 +1098,48 @@
                 let files = event.target.files;
 
                 $.each(files, function (index, file) {
-                    let fileIndex = allFiles.length; // Unique index
-                    allFiles.push(file); // Store file in array
+                    const fileSizeMB = file.size / (1024 * 1024); // Convert bytes to MB
 
-                    let reader = new FileReader();
-                    reader.onload = function (e) {
-                        let imgId = "img-" + fileIndex;
-                        $("#previewImages").append(`
-                            <div class="m-2 position-relative d-inline-block" id="preview-${fileIndex}">
-                                <img src="${e.target.result}" id="img-${fileIndex}" class="img-thumbnail preview-img" width="100" data-file-index="${fileIndex}" height="100" style="cursor: pointer;">
-                                <button type="button" class="close-btn btn btn-danger btn-sm" data-index="${fileIndex}" style="position: absolute; top: 5px; right: 5px;">×</button>
-                            </div>
-                        `);
+                    const processFile = function (finalFile) {
+                        let fileIndex = allFiles.length;
+                        allFiles.push(finalFile);
+
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            $("#previewImages").append(`
+                                <div class="m-2 position-relative d-inline-block" id="preview-${fileIndex}">
+                                    <img src="${e.target.result}" id="img-${fileIndex}" class="img-thumbnail preview-img" width="100" data-file-index="${fileIndex}" height="100" style="cursor: pointer;">
+                                    <button type="button" class="close-btn btn btn-danger btn-sm" data-index="${fileIndex}" style="position: absolute; top: 5px; right: 5px;">×</button>
+                                </div>
+                            `);
+                        };
+                        reader.readAsDataURL(finalFile);
                     };
-                    reader.readAsDataURL(file);
+
+                    if (fileSizeMB > 1) {
+                        // Compress only if > 1MB
+                        new Compressor(file, {
+                            quality: 0.6,
+                            maxWidth: 1200,
+                            success: function (compressedBlob) {
+                                const compressedFile = new File([compressedBlob], file.name, {
+                                    type: compressedBlob.type,
+                                    lastModified: Date.now(),
+                                });
+                                processFile(compressedFile);
+                            },
+                            error: function (err) {
+                                console.error("Compression error:", err.message);
+                                processFile(file); // fallback to original
+                            },
+                        });
+                    } else {
+                        // No compression needed
+                        processFile(file);
+                    }
                 });
 
-                // Reset file input to allow re-selection of the same files
-                $(this).val("");
+                $(this).val(""); // Allow re-selection of same files
             });
 
             $("#previewImages").on("click", ".close-btn", function () {
@@ -1792,28 +1821,50 @@
             
         });
 
-        $(document).on("change", "#existingUploadImages",function (event) {
+        $(document).on("change", "#existingUploadImages", function (event) {
             let files = event.target.files;
 
             $.each(files, function (index, file) {
-                let fileIndex = allFiles.length; // Unique index
-                allFiles.push(file); // Store file in array
+                const fileSizeMB = file.size / (1024 * 1024); // Convert bytes to MB
 
-                let reader = new FileReader();
-                reader.onload = function (e) {
-                    let imgId = "img-" + fileIndex;
-                    $(".existing-image-contener").append(`
-                        <div class="m-2 position-relative d-inline-block" id="existing-img-preview-${fileIndex}">
-                            <img src="${e.target.result}" data-file-index="${fileIndex}" id="existing_image_${fileIndex}" height="160px" style="padding:5px; cursor:pointer" class="image-thumb-assigner" />
-                            <button type="button"class="existing-img-close-btn btn btn-danger btn-sm"data-index="${fileIndex}" style="position: absolute; top: 5px; right: 5px; border-radius: 30px; height: 20px; width: 20px; display: flex; justify-content: center; align-items: center; padding: 0; font-size: 14px; "> × </button>
-                        </div>
-                    `);
+                const processFile = function (finalFile) {
+                    let fileIndex = allFiles.length;
+                    allFiles.push(finalFile); // Add to global array
+
+                    let reader = new FileReader();
+                    reader.onload = function (e) {
+                        $(".existing-image-contener").append(`
+                            <div class="m-2 position-relative d-inline-block" id="existing-img-preview-${fileIndex}">
+                                <img src="${e.target.result}" data-file-index="${fileIndex}" id="existing_image_${fileIndex}" height="160px" style="padding:5px; cursor:pointer" class="image-thumb-assigner" />
+                                <button type="button" class="existing-img-close-btn btn btn-danger btn-sm" data-index="${fileIndex}" style="position: absolute; top: 5px; right: 5px; border-radius: 30px; height: 20px; width: 20px; display: flex; justify-content: center; align-items: center; padding: 0; font-size: 14px;">×</button>
+                            </div>
+                        `);
+                    };
+                    reader.readAsDataURL(finalFile);
                 };
-                reader.readAsDataURL(file);
+
+                if (fileSizeMB > 1) {
+                    new Compressor(file, {
+                        quality: 0.6,
+                        maxWidth: 1200,
+                        success: function (compressedBlob) {
+                            const compressedFile = new File([compressedBlob], file.name, {
+                                type: compressedBlob.type,
+                                lastModified: Date.now(),
+                            });
+                            processFile(compressedFile);
+                        },
+                        error: function (err) {
+                            console.error("Compression error:", err.message);
+                            processFile(file); // fallback to original
+                        }
+                    });
+                } else {
+                    processFile(file); // no compression needed
+                }
             });
 
-            // Reset file input to allow re-selection of the same files
-            $(this).val("");
+            $(this).val(""); // allow re-selection
         });
 
         $(document).on("click", "#update_study_image", function () {
@@ -1836,7 +1887,13 @@
                 success: function (data) {
                     $('#update_study_image').html('Update Images');
                     if ($.isEmptyObject(data.error)) {
-                        printSuccessMsg(data.success);
+                        $startDate = $('#start_date').val();
+                        $endDate = $('#end_date').val();
+                        const params = {
+                            sdt: $startDate,
+                            edt: $endDate
+                        };
+                        printSuccessMsg(data.success, params);
                     } else {
                         printErrorMsg(data.error);
                     }
@@ -1845,6 +1902,18 @@
                     $('#update_study_image').html('Update Images');
                 }
             });
+        });
+
+        $(document).on("click", ".download-zip", function () {
+            let $btn = $(this);
+            $btn.html('<i class="fas fa-spinner fa-spin"></i>');
+            $btn.prop('disabled', true);
+
+            // Reset button after 3 seconds
+            setTimeout(function () {
+                $btn.html('<i class="fas fa-file-archive"></i>');
+                $btn.prop('disabled', false);
+            }, 3000);
         });
     });
     </script>

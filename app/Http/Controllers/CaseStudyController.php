@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use ZipArchive;
 use Validator;
 use Auth;
 use Str;
@@ -616,15 +617,14 @@ class CaseStudyController extends Controller
         $caseStudy->ref_by = $request->ref_by;
         $caseStudy->save();
         
-        $patient = Patient::updateOrCreate(
-            ['patient_id' => $caseStudy->patient_id],
+        patient::where('id', $caseStudy->patient_id)
+            ->update(
             [
                 'name' => $request->patient_name,
                 'age' => $request->age,
                 'gender' => $request->gender,
                 'clinical_history' => $request->clinical_history,
-            ]
-        );
+            ]);
         return response()->json(['status'=>'success', 'message' => [$this->getMessages('_UPSUMSG')]]);
     }
 
@@ -663,8 +663,42 @@ class CaseStudyController extends Controller
             $fullPath = $relativePath . DIRECTORY_SEPARATOR . $imageName;
             
             Storage::putFileAs('public'.DIRECTORY_SEPARATOR. $relativePath, $image, $imageName);
-            umask($oldUmask); 
+            umask($oldUmask);
+
+            $studyImage = new studyImages;
+            $studyImage->case_study_id = $caseStudy->id;
+            $studyImage->image = $fullPath;
+            $studyImage->save();
         }
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
+    }
+
+    public function downloadImagesZip($id){
+        if(empty($id)){
+            abort(404, 'Case Study not found.');
+        }
+        $caseStudy = caseStudy::find($id);
+        if(!$caseStudy){
+            abort(404, 'Case Study not found.');
+        }
+        $zipFileName = str_replace(" ","_", $caseStudy->patient->name).'_'.$caseStudy->case_study_id.'_images.zip';
+        $zip = new ZipArchive;
+
+        $tempFile = tempnam(sys_get_temp_dir(), $zipFileName);
+
+        if ($zip->open($tempFile, ZipArchive::CREATE) === TRUE) {
+
+            foreach ($caseStudy->images as $file) {
+                $filePath = storage_path('app/public/' . $file->image);
+                $fileName = basename($file->image);
+                $zip->addFile($filePath, $fileName);
+            }
+
+            $zip->close();
+
+            return response()->download($tempFile, $zipFileName)->deleteFileAfterSend(true);
+        } else {
+            abort(404, 'Case Study not found.');
+        }
     }
 }

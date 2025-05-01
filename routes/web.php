@@ -127,6 +127,7 @@ Route::group(['prefix' => 'admin'], function () {
             Route::post('/delete-existing-study', [CaseStudyController::class, 'deleteExistingStudy'])->name('admin.deleteExistingStudy');
             Route::post('/update-case-study', [CaseStudyController::class, 'updateCaseStudy'])->name('admin.updateCaseStudy');
             Route::post('/update-case-study-image', [CaseStudyController::class, 'updateCaseStudyImage'])->name('admin.updateCaseStudyImage');
+            Route::get('/download-images-zip/{id}', [CaseStudyController::class, 'downloadImagesZip'])->name('admin.downloadImagesZip');
         });
         Route::middleware(['role:Admin,Manager,Assigner,Quality Controller,Centre', '2fa'])->group(function () {
             Route::get('/add-case-study', [CaseStudyController::class, 'addCaseStudy'])->name('admin.addCaseStudy');

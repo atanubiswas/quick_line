@@ -75,7 +75,7 @@
                 <td>{!!$doctor!!}</td>
                 <td>
                     @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
-                    <button class="btn btn-xs bg-gradient-purple assigner_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-xs bg-gradient-purple assigner_view_image" title="View Images" data-pt-name="{{ $caseStudy->patient->name }}" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                     @else
                         <button class="btn btn-xs bg-gradient-purple doc_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                     @endif
@@ -89,6 +89,7 @@
                     @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && $caseStudy->study_status_id == 5)
                     <button class="btn btn-xs bg-gradient-success view-report-btn" title="View Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-file-pdf"></i></button>
                     @endif
+                    <a href="{{ route('admin.downloadImagesZip', ['id' => $caseStudy->id]) }}" class="btn btn-xs bg-gradient-dark download-zip"><i class="fas fa-file-archive"></i></a>
                 </td>
                 <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>
             </tr>
