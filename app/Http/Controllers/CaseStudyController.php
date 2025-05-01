@@ -684,10 +684,11 @@ class CaseStudyController extends Controller
         $zipFileName = str_replace(" ","_", $caseStudy->patient->name).'_'.$caseStudy->case_study_id.'_images.zip';
         $zip = new ZipArchive;
 
-        $tempFile = tempnam(sys_get_temp_dir(), $zipFileName);
+        $tempFile = tempnam(sys_get_temp_dir(), 'zip_');
+        $newTempFile = $tempFile . '.zip';
+        rename($tempFile, $newTempFile);
 
-        if ($zip->open($tempFile, ZipArchive::CREATE) === TRUE) {
-
+        if ($zip->open($newTempFile, ZipArchive::CREATE) === TRUE) {
             foreach ($caseStudy->images as $file) {
                 $filePath = storage_path('app/public/' . $file->image);
                 $fileName = basename($file->image);
@@ -696,9 +697,9 @@ class CaseStudyController extends Controller
 
             $zip->close();
 
-            return response()->download($tempFile, $zipFileName)->deleteFileAfterSend(true);
+            return response()->download($newTempFile, $zipFileName);//->deleteFileAfterSend(true);
         } else {
-            abort(404, 'Case Study not found.');
+            abort(404, 'Unable to create ZIP file.');
         }
     }
 }
