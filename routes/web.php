@@ -128,6 +128,7 @@ Route::group(['prefix' => 'admin'], function () {
             Route::post('/update-case-study', [CaseStudyController::class, 'updateCaseStudy'])->name('admin.updateCaseStudy');
             Route::post('/update-case-study-image', [CaseStudyController::class, 'updateCaseStudyImage'])->name('admin.updateCaseStudyImage');
             Route::get('/download-images-zip/{id}', [CaseStudyController::class, 'downloadImagesZip'])->name('admin.downloadImagesZip');
+            Route::post('/insert-attachments', [CaseStudyController::class, 'insertAttachments'])->name('admin.insertAttachments');
         });
         Route::middleware(['role:Admin,Manager,Assigner,Quality Controller,Centre', '2fa'])->group(function () {
             Route::get('/add-case-study', [CaseStudyController::class, 'addCaseStudy'])->name('admin.addCaseStudy');
@@ -145,6 +146,7 @@ Route::group(['prefix' => 'admin'], function () {
             Route::post('/get-case-study-search-result', [CaseStudyController::class, 'getCaseStudySearchResult']);
             Route::post('/get-case-study-images', [CaseStudyController::class, 'getCaseStudyImages']);
         });
+        Route::post('/get-case-study-attachments', [CaseStudyController::class, 'getCaseStudyAttachments'])->name('admin.get-case-study-details');
 
    /*============== TIMELINE CONTROLLER =================*/
    Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {

@@ -441,6 +441,7 @@
                                                     @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && in_array($caseStudy->study_status_id, [1, 2]))
                                                     <button class="btn btn-custom-class btn-xs bg-gradient-danger delete-case-btn" title="Delete Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-trash"></i></button>
                                                     @endif
+                                                    <button class="btn btn-custom-class btn-xs bg-gradient-orange attachment-btn" title="Attachments" data-index="{{ $caseStudy->id }}"><i class="fas fa-paperclip"></i></button>@if(count($caseStudy->attachments)>0)<span style="position: relative; top: -10px; left: -10px" class="translate-middle badge rounded-pill bg-danger">{{ count($caseStudy->attachments) }}</span>@endif
                                                     <a href="{{ route('admin.downloadImagesZip', ['id' => $caseStudy->id]) }}" title="Download Images" class="btn btn-custom-class btn-xs bg-gradient-dark download-zip"><i class="fas fa-file-archive"></i></a>
                                                 </td>
                                                 @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
@@ -745,6 +746,26 @@
                             </button>
                         </div>
                         <div class="modal-body doc_image_view_body">
+                            
+                        </div>
+                        <div class="modal-footer justify-content-between" style="display: block;">
+                            <button type="button" class="btn btn-danger float-right" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal -->
+
+            <div class="modal fade" id="case_study_attachment">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Case Attachments</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body case_study_attachment_body">
                             
                         </div>
                         <div class="modal-footer justify-content-between" style="display: block;">
@@ -1163,7 +1184,7 @@
                         noImage = false;
                     }
                 });
-                console.log(isNoImage);
+                
                 if(isNoImage === true){
                     const noImage = '{{ asset('images/no-img.jpg')}}'; 
                     $("#cropImage-assigner").attr("src", noImage);
@@ -1191,7 +1212,7 @@
                 }
             });
 
-        $("#save_study").on("click", function (event) {
+            $("#save_study").on("click", function (event) {
                 $(this).html('Saving <i class="fas fa-spinner fa-spin"></i>');
                 $(".form-control").removeClass("is-invalid");
                 $(".error").remove();
@@ -1231,40 +1252,40 @@
                 });
             });
 
-        // Open Cropper Modal when an image is clicked
-        $(document).on("click", ".preview-img", function () {
-            let imgSrc = $(this).attr("src");
-            currentFile = $(this).data("file-index"); // Store file index
-            console.log("Current File Index:", currentFile);
-            $("#cropImage").attr("src", imgSrc);
-            
-            $("#cropModal").modal("show");
+            // Open Cropper Modal when an image is clicked
+            $(document).on("click", ".preview-img", function () {
+                let imgSrc = $(this).attr("src");
+                currentFile = $(this).data("file-index"); // Store file index
+                
+                $("#cropImage").attr("src", imgSrc);
+                
+                $("#cropModal").modal("show");
 
-            $("#cropModal").on("shown.bs.modal", function () {
-                if (cropper) {
-                    cropper.destroy();
-                }
+                $("#cropModal").on("shown.bs.modal", function () {
+                    if (cropper) {
+                        cropper.destroy();
+                    }
 
-                let image = document.getElementById("cropImage");
-                cropper = new Cropper(image, {
-                    aspectRatio: NaN, // Free cropping
-                    viewMode: 2, // Prevents overflow
-                    autoCropArea: 1, // Ensures image fits well
-                    responsive: true,
-                    restore: false,
-                    scalable: true,
-                    zoomable: true,
-                    rotatable: true,
-                    movable: true,
-                    autoCrop: false
+                    let image = document.getElementById("cropImage");
+                    cropper = new Cropper(image, {
+                        aspectRatio: NaN, // Free cropping
+                        viewMode: 2, // Prevents overflow
+                        autoCropArea: 1, // Ensures image fits well
+                        responsive: true,
+                        restore: false,
+                        scalable: true,
+                        zoomable: true,
+                        rotatable: true,
+                        movable: true,
+                        autoCrop: false
+                    });
+
+                    // Resize Cropper to fit within the modal
+                    setTimeout(() => {
+                        cropper.resize();
+                    }, 300);
                 });
-
-                // Resize Cropper to fit within the modal
-                setTimeout(() => {
-                    cropper.resize();
-                }, 300);
             });
-        });
 
         $(document).on("click", ".image-thumb-assigner", function () {
             let imgSrc = $(this).attr("src");
@@ -1539,7 +1560,6 @@
                     "case_id": case_study_id
                 },
                 success: function (response) {
-                    console.log(response);
                     return response;
                 }
             });
@@ -1716,7 +1736,6 @@
         });
 
         $(document).on("click", '.delete-case-btn',function () {
-            console.log("Delete button clicked");
             var case_study_id = $(this).data("index");
             Swal.fire({
                 icon: 'error',
@@ -1788,7 +1807,6 @@
             let croppedImage = canvas.toDataURL("image/png"); // Convert to Base64
 
             let imgSelector = `#existing_image_${currentFile}`;
-            console.log("Image Selector:", imgSelector);
             $(imgSelector).attr("src", croppedImage);
             $("#cropImage-assigner").attr("src", croppedImage);
 
@@ -1919,6 +1937,83 @@
                 $btn.html('<i class="fas fa-file-archive"></i>');
                 $btn.prop('disabled', false);
             }, 3000);
+        });
+
+        $(document).on("click", ".attachment-btn", function () {
+            let case_study_id = $(this).data("index");
+            let $btn = $(this);
+            $btn.html('<i class="fas fa-spinner fa-spin"></i>');
+            let form_data = new FormData();
+            form_data.append("case_study_id", case_study_id);
+            $.ajax({
+                url: '{{url("admin/get-case-study-attachments")}}',
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,
+                type: 'post',
+                success: function (data) {
+                    $btn.html('<i class="fas fa-paperclip"></i>');
+                    if ($.isEmptyObject(data.error)) {
+                        $(".case_study_attachment_body").html(data);
+                        $("#case_study_attachment").modal("show");
+                    } else {
+                        printErrorMsg(data.error);
+                    }
+                },
+                error: function (data) {
+                    $btn.html('<i class="fas fa-paperclip"></i>');
+                }
+            });
+        });
+
+        $(document).on('click', '.upload-attachment-btn', function() {
+            let $btn = $(this);
+            $btn.html('<i class="fas fa-spinner fa-spin"></i> Uploading...');
+            var files = $("#attachment")[0].files;
+            if(files.length == 0){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Nothing to Upload.',
+                });
+                return false
+            }
+            var formData = new FormData();
+            var attachments = [];
+            var case_study_id = $(this).data("index");
+            Array.from(files).forEach(function(file) {
+                formData.append('attachments[]', file);
+            });
+            formData.append('case_study_id', case_study_id);
+            formData.append('_token', '{{ csrf_token() }}');
+            $.ajax({
+                url: '{{ route('admin.insertAttachments') }}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    $btn.html('Upload');
+                    if ($.isEmptyObject(data.error)) {
+                        $(".view_attachments_div").html(data);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error uploading attachments. You can only Upload Images and PDF files.',
+                        });
+                    }
+                },
+                error: function(data) {
+                    $btn.html('Upload');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error uploading attachments. You can only Upload Images and PDF files.',
+                    });
+                }
+            });
         });
     });
     </script>

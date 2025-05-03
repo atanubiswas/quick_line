@@ -42,4 +42,8 @@ class caseStudy extends Model
     public function modality(){
         return $this->belongsTo('App\Models\Modality');
     }
+
+    public function attachments(){
+        return $this->hasMany('App\Models\caseAttachment', 'case_study_id');
+    }
 }

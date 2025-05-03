@@ -22,6 +22,7 @@ use App\Models\caseStudy;
 use App\Models\studyType;
 use App\Models\Laboratory;
 use App\Models\studyImages;
+use App\Models\caseAttachment;
 
 use App\Traits\GeneralFunctionTrait;
 
@@ -701,5 +702,62 @@ class CaseStudyController extends Controller
         } else {
             abort(404, 'Unable to create ZIP file.');
         }
+    }
+
+    public function getCaseStudyAttachments(Request $request){
+        $validator = Validator::make($request->all(), [
+            'case_study_id' => 'required|numeric|exists:case_studies,id'
+        ]);
+        if (!$validator->passes()) {
+            return response()->json(['error'=>$validator->errors()]);
+        }
+        $authUser = Auth::user();
+        $roleId = Auth::user()->roles[0]->pivot->role_id;
+        $caseStudy = caseStudy::find($request->case_study_id);
+        return view('admin.caseStudyAttachments', compact('caseStudy', 'authUser', 'roleId'));
+    }
+
+    public function insertAttachments(Request $request){
+        $validator = Validator::make($request->all(), [
+            'case_study_id' => 'required|numeric|exists:case_studies,id',
+            'attachments' => 'required|array',
+            'attachments.*' => 'required|file|mimetypes:image/jpeg,image/png,image/jpg,image/gif,image/svg+xml,image/webp,application/pdf'
+        ]);
+        if (!$validator->passes()) {
+            return response()->json(['error'=>$validator->errors()]);
+        }
+        $authUser = Auth::user();
+        $roleId = Auth::user()->roles[0]->pivot->role_id;
+        if(!in_array($roleId, [1, 3, 5, 6])){
+            return response()->json(['status'=>'error', 'message'=>['You are not authorized to add attachments.']]);
+        }
+        $caseStudy = caseStudy::find($request->case_study_id);
+        if($caseStudy->study_status_id > 2){
+            return response()->json(['status'=>'error', 'message'=>['You can\'t add Attachments, Status has Changed.']]);
+        }
+
+        $labName = $caseStudy->laboratory->lab_name;
+        $patient_name = $caseStudy->patient->name;
+        
+        foreach($request->file('attachments') as $attachment){
+            $attachmentName = time().'_'.str_replace(" ", "_", $attachment->getClientOriginalName());
+            $relativePath = 'uploads'.DIRECTORY_SEPARATOR . str_replace(" ", "_", $labName) . DIRECTORY_SEPARATOR . str_replace(" ", "_", $patient_name);
+            $directoryPath = storage_path('app'.DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR. $relativePath);
+            
+            // Manually create directory with correct permissions
+            if (!File::exists($directoryPath)) {
+                File::makeDirectory($directoryPath, 0755, true);
+            }
+
+            $fullPath = $relativePath . DIRECTORY_SEPARATOR . $attachmentName;
+            
+            Storage::putFileAs('public'.DIRECTORY_SEPARATOR. $relativePath, $attachment, $attachmentName);
+
+            $studyAttachment = new caseAttachment;
+            $studyAttachment->case_study_id = $caseStudy->id;
+            $studyAttachment->file_name = $fullPath;
+            $studyAttachment->save();
+        }
+        return view('admin.caseStudyOnlyAttachments', compact('caseStudy'));
     }
 }
