@@ -504,9 +504,18 @@
                     if (data.status === 'success') {
                         $startDate = $('#start_date').val();
                         $endDate = $('#end_date').val();
+                        $doctor_id = $('#doctor_search').val();
+                        $centre_id = $('#centre').val();
+                        $qc_id = $('#qc_search').val();
+                        $status = $('#status_search').val();
+
                         const params = {
                             sdt: $startDate,
-                            edt: $endDate
+                            edt: $endDate,
+                            did: $doctor_id,
+                            cid: $centre_id,
+                            qid: $qc_id,
+                            st: $status,
                         };
                         printSuccessMsg(data.message, params);
                     } else if (data.status === 'error') {

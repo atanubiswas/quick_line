@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
@@ -22,6 +23,7 @@ use App\Models\caseStudy;
 use App\Models\studyType;
 use App\Models\Laboratory;
 use App\Models\studyImages;
+use App\Models\studyStatus;
 use App\Models\caseAttachment;
 
 use App\Traits\GeneralFunctionTrait;
@@ -38,14 +40,43 @@ class CaseStudyController extends Controller
     public function viewCaseStudy(Request $request){
         $start_date = !isset($request->sdt)?Carbon::now()->startOfDay():Carbon::parse($request->sdt)->startOfDay();
         $end_date = !isset($request->edt)?Carbon::now()->endOfDay():Carbon::parse($request->edt)->endOfDay();
-        $pageName = $this->pageName;
-        $centre_id = 0;
-        $centre_name = "";
+        $doctor_id = !isset($request->did)?'':$request->did;
+        $centre_id = !isset($request->cid)?'':$request->cid;
+        $qc_id = !isset($request->qid)?'':$request->qid;
+        $status_id = !isset($request->st)?'':$request->st;
+        $type = !isset($request->ty)?'':$request->ty;
         
+        $pageName = $this->pageName;
+        $centre_name = "";
+        $allCaseStudies = caseStudy::select("created_at", "study_status_id")->whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->get();
+        $todayStudies = caseStudy::select('study_status_id', 'is_emergency')->whereBetween('created_at', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()])->get();
         if(in_array(auth()->user()->roles[0]->id, [1, 5, 6])){
             $CaseStudies = caseStudy::orderBy('created_at', 'desc')
                 ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
                 ->whereBetween('created_at', [$start_date, $end_date])
+                ->when(!empty($centre_id), function($query) use($centre_id){
+                    $query->where("laboratory_id", $centre_id);
+                })
+                ->when(!empty($doctor_id), function($query) use($doctor_id){
+                    $query->where("doctor_id", $doctor_id);
+                })
+                ->when(!empty($qc_id), function($query) use($qc_id){
+                    $query->where("qc_id", $qc_id);
+                })
+                ->when(!empty($status_id), function($query) use($status_id){
+                    if($status_id == 'active'){
+                        $status_id_array = [1, 2, 3, 4];
+                    }
+                    else{
+                        $status_id_array = [$status_id];
+                    }
+                    $query->whereIn("study_status_id", $status_id_array);
+                })
+                ->when(!empty($type), function($query) use($type){
+                    if($type == 'emr'){
+                        $query->where("is_emergency", 1);
+                    }
+                })
                 ->get();
         }
         elseif(in_array(auth()->user()->roles[0]->id, [4])){
@@ -71,11 +102,73 @@ class CaseStudyController extends Controller
                 ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
                 ->where('laboratory_id', $centre->id)
                 ->whereBetween('created_at', [$start_date, $end_date])
+                ->when(!empty($status_id), function($query) use($status_id){
+                    $query->where("study_status_id", $status_id);
+                })
                 ->get();
         }
         else{
             $CaseStudies = array();
         }
+
+        /* =============== CODE FOR CALCULATING THE COUNTS ================= */
+        $now = Carbon::now();
+
+        // Today
+        $todayCount = $allCaseStudies->filter(function($case) use ($now) {
+            return Carbon::parse($case->created_at)->isToday();
+        })->count();
+
+        // Yesterday
+        $yesterdayCount = $allCaseStudies->filter(function($case) use ($now) {
+            return Carbon::parse($case->created_at)->isYesterday();
+        })->count();
+
+        // This week (from Monday to now)
+        $weekCount = $allCaseStudies->filter(function($case) use ($now) {
+            return Carbon::parse($case->created_at)->isSameWeek($now);
+        })->count();
+
+        // This month
+        $monthCount = $allCaseStudies->filter(function($case) use ($now) {
+            return Carbon::parse($case->created_at)->isSameMonth($now);
+        })->count();
+
+        // Actives
+        $activeCount = $allCaseStudies->filter(function($case) {
+            return in_array($case->study_status_id, [1, 2, 3, 4]);
+        })->count();
+
+        // Unread
+        $unreadCount = $todayStudies->filter(function($case) {
+            return in_array($case->study_status_id, [1]);
+        })->count();
+
+        // Pending
+        $pendingCount = $todayStudies->filter(function($case) {
+            return in_array($case->study_status_id, [2]);
+        })->count();
+
+        // QA Pending
+        $qaPendingCount = $todayStudies->filter(function($case) {
+            return in_array($case->study_status_id, [3]);
+        })->count();
+
+        // Re Work
+        $reWorkCount = $todayStudies->filter(function($case) {
+            return in_array($case->study_status_id, [4]);
+        })->count();
+
+        // Finished
+        $finishedCount = $todayStudies->filter(function($case) {
+            return in_array($case->study_status_id, [5]);
+        })->count();
+
+        // Emergency
+        $emergencyCount = $todayStudies->filter(function($case) {
+            return in_array($case->is_emergency, [1]);
+        })->count();
+        /* =============== CODE FOR CALCULATING THE COUNTS ================= */
 
         $authUser = Auth::user();
         $authUserId = $authUser->id;
@@ -84,7 +177,17 @@ class CaseStudyController extends Controller
         $Labrotories = Laboratory::where("status", 1)
             ->orderBy("lab_name")
             ->get();
-        return view('admin.viewCaseStudy', compact('pageName', 'CaseStudies', 'Labrotories', 'roleId', 'centre_id', 'centre_name', 'authUserId'));
+        $doctors = Doctor::where("status", "1")
+            ->orderBy("name")
+            ->get();
+        $qualityControllers = User::whereHas('roles', function($query) {
+            $query->where('name', 'Quality Controller');
+        })->get();
+        $status = studyStatus::where("id", "!=", 6)
+            ->orderBy("id")
+            ->get();
+        
+        return view('admin.viewCaseStudy', compact('pageName', 'CaseStudies', 'Labrotories', 'roleId', 'centre_id', 'centre_name', 'authUserId', 'doctors', 'qualityControllers', 'status', 'todayCount', 'yesterdayCount', 'weekCount', 'monthCount', 'activeCount', 'unreadCount', 'pendingCount', 'qaPendingCount', 'reWorkCount', 'finishedCount', 'emergencyCount'));
     }
 
     /**
@@ -326,6 +429,9 @@ class CaseStudyController extends Controller
         else{
             $centre_id = $request->centre_id;
         }
+        $doctor_id = $request->doctor_id;
+        $qc_id = $request->qc_id;
+        $status = $request->status;
         
         $CaseStudies = caseStudy::orderBy('created_at', 'desc')
         ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
@@ -333,8 +439,17 @@ class CaseStudyController extends Controller
         ->when($centre_id !== null, function($query) use($centre_id){
             $query->where("laboratory_id", $centre_id);
         })
+        ->when(!empty($doctor_id), function($query) use($doctor_id){
+            $query->where("doctor_id", $doctor_id);
+        })
+        ->when(!empty($qc_id), function($query) use($qc_id){
+            $query->where("qc_id", $qc_id);
+        })
         ->when($roleId == 3, function($query) use($centre_id){
             $query->where("laboratory_id", $centre_id);
+        })
+        ->when(!empty($status), function($query) use($status){
+            $query->where("study_status_id", $status);
         })
         ->get();
         

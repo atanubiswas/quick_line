@@ -5,12 +5,13 @@
             <th style="width: 6%;">Case Id</th>
             <th style="width: 7%;">Date & Time</th>
             <th style="width: 15%;">Patient Name</th>
+            <th style="width: 15%;">Studies</th>
             <th style="width: 7%;">Modality</th>
             <th style="width: 5%;">Age Sex</th>
             <th style="width: 6%;">History</th>
             <th style="width: 6%;">Status</th>
             <th>Doctor</th>
-            <th style="width: 12%;">Controls</th>
+            <th style="width: 10%;">Controls</th>
             <th>Centre</th>
         </tr>
     </thead>
@@ -58,6 +59,11 @@
                     <div class="badge bg-gradient-orange"><i class="fas fa-info-circle me-1"></i> Callback</div>
                     @endif
                 </td>
+                <td>
+                    @foreach($caseStudy->study as $study)
+                        {{ $study->type->name }}@if(!$loop->last), @endif
+                    @endforeach
+                </td>
                 <td>{{ $caseStudy->modality->name }}</td>
                 <td>{{$caseStudy->patient->age."/".strtoupper(substr($caseStudy->patient->gender,0, 1))}}</td>
                 <td>{{$caseStudy->clinical_history}}</td>
@@ -89,8 +95,10 @@
                     @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && $caseStudy->study_status_id == 5)
                     <button class="btn btn-custom-class btn-xs bg-gradient-success view-report-btn" title="View Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-file-pdf"></i></button>
                     @endif
-                    <button class="btn btn-custom-class btn-xs bg-gradient-orange attachment-btn" title="Attachments" data-index="{{ $caseStudy->id }}"><i class="fas fa-paperclip"></i></button>
+                    @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]))
                     <a href="{{ route('admin.downloadImagesZip', ['id' => $caseStudy->id]) }}" title="Download Images" class="btn btn-custom-class btn-xs bg-gradient-dark download-zip"><i class="fas fa-file-archive"></i></a>
+                    @endif
+                    <button class="btn btn-custom-class btn-xs bg-gradient-orange attachment-btn" title="Attachments" data-index="{{ $caseStudy->id }}"><i class="fas fa-paperclip"></i></button>@if(count($caseStudy->attachments)>0)<span style="position: relative; top: -10px; left: -10px" class="translate-middle badge rounded-pill bg-danger">{{ count($caseStudy->attachments) }}</span>@endif
                 </td>
                 <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>
             </tr>

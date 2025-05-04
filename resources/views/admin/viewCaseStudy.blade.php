@@ -304,16 +304,91 @@
         <!-- Main content -->
         <section class="content">
             <div class="container-fluid">
+                @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
+                <div class="row">
+                    <div class="col-sm-4">
+                        <a href="{{ route("admin.viewCaseStudy", ['sdt'=>Carbon\Carbon::now()->format('Y-m-d'), 'edt'=>Carbon\Carbon::now()->format('Y-m-d')]) }}" class="btn btn-app bg-success">
+                        <span class="badge bg-danger">{{ $todayCount }}</span>
+                        <i class="fas fa-calendar-check"></i>Today
+                        </a>
+                        <a href="{{ route("admin.viewCaseStudy", ['sdt'=>Carbon\Carbon::now()->subDay()->format('Y-m-d'), 'edt'=>Carbon\Carbon::now()->subDay()->format('Y-m-d')]) }}" class="btn btn-app bg-primary">
+                        <span class="badge bg-danger">{{ $yesterdayCount }}</span>
+                        <i class="fas fa-calendar-day"></i>Yesterday
+                        </a>
+                        <a href="{{ route("admin.viewCaseStudy", ['sdt'=>Carbon\Carbon::now()->startOfWeek()->format('Y-m-d'), 'edt'=>Carbon\Carbon::now()->endOfWeek()->format('Y-m-d')]) }}" class="btn btn-app bg-orange">
+                        <span class="badge bg-danger">{{ $weekCount }}</span>
+                        <i class="fas fa-calendar-alt"></i>This Week
+                        </a>
+                        <a href="{{ route("admin.viewCaseStudy", ['sdt'=>Carbon\Carbon::now()->startOfMonth()->format('Y-m-d'), 'edt'=>Carbon\Carbon::now()->format('Y-m-d')]) }}" class="btn btn-app bg-warning">
+                        <span class="badge bg-danger">{{ $monthCount }}</span>
+                        <i class="fas fa-calendar-alt"></i>This Month
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{{ route("admin.viewCaseStudy", ['sdt'=>Carbon\Carbon::now()->startOfMonth()->format('Y-m-d'), 'edt'=>Carbon\Carbon::now()->format('Y-m-d'), 'st'=>'active']) }}" class="btn btn-app bg-success">
+                        <span class="badge bg-danger">{{ $activeCount }}</span>
+                        <i class="fas fa-calendar-alt"></i>Active
+                        </a>
+                        <a href="{{ route("admin.viewCaseStudy", ['sdt'=>Carbon\Carbon::now()->format('Y-m-d'), 'edt'=>Carbon\Carbon::now()->format('Y-m-d'), 'st'=>1]) }}" class="btn btn-app bg-primary">
+                        <span class="badge bg-danger">{{ $unreadCount }}</span>
+                        <i class="fas fa-calendar-alt"></i>Unread
+                        </a>
+                        <a href="{{ route("admin.viewCaseStudy", ['sdt'=>Carbon\Carbon::now()->format('Y-m-d'), 'edt'=>Carbon\Carbon::now()->format('Y-m-d'), 'st'=>2]) }}" class="btn btn-app bg-warning">
+                        <span class="badge bg-danger">{{ $pendingCount }}</span>
+                        <i class="fas fa-calendar-alt"></i>Pending
+                        </a>
+                        <a href="{{ route("admin.viewCaseStudy", ['sdt'=>Carbon\Carbon::now()->format('Y-m-d'), 'edt'=>Carbon\Carbon::now()->format('Y-m-d'), 'st'=>3]) }}" class="btn btn-app bg-orange">
+                        <span class="badge bg-danger">{{ $qaPendingCount }}</span>
+                        <i class="fas fa-calendar-alt"></i>QA Pending
+                        </a>
+                        <a href="{{ route("admin.viewCaseStudy", ['sdt'=>Carbon\Carbon::now()->format('Y-m-d'), 'edt'=>Carbon\Carbon::now()->format('Y-m-d'), 'st'=>4]) }}" class="btn btn-app bg-info">
+                        <span class="badge bg-danger">{{ $reWorkCount }}</span>
+                        <i class="fas fa-calendar-alt"></i>Re-Work
+                        </a>
+                        <a href="{{ route("admin.viewCaseStudy", ['sdt'=>Carbon\Carbon::now()->format('Y-m-d'), 'edt'=>Carbon\Carbon::now()->format('Y-m-d'), 'st'=>5]) }}" class="btn btn-app bg-dark">
+                        <span class="badge bg-danger">{{ $finishedCount }}</span>
+                        <i class="fas fa-calendar-alt"></i>Finished
+                        </a>
+                    </div>
+                    <div class="col-sm-2">
+                        <a href="{{ route("admin.viewCaseStudy", ['sdt'=>Carbon\Carbon::now()->format('Y-m-d'), 'edt'=>Carbon\Carbon::now()->format('Y-m-d'), 'ty'=>'emr']) }}" class="btn btn-app bg-danger">
+                        <span class="badge bg-success">{{ $emergencyCount }}</span>
+                        <i class="fas fa-calendar-check"></i>Emergency
+                        </a>
+                    </div>
+                </div>
+                @endif
                 <div class="row">
                     <div class="col-12">
                         <div class="card card-purple">
                             <div class="card-header">
                                 @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]))
                                 <div class="row">
-                                    <div class="col-md-4">
-                                        <h3 class="card-title" style="color: #fff;">View {{$pageName}} Data</h3>
+                                    <div class="col-md-2">
+                                        @if($roleId != 3)
+                                        <div class="input-group">
+                                            <select id="doctor_search" name="doctor_search" class="form-control select2" style="width: 100%;">
+                                                <option value="">All Doctors</option>
+                                                @foreach($doctors as $doctor)
+                                                    <option value="{{$doctor->id}}">{{$doctor->name}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        @endif
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
+                                        @if($roleId != 3)
+                                        <div class="input-group">
+                                            <select id="qc_search" name="qc_search" class="form-control select2" style="width: 100%;">
+                                                <option value="">All Quality Controllers</option>
+                                                @foreach($qualityControllers as $qualityController)
+                                                    <option value="{{$qualityController->id}}">{{$qualityController->name}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        @endif
+                                    </div>
+                                    <div class="col-md-2">
                                         @if($roleId != 3)
                                         <div class="input-group">
                                             <select id="centre" name="centre" class="form-control select2" style="width: 100%;">
@@ -324,19 +399,28 @@
                                             </select>
                                         </div>
                                         @endif
-                                        <input type="hidden" id="start_date" name="start_date" value="{{ Carbon\Carbon::now()->format('Y-m-d') }}">
-                                        <input type="hidden" id="end_date" name="end_date" value="{{ Carbon\Carbon::now()->format('Y-m-d') }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="input-group">
+                                            <select id="status_search" name="status_search" class="form-control select2" style="width: 100%;">
+                                                <option value="">All Status</option>
+                                                @foreach($status as $st)
+                                                    <option value="{{$st->id}}">{{$st->name}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="input-group">
                                             <input type="text" id="daterange" class="form-control daterange" data-target="#datepicker"/>
+                                            <input type="hidden" id="start_date" name="start_date" value="{{ Carbon\Carbon::now()->format('Y-m-d') }}">
+                                            <input type="hidden" id="end_date" name="end_date" value="{{ Carbon\Carbon::now()->format('Y-m-d') }}">
                                             <button style="margin-left: 10px;" type="button" id="search_btn" name="search_btn" class="btn bg-gradient-orange float-right btn-sm">Search</button>
                                         </div>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-1">
                                         <button type="button" id="add_case_study_btn" class="btn bg-gradient-success float-right btn-sm" data-toggle="modal" data-target="#add-case-study-modal">Add {{$pageName}}</button>
                                     </div>
-                                
                                 </div>
                                 @else
                                 <div class="row">
@@ -355,12 +439,13 @@
                                             <th style="width: 6%;">Case Id</th>
                                             <th style="width: 7%;">Date & Time</th>
                                             <th style="width: 15%;">Patient Name</th>
+                                            <th style="width: 15%;">Studies</th>
                                             <th style="width: 7%;">Modality</th>
                                             <th style="width: 5%;">Age Sex</th>
                                             <th style="width: 6%;">History</th>
                                             <th style="width: 6%;">Status</th>
                                             <th>Doctor</th>
-                                            <th style="width: 12%;">Controls</th>
+                                            <th style="width: 10%;">Controls</th>
                                             @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                             <th>Centre</th>
                                             @endif
@@ -410,6 +495,11 @@
                                                     <div class="badge bg-gradient-orange"><i class="fas fa-info-circle me-1"></i> Callback</div>
                                                     @endif
                                                 </td>
+                                                <td>
+                                                    @foreach($caseStudy->study as $study)
+                                                        {{ $study->type->name }}@if(!$loop->last), @endif
+                                                    @endforeach
+                                                </td>
                                                 <td>{{ $caseStudy->modality->name }}</td>
                                                 <td>{{$caseStudy->patient->age."/".strtoupper(substr($caseStudy->patient->gender,0, 1))}}</td>
                                                 <td>{{$caseStudy->clinical_history}}</td>
@@ -441,8 +531,10 @@
                                                     @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && in_array($caseStudy->study_status_id, [1, 2]))
                                                     <button class="btn btn-custom-class btn-xs bg-gradient-danger delete-case-btn" title="Delete Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-trash"></i></button>
                                                     @endif
-                                                    <button class="btn btn-custom-class btn-xs bg-gradient-orange attachment-btn" title="Attachments" data-index="{{ $caseStudy->id }}"><i class="fas fa-paperclip"></i></button>@if(count($caseStudy->attachments)>0)<span style="position: relative; top: -10px; left: -10px" class="translate-middle badge rounded-pill bg-danger">{{ count($caseStudy->attachments) }}</span>@endif
+                                                    @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]))
                                                     <a href="{{ route('admin.downloadImagesZip', ['id' => $caseStudy->id]) }}" title="Download Images" class="btn btn-custom-class btn-xs bg-gradient-dark download-zip"><i class="fas fa-file-archive"></i></a>
+                                                    @endif
+                                                    <button class="btn btn-custom-class btn-xs bg-gradient-orange attachment-btn" title="Attachments" data-index="{{ $caseStudy->id }}"><i class="fas fa-paperclip"></i></button>@if(count($caseStudy->attachments)>0)<span style="position: relative; top: -10px; left: -10px" class="translate-middle badge rounded-pill bg-danger">{{ count($caseStudy->attachments) }}</span>@endif
                                                 </td>
                                                 @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                                 <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>
@@ -978,6 +1070,10 @@
 
             const startDateVal = getUrlParam('sdt');
             const endDateVal = getUrlParam('edt');
+            const centreIdVal = getUrlParam('cid');
+            const doctorIdVal = getUrlParam('did');
+            const qcIdVal = getUrlParam('qid');
+            const statusVal = getUrlParam('st');
 
             // Always FORMAT the moment before using
             const sdt = startDateVal ? moment(startDateVal, 'YYYY-MM-DD').format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
@@ -986,6 +1082,11 @@
             // Set the formatted values into inputs
             $('#start_date').val(sdt);
             $('#end_date').val(edt);
+
+            $('#centre').val(centreIdVal);
+            $('#doctor_search').val(doctorIdVal);
+            $('#qc_search').val(qcIdVal);
+            $('#status_search').val(statusVal);
 
             // Initialize daterangepicker
             $('#daterange').daterangepicker({
@@ -1007,6 +1108,9 @@
                 let start_date = $('#start_date').val();
                 let end_date = $('#end_date').val();
                 let centre_id = $('#centre').val();
+                let doctor_id = $('#doctor_search').val();
+                let qc_id = $('#qc_search').val();
+                let status = $('#status_search').val();
                 
                 $.ajax({
                     url: "{{ url('admin/get-case-study-search-result') }}",
@@ -1015,7 +1119,10 @@
                         "_token": "{{ csrf_token() }}",
                         "start_date": start_date,
                         "end_date": end_date,
-                        "centre_id": centre_id
+                        "centre_id": centre_id,
+                        "doctor_id": doctor_id,
+                        "qc_id": qc_id,
+                        "status": status
                     },
                     success: function(response) {
                         $("#search_btn").html("Search");
@@ -1912,9 +2019,18 @@
                     if ($.isEmptyObject(data.error)) {
                         $startDate = $('#start_date').val();
                         $endDate = $('#end_date').val();
+                        $doctor_id = $('#doctor_search').val();
+                        $centre_id = $('#centre').val();
+                        $qc_id = $('#qc_search').val();
+                        $status = $('#status_search').val();
+
                         const params = {
                             sdt: $startDate,
-                            edt: $endDate
+                            edt: $endDate,
+                            did: $doctor_id,
+                            cid: $centre_id,
+                            qid: $qc_id,
+                            st: $status,
                         };
                         printSuccessMsg(data.success, params);
                     } else {
@@ -1940,6 +2056,7 @@
         });
 
         $(document).on("click", ".attachment-btn", function () {
+            var tr = $(this).closest('tr');
             let case_study_id = $(this).data("index");
             let $btn = $(this);
             $btn.html('<i class="fas fa-spinner fa-spin"></i>');
@@ -1967,18 +2084,45 @@
             });
         });
 
+        $('#case_study_attachment').on('hidden.bs.modal', function () {
+            $startDate = $('#start_date').val();
+            $endDate = $('#end_date').val();
+            $doctor_id = $('#doctor_search').val();
+            $centre_id = $('#centre').val();
+            $qc_id = $('#qc_search').val();
+            $status = $('#status_search').val();
+
+            const params = {
+                sdt: $startDate,
+                edt: $endDate,
+                did: $doctor_id,
+                cid: $centre_id,
+                qid: $qc_id,
+                st: $status,
+            };
+            const url = new URL(window.location.href);
+            Object.entries(params).forEach(([key, value]) => {
+                url.searchParams.set(key, value);
+            });
+            url.searchParams.set('_', Date.now());
+            window.location.href = url.toString();
+        });
+
         $(document).on('click', '.upload-attachment-btn', function() {
             let $btn = $(this);
             $btn.html('<i class="fas fa-spinner fa-spin"></i> Uploading...');
             var files = $("#attachment")[0].files;
+            
             if(files.length == 0){
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
                     text: 'Nothing to Upload.',
                 });
-                return false
+                $btn.html('Upload');
+                return false;
             }
+            
             var formData = new FormData();
             var attachments = [];
             var case_study_id = $(this).data("index");
@@ -1995,6 +2139,7 @@
                 contentType: false,
                 success: function(data) {
                     $btn.html('Upload');
+                    $("#attachment").val('');
                     if ($.isEmptyObject(data.error)) {
                         $(".view_attachments_div").html(data);
                     } else {
@@ -2007,6 +2152,7 @@
                 },
                 error: function(data) {
                     $btn.html('Upload');
+                    $("#attachment").val('');
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
