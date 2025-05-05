@@ -110,6 +110,17 @@
                 </div>
             </div>
         </div>
+        <div class="row" style="padding: 10px; margin-bottom: 5px;">
+            <div class="col-md-12">
+                <div class="card card-purple">
+                    <div class="card-header">
+                        <h3 class="card-title">Comments</h3>
+                    </div>
+                    <div class="card-body">
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     @if($roleId != '3')
     @foreach($caseStudy->study as $study)

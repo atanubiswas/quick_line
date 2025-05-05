@@ -53,7 +53,20 @@ class StudyLayoutController extends Controller
     public function addStudyLayout(){
         $modalityes = Modality::all();
         $doctors = Doctor::orderBy("name")->get();
-        return view("admin.addStudyLayout", ["modalityes" => $modalityes, "pageName" => $this->pageName, "doctors" => $doctors]);
+        $authUser = Auth::user();
+        $currentDoctor = $doctors->filter(function($query) use ($authUser){
+            return $query->user_id == $authUser->id;
+        })->first();
+        
+        if($currentDoctor != null){
+            $currentDoctorModalities = $currentDoctor->DoctorModality->pluck('modality_id')->toArray();
+            $modalityes = $modalityes->filter(function($query) use ($currentDoctorModalities){
+                return in_array($query->id, $currentDoctorModalities);
+            });
+        }
+        
+        $roleId = $authUser->roles[0]->pivot->role_id;
+        return view("admin.addStudyLayout", ["modalityes" => $modalityes, "pageName" => $this->pageName, "doctors" => $doctors, "roleId" => $roleId, "currentDoctor" => $currentDoctor, "authUser" => $authUser]);
     }
 
     /**
@@ -96,7 +109,20 @@ class StudyLayoutController extends Controller
     public function viewStudyLayout(){
         $pageName = $this->pageName;
         $modalityes = Modality::all();
-            
+        $authUser = Auth::user();
+        $roleId = $authUser->roles[0]->pivot->role_id;
+        $currentDoctor = null;
+        if($roleId == 4){
+            $currentDoctor = Doctor::where("user_id", $authUser->id)->first();
+        }
+        
+        if($currentDoctor != null){
+            $currentDoctorModalities = $currentDoctor->DoctorModality->pluck('modality_id')->toArray();
+            $modalityes = $modalityes->filter(function($query) use ($currentDoctorModalities){
+                return in_array($query->id, $currentDoctorModalities);
+            });
+        }
+        
         return view('admin.viewStudyLayout', compact('pageName', 'modalityes'));
     }
 
@@ -149,9 +175,14 @@ class StudyLayoutController extends Controller
     }
 
     public function getStudyLayoutTable(Request $request){
+        $authUser = Auth::user();
+        $roleId = $authUser->roles[0]->pivot->role_id;
         $studyLayouts = modalityStudyLayout::where("study_type_id", $request->study)
             ->orderBy('id', 'desc')
             ->with('studyType', 'doctor')
+            ->when($roleId == 4, function ($query) use ($authUser) {
+                return $query->where('created_by', $authUser->id);
+            })
             ->get();
             
         return view('admin.getStudyLayoutTable', compact('studyLayouts'));

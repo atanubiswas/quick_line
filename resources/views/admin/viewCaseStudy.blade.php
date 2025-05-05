@@ -445,7 +445,7 @@
                                             <th style="width: 6%;">History</th>
                                             <th style="width: 6%;">Status</th>
                                             <th>Doctor</th>
-                                            <th style="width: 10%;">Controls</th>
+                                            <th style="width: 95px;">Controls</th>
                                             @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                             <th>Centre</th>
                                             @endif

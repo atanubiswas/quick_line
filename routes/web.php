@@ -80,6 +80,7 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('/insert-user', [UserController::class,'insertUser']);
         Route::get('/view-user', [UserController::class, 'viewUser'])->name('admin.viewUser');
         Route::post('/change-user-status', [UserController::class,'changeStatus']);
+        Route::post('/reset-password', [UserController::class,'resetPassword'])->name('admin.resetPassword');
     });
     Route::middleware(['role:Admin,Centre,Quality Controller,Doctor,Manager,Assigner', '2fa'])->group(function () {
         Route::get('/change-password', [UserController::class, 'changePassword'])->name('admin.changePassword');
@@ -156,7 +157,7 @@ Route::group(['prefix' => 'admin'], function () {
     });
 
    /*============== STUDYLAYOUT CONTROLLER ==============*/
-   Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {
+   Route::middleware(['role:Admin,Manager,Assigner,Doctor', '2fa'])->group(function () {
         Route::get('/add-study-layout', [StudyLayoutController::class,'addStudyLayout'])->name('admin.addStudyLayout');
         Route::post('/insert-study-layout', [StudyLayoutController::class,'insertStudyLayout']);
         Route::get('/view-study-layout', [StudyLayoutController::class,'viewStudyLayout'])->name('admin.viewStudyLayout');

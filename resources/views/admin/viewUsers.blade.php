@@ -58,6 +58,7 @@
                                         <th>Mobile Number</th>
                                         <th>User Type</th>
                                         <th>Status</th>
+                                        <th>Controls</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -71,6 +72,9 @@
                                         <td>
                                             <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" /> 
                                             <label for="user_status_{{$user->id}}"  @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') style="background-color: #aaa" @endif data-on-label="Active" data-off-label="Inactive"></label>
+                                        </td>
+                                        <td>
+                                            <button type="button" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif class="btn btn-warning btn-sm reset_password" data-id="{{$user->id}}"><i class="fas fa-key"></i> Reset Password
                                         </td>
                                     </tr>
                                     @endif
@@ -95,6 +99,7 @@
                                         <th>Mobile Number</th>
                                         <th>User Type</th>
                                         <th>Status</th>
+                                        <th>Controls</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -108,6 +113,9 @@
                                         <td>
                                             <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" /> 
                                             <label for="user_status_{{$user->id}}"  @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') style="background-color: #aaa" @endif data-on-label="Active" data-off-label="Inactive"></label>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-warning btn-sm reset_password" data-id="{{$user->id}}"><i class="fas fa-key"></i> Reset Password
                                         </td>
                                     </tr>
                                     @endif
@@ -132,6 +140,7 @@
                                         <th>Mobile Number</th>
                                         <th>User Type</th>
                                         <th>Status</th>
+                                        <th>Controls</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -145,6 +154,91 @@
                                         <td>
                                             <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" />
                                             <label for="user_status_{{$user->id}}"  @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') style="background-color: #aaa" @endif data-on-label="Active" data-off-label="Inactive"></label>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-warning btn-sm reset_password" data-id="{{$user->id}}"><i class="fas fa-key"></i> Reset Password
+                                        </td>
+                                    </tr>
+                                    @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                    <div class="card card-purple">
+                        <div class="card-header">
+                            <h3 class="card-title">View Centers</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <table id="centre_table" class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>User Name</th>
+                                        <th>Email</th>
+                                        <th>Mobile Number</th>
+                                        <th>User Type</th>
+                                        <th>Status</th>
+                                        <th>Controls</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($users as $user)
+                                    @if($user->roles[0]->name == 'Centre')
+                                    <tr>
+                                        <td><img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}</td>
+                                        <td><a href="mailto:{{$user->email}}">{{$user->email}}</a></td>
+                                        <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
+                                        <td>{{$user->roles[0]->name}}</td>
+                                        <td>
+                                            <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" />
+                                            <label for="user_status_{{$user->id}}"  @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') style="background-color: #aaa" @endif data-on-label="Active" data-off-label="Inactive"></label>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-warning btn-sm reset_password" data-id="{{$user->id}}"><i class="fas fa-key"></i> Reset Password
+                                        </td>
+                                    </tr>
+                                    @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                    <div class="card card-purple">
+                        <div class="card-header">
+                            <h3 class="card-title">View Doctors</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <table id="doctor_table" class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>User Name</th>
+                                        <th>Email</th>
+                                        <th>Mobile Number</th>
+                                        <th>User Type</th>
+                                        <th>Status</th>
+                                        <th>Controls</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($users as $user)
+                                    @if($user->roles[0]->name == 'Doctor')
+                                    <tr>
+                                        <td><img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}</td>
+                                        <td><a href="mailto:{{$user->email}}">{{$user->email}}</a></td>
+                                        <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
+                                        <td>{{$user->roles[0]->name}}</td>
+                                        <td>
+                                            <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" />
+                                            <label for="user_status_{{$user->id}}"  @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') style="background-color: #aaa" @endif data-on-label="Active" data-off-label="Inactive"></label>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-warning btn-sm reset_password" data-id="{{$user->id}}"><i class="fas fa-key"></i> Reset Password
                                         </td>
                                     </tr>
                                     @endif
@@ -217,7 +311,29 @@ $(function () {
         "lengthMenu": [ [10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"] ]
     });
 
-    $('#manager_table tbody').on('change', '.user_status',function () {
+    $('#centre_table').DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "lengthMenu": [ [10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"] ]
+    });
+
+    $('#doctor_table').DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "lengthMenu": [ [10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"] ]
+    });
+
+    $(document).on('change', '.user_status',function () {
         var isChecked = $(this).is(':checked');
         var user_id = $(this).data("id");
 
@@ -256,82 +372,30 @@ $(function () {
         }
     });
 
-    $('#assigner_table tbody').on('change', '.user_status',function () {
-        var isChecked = $(this).is(':checked');
+    $(document).on('click', '.reset_password', function () {
         var user_id = $(this).data("id");
-
-        if (isChecked) {
-            Swal.fire({
-                title: "Are you sure?",
-                text: "You want to Re-active this Person?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, Re-active It!"
-            }).then((result) => {
-                if (!result.isConfirmed) {
-                    $(this).prop('checked', false);
-                } else {
-                    changeUserStatus(user_id, isChecked);
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You want to Reset Password of this Person?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, Reset It!"
+        }).then((result) => {
+            $.ajax({
+                url: '{{url("admin/reset-password")}}',
+                type: 'POST',
+                data: {user_id: user_id},
+                success: function (data) {
+                    if (data.success) {
+                        printSuccessMsg(data.success);
+                    } else {
+                        printErrorMsg(data.error);
+                    }
                 }
             });
-        } else {
-            Swal.fire({
-                title: "Are you sure?",
-                text: "You want to Deactive this Person?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, Deactive It!"
-            }).then((result) => {
-                if (!result.isConfirmed) {
-                    $(this).prop('checked', true);
-                } else {
-                    changeUserStatus(user_id, isChecked);
-                }
-            });
-        }
         });
-
-    $('#quality_controller_table tbody').on('change', '.user_status',function () {
-        var isChecked = $(this).is(':checked');
-        var user_id = $(this).data("id");
-
-        if (isChecked) {
-            Swal.fire({
-                title: "Are you sure?",
-                text: "You want to Re-active this Person?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, Re-active It!"
-            }).then((result) => {
-                if (!result.isConfirmed) {
-                    $(this).prop('checked', false);
-                } else {
-                    changeUserStatus(user_id, isChecked);
-                }
-            });
-        } else {
-            Swal.fire({
-                title: "Are you sure?",
-                text: "You want to Deactive this Person?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, Deactive It!"
-            }).then((result) => {
-                if (!result.isConfirmed) {
-                    $(this).prop('checked', true);
-                } else {
-                    changeUserStatus(user_id, isChecked);
-                }
-            });
-        }
     });
     
     function changeUserStatus(user_id, isChecked) {

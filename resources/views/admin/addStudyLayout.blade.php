@@ -52,6 +52,7 @@
                               <input type="text" class="form-control" required="required" name="layout_name" id="layout_name" placeholder="Enter Layout Name">
                           </div>
                       </div>
+                      @if($roleId != 4)
                       <div class="col-md-6">
                           <div class="form-group">
                               <label for="exampleInputEmail1">Layout For <em>*</em></label>
@@ -63,6 +64,9 @@
                               </select>
                           </div>
                       </div>
+                      @else
+                      <input type="hidden" name="doctor_id" id="doctor_id" value="{{$authUser->id}}">
+                      @endif
                   </div>      
                   <div class="row">
                       <div class="col-md-6">
@@ -126,12 +130,13 @@ $(function(){
       placeholder: '-- Select Study --',
       selectionCssClass: 'bg-purple'
     });
+    @if($roleId != 4)
     $('#doctor_id').select2({
       theme: 'bootstrap4',
       placeholder: '-- All Doctors --',
       selectionCssClass: 'bg-purple'
     });
-
+    @endif
     $('#layout').summernote({
       height: 300,
         fontNames: ['Arial', 'Arial Black', 'Comic Sans MS', 'Courier New', 'Merriweather'],

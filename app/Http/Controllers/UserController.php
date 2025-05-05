@@ -86,7 +86,7 @@ class UserController extends Controller
     public function viewUser(){
         $authUser = Auth::user();
         $users = User::with('roles')
-            ->whereIn("access_type", array('Quality Controller', 'Manager', 'Assigner'))
+            // ->whereIn("access_type", array('Quality Controller', 'Manager', 'Assigner', 'Centre', 'Doctor'))
             ->get();
         $pageName = $this->pageName;
         return view("admin.viewUsers", compact("users", "pageName", "authUser"));
@@ -133,6 +133,19 @@ class UserController extends Controller
         
         $status = ($request->is_checked=='true') ?1:0;
         User::where('id', $request->user_id)->update(['status'=> $status]);
+        return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
+    }
+
+    public function resetPassword(Request $request){
+        $request->validate([
+            'user_id' => 'required|integer|exists:users,id'
+        ]);
+        
+        $user = User::find($request->user_id);
+        $user->password = bcrypt($this->defaultPassword);
+        $user->is_first_login = '1';
+        $user->save();
+        
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
     }
 }
