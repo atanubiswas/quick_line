@@ -47,7 +47,7 @@
             <img src="{{ url('storage/'.$caseStudy->doctor->signature) }}" alt="Doctor Signature" style="width: 100%; max-width: 250px; margin-bottom: 10px;">
           @endif
           <p style="margin: 0; font-size: 14px; line-height: 1.5;">
-            <strong style="font-size: 18px;">Doctor {{ $caseStudy->doctor->name }}</strong><br>
+            <strong style="font-size: 18px;">{{ $caseStudy->doctor->name }}</strong><br>
             <strong>{{ $doctorQualification->value }}</strong><br>
             @if(isset($registrationNumber->value))
               <strong>{{ $registrationNumber->value }}</strong><br>

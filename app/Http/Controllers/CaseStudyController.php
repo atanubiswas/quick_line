@@ -24,6 +24,7 @@ use App\Models\studyType;
 use App\Models\Laboratory;
 use App\Models\studyImages;
 use App\Models\studyStatus;
+use App\Models\caseComment;
 use App\Models\caseAttachment;
 
 use App\Traits\GeneralFunctionTrait;
@@ -874,5 +875,88 @@ class CaseStudyController extends Controller
             $studyAttachment->save();
         }
         return view('admin.caseStudyOnlyAttachments', compact('caseStudy'));
+    }
+
+    public function getCaseComments(Request $request){
+        $validator = Validator::make($request->all(), [
+            'case_study_id' => 'required|numeric|exists:case_studies,id',
+            'view_add_comment' => 'sometimes|nullable'
+        
+        ]);
+        if (!$validator->passes()) {
+            return response()->json(['error'=>$validator->errors()]);
+        }
+        $authUser = Auth::user();
+        $roleId = Auth::user()->roles[0]->pivot->role_id;
+        $caseStudy = caseStudy::find($request->case_study_id);
+        $caseComments = caseComment::selectRaw("case_comments.*, date(created_at) as created_at_date")
+            ->where("case_study_id", $request->case_study_id)
+            ->with('user')
+            ->orderBy("created_at", "desc")
+            ->get();
+        $viewAddComment = isset($request->view_add_comment) && !empty($request->view_add_comment)?$request->view_add_comment:true;
+        foreach($caseComments as $caseComment) {
+            $eventTime = $this->getHumanReadableTime($caseComment->created_at);
+            $caseComment->event_time = $eventTime;
+
+            if($caseComment->user->roles[0]->name == 'Doctor'){
+                $caseComment->user->user_image = asset('images/doctor-icon.png');
+            }
+            else if($caseComment->user->roles[0]->name == 'Quality Controller'){
+                $caseComment->user->user_image = asset('images/qc-icon.png');
+            }
+            else if($caseComment->user->roles[0]->name == 'Centre'){
+                $caseComment->user->user_image = asset('images/centre-icon.png');
+            }
+            else{
+                $caseComment->user->user_image = asset('images/user-icon.png');
+            }
+        }
+        
+        return view('admin.caseComments', compact('caseStudy', 'authUser', 'roleId', 'caseComments', 'viewAddComment'));
+    }
+
+    public function saveCaseComment(Request $request){
+        $validator = Validator::make($request->all(), [
+            'case_study_id' => 'required|numeric|exists:case_studies,id',
+            'comment' => 'required|string|max:255'
+        ]);
+        if (!$validator->passes()) {
+            return response()->json(['error'=>$validator->errors()]);
+        }
+        $authUser = Auth::user();
+        $roleId = Auth::user()->roles[0]->pivot->role_id;
+        $caseStudy = caseStudy::find($request->case_study_id);
+
+        $caseComment = new caseComment();
+        $caseComment->case_study_id = $request->case_study_id;
+        $caseComment->comment = $request->comment;
+        $caseComment->user_id = $authUser->id;
+        $caseComment->save();
+
+        $caseComments = caseComment::selectRaw("case_comments.*, date(created_at) as created_at_date")
+            ->where("case_study_id", $request->case_study_id)
+            ->with('user')
+            ->orderBy("created_at", "desc")
+            ->get();
+        $viewAddComment = true;
+        foreach($caseComments as $caseComment) {
+            $eventTime = $this->getHumanReadableTime($caseComment->created_at);
+            $caseComment->event_time = $eventTime;
+
+            if($caseComment->user->roles[0]->name == 'Doctor'){
+                $caseComment->user->user_image = asset('images/doctor-icon.png');
+            }
+            else if($caseComment->user->roles[0]->name == 'Quality Controller'){
+                $caseComment->user->user_image = asset('images/qc-icon.png');
+            }
+            else if($caseComment->user->roles[0]->name == 'Centre'){
+                $caseComment->user->user_image = asset('images/centre-icon.png');
+            }
+            else{
+                $caseComment->user->user_image = asset('images/user-icon.png');
+            }
+        }
+        return view('admin.onlyCaseComments', compact( 'authUser', 'roleId', 'caseComments'));
     }
 }

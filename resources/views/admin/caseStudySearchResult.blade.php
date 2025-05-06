@@ -98,6 +98,7 @@
                     @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]))
                     <a href="{{ route('admin.downloadImagesZip', ['id' => $caseStudy->id]) }}" title="Download Images" class="btn btn-custom-class btn-xs bg-gradient-dark download-zip"><i class="fas fa-file-archive"></i></a>
                     @endif
+                    <button class="btn btn-custom-class btn-xs bg-gradient-purple view-comments-btn" title="Case Comments" data-index="{{ $caseStudy->id }}"><i class="fas fa-comments"></i></button>
                     <button class="btn btn-custom-class btn-xs bg-gradient-orange attachment-btn" title="Attachments" data-index="{{ $caseStudy->id }}"><i class="fas fa-paperclip"></i></button>@if(count($caseStudy->attachments)>0)<span style="position: relative; top: -10px; left: -10px" class="translate-middle badge rounded-pill bg-danger">{{ count($caseStudy->attachments) }}</span>@endif
                 </td>
                 <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>

@@ -534,6 +534,7 @@
                                                     @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]))
                                                     <a href="{{ route('admin.downloadImagesZip', ['id' => $caseStudy->id]) }}" title="Download Images" class="btn btn-custom-class btn-xs bg-gradient-dark download-zip"><i class="fas fa-file-archive"></i></a>
                                                     @endif
+                                                    <button class="btn btn-custom-class btn-xs bg-gradient-purple view-comments-btn" title="Case Comments" data-index="{{ $caseStudy->id }}"><i class="fas fa-comments"></i></button>
                                                     <button class="btn btn-custom-class btn-xs bg-gradient-orange attachment-btn" title="Attachments" data-index="{{ $caseStudy->id }}"><i class="fas fa-paperclip"></i></button>@if(count($caseStudy->attachments)>0)<span style="position: relative; top: -10px; left: -10px" class="translate-middle badge rounded-pill bg-danger">{{ count($caseStudy->attachments) }}</span>@endif
                                                 </td>
                                                 @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
@@ -858,6 +859,26 @@
                             </button>
                         </div>
                         <div class="modal-body case_study_attachment_body">
+                            
+                        </div>
+                        <div class="modal-footer justify-content-between" style="display: block;">
+                            <button type="button" class="btn btn-danger float-right" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal -->
+
+            <div class="modal fade" id="case_study_comments">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Case Comments</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body case_study_comments_body">
                             
                         </div>
                         <div class="modal-footer justify-content-between" style="display: block;">
@@ -2157,6 +2178,34 @@
                         icon: 'error',
                         title: 'Error',
                         text: 'Error uploading attachments. You can only Upload Images and PDF files.',
+                    });
+                }
+            });
+        });
+
+        $(document).on('click', '.view-comments-btn', function() {
+            let $btn = $(this);
+            $btn.html('<i class="fas fa-spinner fa-spin"></i>');
+            var case_study_id = $(this).data("index");
+            $.ajax({
+                url: '{{ route('admin.getCaseComments') }}',
+                type: 'POST',
+                data: {
+                    "_token": "{{ csrf_token() }}",
+                    "case_study_id": case_study_id,
+                    "view_add_comment": false
+                },
+                success: function(response) {
+                    $btn.html('<i class="fas fa-comments"></i>');
+                    $(".case_study_comments_body").html(response);
+                    $("#case_study_comments").modal("show");
+                },
+                error: function(xhr, status, error) {
+                    $btn.html('<i class="fas fa-comments"></i>');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error fetching comments. Please try again.',
                     });
                 }
             });

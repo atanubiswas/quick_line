@@ -116,7 +116,7 @@
                     <div class="card-header">
                         <h3 class="card-title">Comments</h3>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body comments-section">
                     </div>
                 </div>
             </div>
@@ -197,6 +197,18 @@
                 $('#tabs ul li a[href="#tabs-{{ $study->id }}"]').addClass('my-incomplete-class');
             @endif
         @endforeach
+
+        $.ajax({
+            url: "{{ route('admin.getCaseComments') }}",
+            type: "POST",
+            data: {
+                "_token": "{{ csrf_token() }}",
+                "case_study_id": $('#unique_case_study_id').val()
+            },
+            success: function (response) {
+                $('.comments-section').html(response);
+            }
+        });
 
         $(document).on('change', '.doctor-layout-selector', function() {
             var layoutId = $(this).val();
