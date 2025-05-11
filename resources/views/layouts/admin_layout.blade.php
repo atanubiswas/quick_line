@@ -332,7 +332,10 @@
             else{
               const url = new URL(window.location.href);
               Object.entries(urlParameters).forEach(([key, value]) => {
-                url.searchParams.set(key, value);
+                console.log(key, value);
+                if(key !== "d"){
+                  url.searchParams.set(key, value);
+                }
               });
               url.searchParams.set('_', Date.now());
               window.location.href = url.toString();

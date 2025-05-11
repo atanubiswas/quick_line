@@ -467,6 +467,17 @@ class CaseStudyController extends Controller
         $authUser = Auth::user();
         $roleId = Auth::user()->roles[0]->pivot->role_id;
         
+        if($caseStudy->study_status_id == 1 && $roleId != 3){
+            $caseStudy->assigner_id = $authUser->id;
+            $caseStudy->save();
+        }
+        else if($caseStudy->study_status_id == 3){
+            if(Auth::user()->roles[0]->pivot->role_id == 2){
+                $caseStudy->qc_id = Auth::user()->id;
+                $caseStudy->save();
+            }
+        }
+        
         if($roleId == 2 && $caseStudy->study_status_id == 3){
             $caseStudy->qc_id = Auth::user()->id;
             $caseStudy->save();
@@ -958,5 +969,78 @@ class CaseStudyController extends Controller
             }
         }
         return view('admin.onlyCaseComments', compact( 'authUser', 'roleId', 'caseComments'));
+    }
+
+    public function updateStudyStatus(Request $request){
+        DB::beginTransaction();
+        try{
+            $validator = Validator::make($request->all(), [
+                'case_study_id' => 'required|numeric|exists:case_studies,id',
+                'status_id' => 'required|numeric|exists:study_statuses,id',
+                'second_opnion_doctor_id' => 'sometimes|nullable|numeric|exists:doctors,id'
+            ]);
+            if (!$validator->passes()) {
+                return response()->json(['error'=>$validator->errors()]);
+            }
+            $authUser = Auth::user();
+            $caseStudy = caseStudy::find($request->case_study_id);
+            $doctor = Doctor::find($request->second_opnion_doctor_id);
+            
+            /*===== REMOVE THE PREVIOUS CASE REPORT AND CASE COMMENTS IF STATUS IS 2ND OPENION ======= */
+            if($request->status_id == 2){
+                $caseStudy->study_status_id = $request->status_id;
+                $caseStudy->doctor_id = $request->second_opnion_doctor_id;
+                $caseStudy->qc_id = null;
+                $caseStudy->status_updated_on = Carbon::now();
+                $caseStudy->assigner_id = $authUser->id;
+                $caseStudy->save();
+
+                $caseStudy->study()->update([
+                    'report' => null,
+                    'status' => 0
+                ]);
+
+                $caseStudy->comments()->delete();
+                $msg = $this->generateLoggedMessage("secondOpenion", 'Case Study', $doctor->name);
+            }
+            /*===== REMOVE THE PREVIOUS CASE REPORT AND CASE COMMENTS IF STATUS IS 2ND OPENION ======= */
+            else{
+                $caseStudy->study_status_id = $request->status_id;
+                $caseStudy->status_updated_on = Carbon::now();
+                $caseStudy->save();
+                $newStatusName = $caseStudy->status->name;
+                
+                $msg = $this->generateLoggedMessage("saveCaseStudyQC", 'Case Study', $newStatusName);
+            }
+            $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'statusChange', $msg);
+
+            DB::commit();
+            $caseStudy->refresh();
+            return response()->json(['status'=>'success', 'message' => [$this->getMessages('_UPSUMSG')]]);
+        }
+        catch (\Exception $e){
+            DB::rollback();
+            return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
+        }
+        catch(\Illuminate\Database\QueryException $ex){
+            DB::rollback();
+            return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
+        }
+    }
+
+    public function downloadWord($id){
+        if(empty($id)){
+            abort(404, 'Case Study not found.');
+        }
+        $caseStudy = caseStudy::with("modality", "study.type", "images", "patient", "laboratory")
+            ->where("case_study_id", $id)
+            ->first();
+        if(!$caseStudy){
+            abort(404, 'Case Study not found.');
+        }
+        $fileName = str_replace(" ", "_", $caseStudy->patient->name).'_'.$caseStudy->case_study_id.'_report.docx';
+        $filePath = 'word-attachments'.DIRECTORY_SEPARATOR. $fileName;
+        $filePath = public_path('storage'.DIRECTORY_SEPARATOR. $filePath);
+        return response()->download($filePath, $fileName);
     }
 }

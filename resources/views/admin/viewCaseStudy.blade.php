@@ -2,6 +2,9 @@
 @section('title', "View Case Studies")
 @section('extra_css')
     <style type="text/css">
+        option:disabled {
+            color: #cfcfcf;
+        }
         .btn-custom-class {
             width:30px;
             max-width: 30px;
@@ -438,14 +441,14 @@
                                             <th style="width: 2%;">Sl. #</th>
                                             <th style="width: 6%;">Case Id</th>
                                             <th style="width: 7%;">Date & Time</th>
-                                            <th style="width: 15%;">Patient Name</th>
+                                            <th style="width: 14%;">Patient Name</th>
                                             <th style="width: 15%;">Studies</th>
                                             <th style="width: 7%;">Modality</th>
                                             <th style="width: 5%;">Age Sex</th>
-                                            <th style="width: 6%;">History</th>
-                                            <th style="width: 6%;">Status</th>
+                                            <th style="width: 5%;">History</th>
+                                            <th style="width: 5%;">Status</th>
                                             <th>Doctor</th>
-                                            <th style="width: 95px;">Controls</th>
+                                            <th style="width: 110px;">Controls</th>
                                             @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                             <th>Centre</th>
                                             @endif
@@ -521,15 +524,18 @@
                                                     @else
                                                         <button class="btn btn-custom-class btn-xs bg-gradient-purple doc_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                                                     @endif
+                                                    @if(!in_array(auth()->user()->roles[0]->id, [3]))
                                                     <button class="btn btn-custom-class btn-xs bg-gradient-blue view-case-btn" title="View Studies" data-index="{{ $caseStudy->id }}"><i class="fas fa-folder"></i></button>
+                                                    @endif
                                                     @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                                     <button class="btn btn-custom-class btn-xs bg-gradient-orange view-timeline-btn" title="View Timeline" data-index="{{ $caseStudy->id }}"><i class="fas fa-history"></i></button>
                                                     @endif
                                                     @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && $caseStudy->study_status_id == 5)
                                                     <button class="btn btn-custom-class btn-xs bg-gradient-success view-report-btn" title="View Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-file-pdf"></i></button>
                                                     @endif
-                                                    @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && in_array($caseStudy->study_status_id, [1, 2]))
+                                                    @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]) && in_array($caseStudy->study_status_id, [2, 4]))
                                                     <button class="btn btn-custom-class btn-xs bg-gradient-danger delete-case-btn" title="Delete Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-trash"></i></button>
+                                                    <button class="btn btn-custom-class btn-xs bg-gradient-cyan copy-link-btn" title="Copy Link" data-index="{{ $caseStudy->id }}"><i class="fas fa-copy"></i></button>
                                                     @endif
                                                     @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]))
                                                     <a href="{{ route('admin.downloadImagesZip', ['id' => $caseStudy->id]) }}" title="Download Images" class="btn btn-custom-class btn-xs bg-gradient-dark download-zip"><i class="fas fa-file-archive"></i></a>
@@ -888,6 +894,24 @@
                 </div>
             </div>
             <!-- /.modal -->
+
+            <div class="modal fade" id="caseStudyModal" tabindex="-1" aria-labelledby="caseStudyModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="caseStudyModalLabel">Case Study Details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="caseStudyModalBody">
+                        <!-- AJAX content goes here -->
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal -->
+
             <div class="row" id="timeline_div">
 
             </div>
@@ -941,6 +965,26 @@
             let isDragging = false;
             let startAngle = 0;
             let currentAngle = 0;
+
+            const targetIndex = getUrlParam("d");
+
+            if (targetIndex !== null) {
+                setTimeout(function () {
+                    const $button = $(`button.doc_view_image[data-index="${targetIndex}"]`).first();
+                    console.log($button);
+                    if ($button.length) {
+                        $button.click();
+                    }
+                    else{
+                        swal.fire({
+                            title: 'Not Found.',
+                            text: 'The Case you are looking for is not found, Please contact Quick Line Team for more Information.',
+                            icon: 'warning',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },500);
+            }
             
             @if($roleId == 3)
                 $.ajax({
@@ -1025,6 +1069,7 @@
             });
 
             $(document).on('click', '.doc_view_image', function() {
+                var tr = $(this).closest('tr');
                 let case_study_id = $(this).data('index');
                 let type = 'doc';
                 $.ajax({
@@ -1037,6 +1082,7 @@
                     },
                     success: function(response) {
                         $(".doc_image_view_body").html(response);
+                        tr.addClass('bg-gradient-warning text-black');
 
                         $('#doc_image_view').modal('show');
                         if (cropper) {
@@ -1528,22 +1574,30 @@
         });
 
         $(document).off("keydown").on("keydown", function (e) {
-            if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-                e.preventDefault();
-            }
-            switch (e.key) {
-                case "ArrowLeft":
-                    $("#moveLeft, #moveLeft-doctor").click();
-                    break;
-                case "ArrowRight":
-                    $("#moveRight, #moveRight-doctor").click();
-                    break;
-                case "ArrowUp":
-                    $("#moveUp, #moveUp-doctor").click();
-                    break;
-                case "ArrowDown":
-                    $("#moveDown, #moveDown-doctor").click();
-                    break;
+            const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+            const $target = $(e.target);
+
+            // Check if the focus is inside an input field or editable area (like Summernote)
+            const isEditable = $target.is("input, textarea, select, [contenteditable=true]") ||
+                            $target.closest("[contenteditable=true]").length > 0;
+
+            if (keys.includes(e.key) && !isEditable) {
+                e.preventDefault(); // Prevent scroll only when not editing
+
+                switch (e.key) {
+                    case "ArrowLeft":
+                        $("#moveLeft, #moveLeft-doctor").click();
+                        break;
+                    case "ArrowRight":
+                        $("#moveRight, #moveRight-doctor").click();
+                        break;
+                    case "ArrowUp":
+                        $("#moveUp, #moveUp-doctor").click();
+                        break;
+                    case "ArrowDown":
+                        $("#moveDown, #moveDown-doctor").click();
+                        break;
+                }
             }
         });
 
@@ -1579,7 +1633,7 @@
                 }
             });
         });
-        // Crop & Save
+        
         $("#cropSave").click(function () {
             cropper.crop(); // Ensure cropping is active
             let canvas = cropper.getCroppedCanvas(); // Get the cropped canvas
@@ -1606,7 +1660,6 @@
             allFiles[currentFile] = croppedFile;
         });
 
-        // Function to Convert Base64 to Blob
         function dataURLtoBlob(dataURL) {
             let arr = dataURL.split(','),
                 mime = arr[0].match(/:(.*?);/)[1],
@@ -1637,33 +1690,57 @@
             "autoWidth": false,
             "responsive": true,
             "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]],
+            "order": [[2, 'desc']],
             rowId: function(data) {
                 return 'row-' + data.id; // Ensuring a unique ID for each row
             }
         });
 
-        $('#study_table tbody').on('click', '.view-case-btn', function () {
+        $(document).on('click', '.view-case-btn', function () {
             var tr = $(this).closest('tr');
             var row = study_table.row(tr);
             var case_study_id = $(this).data('index');
-            
-            if (row.child.isShown()) {
-                tr.removeClass('bg-gradient-warning text-black');
-                row.child.hide();
-                $.ajax({
-                    url: "{{ route('admin.reset-assigner-id') }}",
-                    type: "POST",
-                    data: {
-                        "_token": "{{ csrf_token() }}",
-                        "case_id": case_study_id
-                    },
-                    success: function (response) {
-                        
-                    }
-                });
-                $(this).html('<i class="fas fa-folder"></i>');
-            } else {
-                tr.addClass('bg-gradient-warning text-black');
+            var button = $(this);
+
+            // Detect screen width
+            var isMobile = window.innerWidth <= 768;
+
+            if (!isMobile) {
+                // DESKTOP behavior: toggle child row
+                if (row.child.isShown()) {
+                    row.child.hide();
+                    tr.removeClass('bg-gradient-warning text-black');
+                    $.ajax({
+                        url: "{{ route('admin.reset-assigner-id') }}",
+                        type: "POST",
+                        data: {
+                            "_token": "{{ csrf_token() }}",
+                            "case_id": case_study_id
+                        },
+                        success: function (response) {
+                            
+                        }
+                    });
+                    button.html('<i class="fas fa-folder"></i>');
+                } 
+                else {
+                    $.ajax({
+                        url: "{{ route('admin.get-all-studies') }}",
+                        type: "POST",
+                        data: {
+                            "_token": "{{ csrf_token() }}",
+                            "case_id": case_study_id
+                        },
+                        success: function (response) {
+                            row.child(response).show();
+                            tr.addClass('bg-gradient-warning text-black');
+                            button.html('<i class="fas fa-folder-open"></i>');
+                        }
+                    });
+                }
+            } 
+            else {
+                // MOBILE behavior: open modal
                 $.ajax({
                     url: "{{ route('admin.get-all-studies') }}",
                     type: "POST",
@@ -1672,11 +1749,25 @@
                         "case_id": case_study_id
                     },
                     success: function (response) {
-                        row.child(response).show();
+                        $('#caseStudyModalBody').html(response);
+                        $('#caseStudyModal').modal('show');
                     }
                 });
-                $(this).html('<i class="fas fa-folder-open"></i>');
             }
+        });
+
+        $('#caseStudyModal').on('hidden.bs.modal', function () {
+            $.ajax({
+                url: "{{ route('admin.reset-assigner-id') }}",
+                type: "POST",
+                data: {
+                    "_token": "{{ csrf_token() }}",
+                    "case_id": case_study_id
+                },
+                success: function (response) {
+                    
+                }
+            });
         });
 
         function formatChildRow(case_study_id) {
@@ -1852,12 +1943,12 @@
                 data: form_data,
                 type: 'post',
                 success: function (data) {
-                    thisButton.html('<i class="fas fa-spinner fa-spin"></i>');
+                    thisButton.html('<i class="fas fa-history"></i>');
                     $("#timeline_div").html(data);
                     scrollToAnchor("view_timeline");
                 },
                 error: function (data) {
-                    thisButton.html('<i class="fas fa-spinner fa-spin"></i>');
+                    thisButton.html('<i class="fas fa-history"></i>');
                     printErrorMsg("Somthing went wrong! Reload the page.");
                 }
             });
@@ -2208,6 +2299,146 @@
                         text: 'Error fetching comments. Please try again.',
                     });
                 }
+            });
+        });
+
+        $(document).on('click', '.change_status_btn',function () {
+            var btn = $(this);
+            btn.html('<i class="fas fa-spinner fa-spin"></i>');
+            var caseId = $(this).data('case-id');
+            var statusId = $("#study_status_id_"+caseId).val();
+            var secondOpnionDoctorId = $("#second_opnion_assign_doctor_"+caseId).val();
+            
+            if(statusId == "") {
+                swal.fire({
+                    title: "Error!",
+                    text: "Please Select Status first!",
+                    icon: "error",
+                    confirmButtonText: "OK"
+                });
+                return false;
+            } 
+            if (statusId == 2 && secondOpnionDoctorId == "") {
+                swal.fire({
+                    title: "Error!",
+                    text: "Please Select 2nd Opnion Doctor!",
+                    icon: "error",
+                    confirmButtonText: "OK"
+                });
+                return false;
+            } else {
+                swal.fire({
+                    title: "Are you sure?",
+                    text: "You want to change the status of this case!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, Change It!"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "{{ url('admin/update-study-status') }}",
+                            type: "POST",
+                            data: {
+                                status_id: statusId,
+                                case_study_id: caseId,
+                                second_opnion_doctor_id: secondOpnionDoctorId,
+                                _token: "{{ csrf_token() }}"
+                            },
+                            success: function (data) {
+                                btn.html('Update Status');
+                                printSuccessMsg(data.message);
+                            },
+                            error: function (data) {
+                                btn.html('Update Status');
+                                printErrorMsg(data.error);
+                            }
+                        });
+                    } else {
+                        btn.html('Update Status');
+                    }
+                });
+            }
+        });
+
+        $(document).on('change', '.study_status_id', function () {
+            var caseId = $(this).data('case-id');
+            var statusId = $(this).val();
+            if (statusId == 2) {
+                $("#second_opnion_assign_doctor_"+caseId).show('slow');
+            } else {
+                $("#second_opnion_assign_doctor_"+caseId).hide('slow');
+            }
+        });
+
+        $(document).on('change', '.assign_doctor', function () {
+            var thisSelect = $(this);
+            var doctorId = $(this).val();
+            var doctorName =  $(this).find(':selected').text();
+            var caseId = $(this).attr('date-case-id');
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You want to Assign " + doctorName + " to this case!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, Assign It!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{{ url('admin/assign-doctor') }}",
+                        type: "POST",
+                        data: {
+                            doctor_id: doctorId,
+                            case_id: caseId,
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function (data) {
+                            printSuccessMsg(data.success);
+                        }
+                    });
+                }
+                else {
+                    thisSelect.val('');
+                }
+            });
+        });
+
+        $(document).on('click', '.copy-link-btn', function () {
+            const index = $(this).data('index');
+            const url = `${window.location.origin}/admin/view-case-study?d=${index}`;
+
+            navigator.clipboard.writeText(url).then(function () {
+            // Success toast
+            Swal.fire({
+                icon: 'success',
+                title: 'Copied!',
+                text: 'URL has been copied to clipboard.',
+                footer: `<code>${url}</code>`,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+            }, function () {
+            // Fallback if clipboard copy fails
+            Swal.fire({
+                icon: 'error',
+                title: 'Error! Could not copy the URL',
+                html: `
+                <p>Copy the URL manually:</p>
+                <input type="text" id="copyFallback" class="swal2-input" value="${url}" readonly>
+                `,
+                didOpen: () => {
+                const input = document.getElementById('copyFallback');
+                input.focus();
+                input.select();
+                },
+                confirmButtonText: 'OK'
+            });
             });
         });
     });

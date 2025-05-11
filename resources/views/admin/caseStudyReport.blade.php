@@ -81,7 +81,10 @@
     @endif
   @endforeach
 </div>
-<div style="width:150px; float: right;">
+<!-- <div style="width:155px; float: right; margin: 5px;">
+<button type="button" @if($isPdf === true) style="display: none;" @endif class="btn btn-block bg-gradient-warning btn-small word_button" id="word_button"><i class="fas fa-file-word"></i>Download Word File</button>
+</div> -->
+<div style="width:150px; float: right; margin: 5px;">
 <button type="button" @if($isPdf === true) style="display: none;" @endif class="btn btn-block bg-gradient-warning btn-small print_button" id="print_report"><i class="fas fa-print"></i>Print Report</button>
 </div>
 @if($isPdf !== true)
@@ -184,6 +187,10 @@
           }
         });
       }
+    });
+
+    $('#word_button').on('click', function () {
+        window.open("{{ route('admin.downloadWord') }}", '_blank');
     });
   });
 </script>

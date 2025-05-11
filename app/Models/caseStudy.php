@@ -46,4 +46,8 @@ class caseStudy extends Model
     public function attachments(){
         return $this->hasMany('App\Models\caseAttachment', 'case_study_id');
     }
+
+    public function comments(){
+        return $this->hasMany('App\Models\caseComment', 'case_study_id');
+    }
 }

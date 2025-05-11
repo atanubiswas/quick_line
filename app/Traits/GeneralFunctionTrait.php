@@ -467,7 +467,12 @@ trait GeneralFunctionTrait{
             case 'saveCaseStudyQC':
                 return "The ".ucwords($unit)." was saved by ".ucwords($loggedInUser->name)." on ".$currentDate." Status is ".$unitName.".";
             case 'updateStudy':
+                if(empty($new_data)){
+                    return "The ".ucwords($unit)." was updated by ".ucwords($loggedInUser->name)." on ".$currentDate;
+                }
                 return "The ".ucwords($unit)." was updated from '".$old_data."' to '".$new_data."' by ".ucwords($loggedInUser->name)." on ".$currentDate;
+            case 'secondOpenion':
+                return "The ".ucwords($unit)." was opened for second opinion to ".$unitName." by ".ucwords($loggedInUser->name)." on ".$currentDate;
             case 'add_document':
                     return "New ".ucwords($unit).", ".$unitName." added by ".ucwords($loggedInUser->name)." on ".$currentDate;
             case 'update':

@@ -214,7 +214,7 @@ class StudyLayoutController extends Controller
         if (!$validator->passes()) {
             return response()->json(['error'=>$validator->errors()]);
         }
-        try{
+        // try{
             $study = study::find($request->study_id);
             $oldLayout = $study->report;
             $study->report = $request->layout;
@@ -233,15 +233,15 @@ class StudyLayoutController extends Controller
                 $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'statusChange', $msg);
             }
             else{
-                $msg = $this->generateLoggedMessage("updateStudy", "Study ".$study->type->name, "", "", $oldLayout, $request->layout);
+                $msg = $this->generateLoggedMessage("updateStudy", "Study ".$study->type->name, "", "", "", "");
                 $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'update', $msg);
             }
             $this->updateMainCaseStudyDoc($study->case_study_id, $caseStudyStatus);
-        }catch(\Exception $ex) {
-            return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
-        } catch(\Illuminate\Database\QueryException $ex){
-            return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
-        }
+        // }catch(\Exception $ex) {
+        //     return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
+        // } catch(\Illuminate\Database\QueryException $ex){
+        //     return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
+        // }
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
     }
 }

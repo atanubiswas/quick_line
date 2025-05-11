@@ -16,8 +16,15 @@
 <div id="tabs">
     <ul>
         <li><a href="#tabs-images" class="my-image-class">Existing Images</a></li>
-        @if(in_array($roleId, [1,5,6]))
-            <li><a href="#tabs-edit-case" class="my-complete-class">Edit Case Study</a></li>
+        @if(in_array($roleId, [1,5,6]) && $caseStudy->study_status_id < 2)
+            <li><a href="#tabs-edit-case" class="my-complete-class">Edit Case Study Details</a></li>
+        @else
+            <li><a href="#tabs-edit-case" class="my-complete-class">View Case Study Details</a></li>
+        @endif
+        @if(in_array($roleId, [1,5,6]) && $caseStudy->study_status_id > 2)
+            @foreach($caseStudy->study as $study)
+                <li><a href="#tabs-{{ $study->id }}" @if($study->status == 0)class="my-incomplete-class" @else class="my-complete-class" @endif>{{ $study->type->name }}</a></li>  
+            @endforeach
         @endif
     </ul>
     <div id="tabs-images">
@@ -274,6 +281,13 @@
         @endif
     </form>
     </div>
+    @endif
+    @if(in_array($roleId, [1,5,6]) && $caseStudy->study_status_id > 2)
+        @foreach($caseStudy->study as $study)
+            <div id="tabs-{{ $study->id }}">
+                <div style="padding: 10px;">{!! $study->report !!}</div>
+            </div>  
+        @endforeach
     @endif
 </div>
 <script>

@@ -160,7 +160,7 @@
                                 </div>
                                 @endif
                                 <div class="form-group">
-                                    <button type="button" class="btn btn-success float-right save-study" id="save_btn_{{ $study->id }}" data-index="{{ $study->id }}">Save</button>
+                                    <button type="button" class="btn btn-success float-right save-study" id="save_btn_{{ $study->id }}" data-index="{{ $study->id }}" data-study-status-id="{{ $caseStudy->study_status_id }}">Save</button>
                                 </div>
                             </div>
                         </form>
@@ -234,23 +234,54 @@
                 var studyId = $(this).data('index');
                 var layout = $('#layout_' + studyId).val();
                 var qcStatus = $('#qc_status_' + studyId).val();
+                var status_id = $(this).data('study-status-id');
 
-                $.ajax({
-                    url: "{{ route('admin.saveCaseSingleStudy') }}",
-                    type: "POST",
-                    data: {
-                        "_token": "{{ csrf_token() }}",
-                        "study_id": studyId,
-                        "layout": layout,
-                        "qc_status": qcStatus
-                    },
-                    success: function (data) {
+                var msg = 'You want to save this Case with all the studies?';
+                if(status_id < 3){
+                    msg = 'You want to save this Study?';
+                }
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: "Are you sure?",
+                    text: msg,
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, Save it!",
+                    cancelButtonText: "No, Cancel!",
+                    showLoaderOnConfirm: true
+                }).then((result) => {
+                    if(result.isConfirmed === true){
+                        $.ajax({
+                            url: "{{ route('admin.saveCaseSingleStudy') }}",
+                            type: "POST",
+                            data: {
+                                "_token": "{{ csrf_token() }}",
+                                "study_id": studyId,
+                                "layout": layout,
+                                "qc_status": qcStatus
+                            },
+                            success: function (data) {
+                                $('.save-study').html('Save');
+                                if ($.isEmptyObject(data.error)) {
+                                    if(status_id < 3){
+                                        swal.fire({
+                                            icon: 'success',
+                                            title: "Data Saved.",
+                                            text: data.success,
+                                            showConfirmButton: true,
+                                        });
+                                    }
+                                    else{
+                                        printSuccessMsg(data.success);
+                                    }
+                                } else {
+                                    printErrorMsg(data.error);
+                                }
+                            }
+                        });
+                    }
+                    else{
                         $('.save-study').html('Save');
-                        if ($.isEmptyObject(data.error)) {
-                            printSuccessMsg(data.success);
-                        } else {
-                            printErrorMsg(data.error);
-                        }
                     }
                 });
             });

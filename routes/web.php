@@ -130,15 +130,18 @@ Route::group(['prefix' => 'admin'], function () {
             Route::post('/update-case-study-image', [CaseStudyController::class, 'updateCaseStudyImage'])->name('admin.updateCaseStudyImage');
             Route::get('/download-images-zip/{id}', [CaseStudyController::class, 'downloadImagesZip'])->name('admin.downloadImagesZip');
             Route::post('/insert-attachments', [CaseStudyController::class, 'insertAttachments'])->name('admin.insertAttachments');
+            Route::get('/download-word/{id}', [CaseStudyController::class, 'downloadWord'])->name('admin.downloadWord');
         });
-        Route::middleware(['role:Admin,Manager,Assigner,Quality Controller,Centre', '2fa'])->group(function () {
-            Route::get('/add-case-study', [CaseStudyController::class, 'addCaseStudy'])->name('admin.addCaseStudy');
-            Route::post('/insert-case-study', [CaseStudyController::class, 'insertCaseStudy']);
+
+        Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {
+            Route::post('/update-study-status', [CaseStudyController::class, 'updateStudyStatus'])->name('admin.updateStudyStatus');
         });
+
         Route::middleware(['role:Admin,Manager,Assigner,Quality Controller', '2fa'])->group(function () {
             Route::post('/reset-assigner-id', [CaseStudyController::class, 'resetAssignerId'])->name('admin.reset-assigner-id');
             Route::post('/assign-doctor', [CaseStudyController::class, 'assignDoctor'])->name('admin.assign-doctor');
         });
+
         Route::middleware(['role:Admin,Manager,Assigner,Doctor,Quality Controller,Centre', '2fa'])->group(function () {
             Route::get('/view-case-study', [CaseStudyController::class, 'viewCaseStudy'])->name('admin.viewCaseStudy');
             Route::post('/get-study-type', [CaseStudyController::class, 'getStudyType'])->name('get-study-type');
@@ -150,6 +153,7 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('/get-case-study-attachments', [CaseStudyController::class, 'getCaseStudyAttachments'])->name('admin.get-case-study-details');
         Route::post('/get-case-comments', [CaseStudyController::class, 'getCaseComments'])->name('admin.getCaseComments');
         Route::post('/save-case-comment', [CaseStudyController::class, 'saveCaseComment'])->name('admin.saveCaseComment');
+        
 
    /*============== TIMELINE CONTROLLER =================*/
    Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {

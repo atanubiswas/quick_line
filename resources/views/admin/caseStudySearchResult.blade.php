@@ -1,19 +1,21 @@
 <table id="study_table" class="table table-bordered table-hover">
     <thead>
-        <tr>
-            <th style="width: 2%;">Sl. #</th>
-            <th style="width: 6%;">Case Id</th>
-            <th style="width: 7%;">Date & Time</th>
-            <th style="width: 15%;">Patient Name</th>
-            <th style="width: 15%;">Studies</th>
-            <th style="width: 7%;">Modality</th>
-            <th style="width: 5%;">Age Sex</th>
-            <th style="width: 6%;">History</th>
-            <th style="width: 6%;">Status</th>
-            <th>Doctor</th>
-            <th style="width: 10%;">Controls</th>
-            <th>Centre</th>
-        </tr>
+    <tr>
+        <th style="width: 2%;">Sl. #</th>
+        <th style="width: 6%;">Case Id</th>
+        <th style="width: 7%;">Date & Time</th>
+        <th style="width: 14%;">Patient Name</th>
+        <th style="width: 15%;">Studies</th>
+        <th style="width: 7%;">Modality</th>
+        <th style="width: 5%;">Age Sex</th>
+        <th style="width: 5%;">History</th>
+        <th style="width: 5%;">Status</th>
+        <th>Doctor</th>
+        <th style="width: 110px;">Controls</th>
+        @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
+        <th>Centre</th>
+        @endif
+    </tr>
     </thead>
     <tbody>
         @php $slNo = 1; @endphp
@@ -64,7 +66,7 @@
                         {{ $study->type->name }}@if(!$loop->last), @endif
                     @endforeach
                 </td>
-                <td>{{ $caseStudy->modality->name }}</td>
+                <td>{{$caseStudy->modality->name}}</td>
                 <td>{{$caseStudy->patient->age."/".strtoupper(substr($caseStudy->patient->gender,0, 1))}}</td>
                 <td>{{$caseStudy->clinical_history}}</td>
                 <td>
@@ -81,19 +83,22 @@
                 <td>{!!$doctor!!}</td>
                 <td>
                     @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
-                    <button class="btn btn-custom-class btn-xs bg-gradient-purple assigner_view_image" title="View Images" data-pt-name="{{ $caseStudy->patient->name }}" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-custom-class btn-xs bg-gradient-purple assigner_view_image" title="View Images" data-pt-name="{{ $caseStudy->patient->name }}" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                     @else
                         <button class="btn btn-custom-class btn-xs bg-gradient-purple doc_view_image" title="View Images" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
                     @endif
+                    @if(!in_array(auth()->user()->roles[0]->id, [3]))
                     <button class="btn btn-custom-class btn-xs bg-gradient-blue view-case-btn" title="View Studies" data-index="{{ $caseStudy->id }}"><i class="fas fa-folder"></i></button>
+                    @endif
                     @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                     <button class="btn btn-custom-class btn-xs bg-gradient-orange view-timeline-btn" title="View Timeline" data-index="{{ $caseStudy->id }}"><i class="fas fa-history"></i></button>
                     @endif
-                    @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && in_array($caseStudy->study_status_id, [1, 2]))
-                    <button class="btn btn-custom-class btn-xs bg-gradient-danger delete-case-btn" title="Delete Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-trash"></i></button>
-                    @endif
                     @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]) && $caseStudy->study_status_id == 5)
                     <button class="btn btn-custom-class btn-xs bg-gradient-success view-report-btn" title="View Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-file-pdf"></i></button>
+                    @endif
+                    @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]) && in_array($caseStudy->study_status_id, [2, 4]))
+                    <button class="btn btn-custom-class btn-xs bg-gradient-danger delete-case-btn" title="Delete Report" data-index="{{ $caseStudy->id }}"><i class="fas fa-trash"></i></button>
+                    <button class="btn btn-custom-class btn-xs bg-gradient-cyan copy-link-btn" title="Copy Link" data-index="{{ $caseStudy->id }}"><i class="fas fa-copy"></i></button>
                     @endif
                     @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]))
                     <a href="{{ route('admin.downloadImagesZip', ['id' => $caseStudy->id]) }}" title="Download Images" class="btn btn-custom-class btn-xs bg-gradient-dark download-zip"><i class="fas fa-file-archive"></i></a>
@@ -107,53 +112,20 @@
     </tbody>
 </table>
 <script>
-    var study_table = $('#study_table').DataTable({
-        "paging": true,
-        "lengthChange": true,
-        "searching": true,
-        "ordering": true,
-        "info": true,
-        "autoWidth": false,
-        "responsive": true,
-        "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]],
-        rowId: function(data) {
-            return 'row-' + data.id; // Ensuring a unique ID for each row
-        }
-    });
-    $('#study_table tbody').on('click', '.view-case-btn', function () {
-        var tr = $(this).closest('tr');
-        var row = study_table.row(tr);
-        var case_study_id = $(this).data('index');
-        
-        if (row.child.isShown()) {
-            tr.removeClass('bg-gradient-warning text-black');
-            row.child.hide();
-            $.ajax({
-                url: "{{ route('admin.reset-assigner-id') }}",
-                type: "POST",
-                data: {
-                    "_token": "{{ csrf_token() }}",
-                    "case_id": case_study_id
-                },
-                success: function (response) {
-                    
-                }
-            });
-            $(this).html('<i class="fas fa-folder"></i>');
-        } else {
-            tr.addClass('bg-gradient-warning text-black');
-            $.ajax({
-                url: "{{ route('admin.get-all-studies') }}",
-                type: "POST",
-                data: {
-                    "_token": "{{ csrf_token() }}",
-                    "case_id": case_study_id
-                },
-                success: function (response) {
-                    row.child(response).show();
-                }
-            });
-            $(this).html('<i class="fas fa-folder-open"></i>');
-        }
+    $(function () {
+        var study_table = $('#study_table').DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+            "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]],
+            "order": [[2, 'desc']],
+            rowId: function(data) {
+                return 'row-' + data.id; // Ensuring a unique ID for each row
+            }
+        });
     });
 </script>
