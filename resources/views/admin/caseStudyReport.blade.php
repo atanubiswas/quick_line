@@ -5,7 +5,7 @@
     <table style="border-collapse: collapse; width: 100%;">
       <tr>
         <th style="border: 1px solid black; padding: 4px;">Patient Name:</th>
-        <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->patient->name }}</th>
+        <th style="border: 1px solid black; padding: 4px;">{{ ucwords($caseStudy->patient->name) }}</th>
         <th style="border: 1px solid black; padding: 4px;">Age / Gender:</th>
         <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->patient->age }} / {{ ucwords($caseStudy->patient->gender) }}</th>
       </tr>
@@ -17,7 +17,7 @@
       </tr>
       <tr>
         <th style="border: 1px solid black; padding: 4px;">Refd By:</th>
-        <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->ref_by }}</th>
+        <th style="border: 1px solid black; padding: 4px;">{{ ucwords($caseStudy->ref_by) }}</th>
         <th style="border: 1px solid black; padding: 4px;">Study:</th>
         <th style="border: 1px solid black; padding: 4px;">{{ $study->type->name }}</th>
       </tr>
@@ -81,9 +81,9 @@
     @endif
   @endforeach
 </div>
-<!-- <div style="width:155px; float: right; margin: 5px;">
-<button type="button" @if($isPdf === true) style="display: none;" @endif class="btn btn-block bg-gradient-warning btn-small word_button" id="word_button"><i class="fas fa-file-word"></i>Download Word File</button>
-</div> -->
+<div style="width:155px; float: right; margin: 5px;">
+<button type="button" @if($isPdf === true) style="display: none;" @endif class="btn btn-block bg-gradient-warning btn-small word_button" id="word_button" data-index="{{ $caseStudy->id }}"><i class="fas fa-file-word"></i>Download Word File</button>
+</div>
 <div style="width:150px; float: right; margin: 5px;">
 <button type="button" @if($isPdf === true) style="display: none;" @endif class="btn btn-block bg-gradient-warning btn-small print_button" id="print_report"><i class="fas fa-print"></i>Print Report</button>
 </div>
@@ -190,7 +190,9 @@
     });
 
     $('#word_button').on('click', function () {
-        window.open("{{ route('admin.downloadWord') }}", '_blank');
+        var id = $(this).data('index');
+        let url = `/quick_line_new/public/admin/download-word/${id}`;
+        window.open(url, '_blank');
     });
   });
 </script>
