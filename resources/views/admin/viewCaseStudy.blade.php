@@ -1127,7 +1127,10 @@
                         "case_id": case_study_id
                     },
                     success: function (response) {
-                        
+                        location.reload();
+                    },
+                    error: function (response) {
+                        location.reload();
                     }
                 });
             });

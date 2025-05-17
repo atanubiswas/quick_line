@@ -1031,68 +1031,91 @@ class CaseStudyController extends Controller
     }
 
     public function downloadWord($id){
-        if(empty($id)){
-            abort(404, 'Case Study not found.');
-        }
-        $caseStudy = caseStudy::with("modality", "study.type", "images", "patient", "laboratory", "doctor.doctorFormFieldValue")
-            ->where("id", $id)
-            ->first();
-        if(!$caseStudy){
-            abort(404, 'Case Study not found.');
-        }
-        $doctorQualification = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "9")->first();
-        $registrationNumber = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "11")->first();
+        try{
+            if(empty($id)){
+                abort(404, 'Case Study not found.');
+            }
+            $caseStudy = caseStudy::with("modality", "study.type", "images", "patient", "laboratory", "doctor.doctorFormFieldValue")
+                ->where("id", $id)
+                ->first();
+            if(!$caseStudy){
+                abort(404, 'Case Study not found.');
+            }
+            $doctorQualification = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "9")->first();
+            $registrationNumber = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "11")->first();
 
-        $studyNames = "";
-        foreach($caseStudy->study as $study){
-            $studyNames .= $study->type->name . ", ";
-        }
-        $studyNames = rtrim($studyNames, ", ");
-    
-        $top = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value) 
-            ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value."mm" 
-            : "30";
-        $right = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value) 
-            ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value."mm" 
-            : "30";
-        $bottom = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value) 
-            ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value."mm" 
-            : "30";
-        $left = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value) 
-            ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value."mm" 
-            : "30";
-
-        // Define filename and save to storage
-        $fileName = 'case-study-report-' . $caseStudy->case_study_id . '-'. str_replace(" ", "-", $caseStudy->patient->name).'.pdf';
-        $filePath = 'pdfs'.DIRECTORY_SEPARATOR. $fileName;
-        $pdfPublicUrl = asset("storage".DIRECTORY_SEPARATOR."{$filePath}");
-        // Get the public URL
-
-        $qrFilename = $caseStudy->case_study_id . '.png';
-        $qrPath = 'qr-codes'.DIRECTORY_SEPARATOR. $qrFilename;
-        $qrLocalPath = public_path('storage'.DIRECTORY_SEPARATOR. $qrPath);
-        $isPdf = true;
+            $studyNames = "";
+            foreach($caseStudy->study as $study){
+                $studyNames .= $study->type->name . ", ";
+            }
+            $studyNames = rtrim($studyNames, ", ");
         
+            $top = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value) 
+                ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 12)->first()->value."mm" 
+                : "30";
+            $right = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value) 
+                ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 13)->first()->value."mm" 
+                : "30";
+            $bottom = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value) 
+                ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 14)->first()->value."mm" 
+                : "30";
+            $left = isset($caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value) 
+                ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value."mm" 
+                : "30";
 
-        $html = view('admin.caseStudyWord', compact(
-            'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left', 'studyNames', 'pdfPublicUrl', 'isPdf', 'qrLocalPath'
-        ))->render();
-        $html = str_replace('&amp;', 'and', $html);
-        $html = preg_replace('/&(?![a-zA-Z]+;)/', 'and', $html);
-        $mmToTwip = fn($mm) => $mm * 56.7;
-        $phpWord = new PhpWord();
-        
-        $section = $phpWord->addSection([
-            'marginTop'    => $mmToTwip(rtrim($top, 'mm')),
-            'marginRight'  => $mmToTwip(rtrim($right, 'mm')),
-            'marginLeft'   => $mmToTwip(rtrim($left, 'mm')),
-            'marginBottom' => $mmToTwip(rtrim($bottom, 'mm'))
-        ]);
-        Html::addHtml($section, $html, false, false);
+            // Define filename and save to storage
+            $fileName = 'case-study-report-' . $caseStudy->case_study_id . '-'. str_replace(" ", "-", $caseStudy->patient->name).'.pdf';
+            $filePath = 'pdfs'.DIRECTORY_SEPARATOR. $fileName;
+            $pdfPublicUrl = asset("storage".DIRECTORY_SEPARATOR."{$filePath}");
+            // Get the public URL
 
-        $fileName = str_replace(" ", "_", $caseStudy->patient->name).'_'.$caseStudy->case_study_id.'_report.docx';
-        $tempPath = storage_path('app/' . $fileName);
-        $phpWord->save($tempPath, 'Word2007');
+            $qrFilename = $caseStudy->case_study_id . '.png';
+            $qrPath = 'qr-codes'.DIRECTORY_SEPARATOR. $qrFilename;
+            $qrLocalPath = public_path('storage'.DIRECTORY_SEPARATOR. $qrPath);
+            $isPdf = true;
+            
+
+            $html = view('admin.caseStudyWord', compact(
+                'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left', 'studyNames', 'pdfPublicUrl', 'isPdf', 'qrLocalPath'
+            ))->render();
+            $html = str_replace('<br>', '<br/>', $html);
+            $html = str_replace('&amp;', 'and', $html);
+            $html = preg_replace('/&(?![a-zA-Z]+;)/', 'and', $html);
+            $html = str_replace('&quot;', "'", $html);
+            $html = str_replace('<o:p></o:p>', '', $html);
+            // dd($html);
+            // $tidy = new \tidy();
+            // $config = [
+            //     'output-xhtml' => true,
+            //     'clean' => true,
+            //     'show-body-only' => true,
+            //     'wrap' => 0
+            // ];
+            // $tidy->parseString($html, $config, 'utf8');
+            // $tidy->cleanRepair();
+
+            // $html = (string)$tidy;
+            $mmToTwip = fn($mm) => $mm * 56.7;
+            $phpWord = new PhpWord();
+            
+            $section = $phpWord->addSection([
+                'marginTop'    => $mmToTwip(rtrim($top, 'mm')),
+                'marginRight'  => $mmToTwip(rtrim($right, 'mm')),
+                'marginLeft'   => $mmToTwip(rtrim($left, 'mm')),
+                'marginBottom' => $mmToTwip(rtrim($bottom, 'mm'))
+            ]);
+            Html::addHtml($section, $html, false, false);
+
+            $fileName = str_replace(" ", "_", $caseStudy->patient->name).'_'.$caseStudy->case_study_id.'_report.docx';
+            $tempPath = storage_path('app/' . $fileName);
+            $phpWord->save($tempPath, 'Word2007');
+        }
+        catch (\Exception $e){
+            return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
+        }
+        catch(\Illuminate\Database\QueryException $ex){
+            return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
+        }
 
         return response()->download($tempPath)->deleteFileAfterSend(true);
     }

@@ -61,7 +61,7 @@
                         <th>Assigned Doctor</th>
                         <th colspan="2">Not Assigned</th>
                     </tr>
-                    @elseif(isset($caseStudy->doctor->name) && $caseStudy->study_status_id == 3 && in_array($roleId, [1, 5, 6]))
+                    @elseif(isset($caseStudy->doctor->name) && in_array($caseStudy->study_status_id, [3, 5]) && in_array($roleId, [1, 5, 6]))
                     <tr>
                         <th>Assigned Doctor</th>
                         <th colspan="2">{{ $caseStudy->doctor->name }}</th>
@@ -73,7 +73,7 @@
                                 <option value="">Select Status</option>
                                 <option value="2">Second Openion</option>
                                 <option value="4">Re-Work</option>
-                                <option value="5">Finished</option>
+                                <option value="5" @if($caseStudy->study_status_id == 5) disabled @endif>Finished</option>
                             </select>
                             <select name="second_opnion_doctor_id" id="second_opnion_assign_doctor_{{ $caseId }}" data-case-id="{{ $caseId }}" class="form-control select2" style="display: none; margin-top: 10px;">
                                 <option selected value="">Select 2nd Opnion Doctor</option>
