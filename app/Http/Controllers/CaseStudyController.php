@@ -907,7 +907,9 @@ class CaseStudyController extends Controller
             ->with('user')
             ->orderBy("created_at", "desc")
             ->get();
-        $viewAddComment = isset($request->view_add_comment) && !empty($request->view_add_comment)?$request->view_add_comment:true;
+        
+        $viewAddComment = (isset($request->view_add_comment) && strtolower($request->view_add_comment) === 'true') ? true : false;
+        
         foreach($caseComments as $caseComment) {
             $eventTime = $this->getHumanReadableTime($caseComment->created_at);
             $caseComment->event_time = $eventTime;

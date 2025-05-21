@@ -19,4 +19,8 @@ class Doctor extends Model
     public function modalities(){
         return $this->belongsToMany(Modality::class, 'doctor_modalities');
     }
+
+    public function user(){
+        return $this->belongsTo(User::class);
+    }
 }

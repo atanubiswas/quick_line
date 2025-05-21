@@ -10,6 +10,8 @@ use DB;
 
 use App\Models\User;
 use App\Models\role;
+use App\Models\Doctor;
+use App\Models\Laboratory;
 use App\Models\role_user;
 
 class UserController extends Controller
@@ -133,6 +135,16 @@ class UserController extends Controller
         
         $status = ($request->is_checked=='true') ?1:0;
         User::where('id', $request->user_id)->update(['status'=> $status]);
+        $user = User::find($request->user_id);
+
+        switch ($user->roles[0]->name) {
+            case 'Doctor':
+                Doctor::where('user_id', $request->user_id)->update(['status'=> $status]);
+                break;
+            case 'Centre':
+                Laboratory::where('user_id', $request->user_id)->update(['status'=> $status]);
+                break;
+        }
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
     }
 

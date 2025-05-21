@@ -274,7 +274,8 @@ class CollectorController extends Controller {
         $collector->deactivated_on = $deactivated_on;
         $collector->save();
         
-        $this->deActivateUser($collector->collector_login_email, $status);
+        $loginEmail = $collector->user->email;
+        $this->deActivateUser($loginEmail, $status);
         return response()->json(['success' => [$this->getMessages('_STUPMSG')]]);
     }
 }

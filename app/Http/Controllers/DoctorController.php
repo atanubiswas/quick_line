@@ -288,7 +288,9 @@ class DoctorController extends Controller
             $doctor->status = $status;
             $doctor->save();
             
-            $this->deActivateUser($doctor->doc_login_email, $status);
+            $loginEmail = $doctor->user->email;
+            
+            $this->deActivateUser($loginEmail, $status);
             $msg = $this->generateLoggedMessage($statusString, "Doctor", $doctor->name);
             $this->addLog("doctor", "doctor_id", $request->doc_id, $statusString, $msg);
         }

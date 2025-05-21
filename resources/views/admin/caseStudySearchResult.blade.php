@@ -113,21 +113,3 @@
         @endforeach
     </tbody>
 </table>
-<script>
-    $(function () {
-        var study_table = $('#study_table').DataTable({
-            "paging": true,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false,
-            "responsive": true,
-            "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]],
-            "order": [[2, 'desc']],
-            rowId: function(data) {
-                return 'row-' + data.id; // Ensuring a unique ID for each row
-            }
-        });
-    });
-</script>

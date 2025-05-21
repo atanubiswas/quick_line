@@ -293,7 +293,8 @@ class LaboratoryController extends Controller
         $laboratory->status = $status;
         $laboratory->save();
 
-        $this->deActivateUser($laboratory->lab_login_email, $status);
+        $loginEmail = $laboratory->user->email;
+        $this->deActivateUser($loginEmail, $status);
 
         $msg = $this->generateLoggedMessage($statusString, "Centre", $laboratory->lab_name);
         $this->addLog("laboratory", "laboratorie_id", $request->lab_id, $statusString, $msg);

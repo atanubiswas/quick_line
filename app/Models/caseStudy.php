@@ -39,6 +39,10 @@ class caseStudy extends Model
         return $this->belongsTo('App\Models\User', 'assigner_id');
     }
 
+    public function qualityController(){
+        return $this->belongsTo('App\Models\User', 'qc_id');
+    }
+
     public function modality(){
         return $this->belongsTo('App\Models\Modality');
     }

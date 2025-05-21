@@ -24,6 +24,9 @@
       width: 30px;
       margin-right: 11px;
     }
+    .small-box span{
+      font-size: 20px;
+    }
   </style>
   @yield('extra_css')
 </head>

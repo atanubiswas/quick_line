@@ -1199,6 +1199,20 @@
                     success: function(response) {
                         $("#search_btn").html("Search");
                         $("#main-card-body").html(response);
+                        study_table = $('#study_table').DataTable({
+                            "paging": true,
+                            "lengthChange": true,
+                            "searching": true,
+                            "ordering": true,
+                            "info": true,
+                            "autoWidth": false,
+                            "responsive": true,
+                            "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]],
+                            "order": [[2, 'desc']],
+                            rowId: function(data) {
+                                return 'row-' + data.id; // Ensuring a unique ID for each row
+                            }
+                        });
                     },
                     error: function(response){
                         $("#search_btn").html("Search");
@@ -2289,7 +2303,7 @@
                 data: {
                     "_token": "{{ csrf_token() }}",
                     "case_study_id": case_study_id,
-                    "view_add_comment": false
+                    "view_add_comment": @if($roleId !=3) true @else false @endif
                 },
                 success: function(response) {
                     $btn.html('<i class="fas fa-comments"></i>');

@@ -602,4 +602,97 @@ trait GeneralFunctionTrait{
     
         return $caseStudyId;
     }
+
+    /**
+     * Summary of getTotalCaseThisMonth
+     * @return int
+     */
+    private function getTotalCaseThisMonth(){
+        $currentMonth = Carbon::now()->format('m');
+        $currentYear = Carbon::now()->format('Y');
+        $totalCaseThisMonth = caseStudy::whereMonth('created_at', $currentMonth)
+            ->whereYear('created_at', $currentYear)
+            ->count();
+        return $totalCaseThisMonth;
+    }
+
+    /**
+     * Summary of getTopCentreThisMonth
+     * @return array|array{count: int, name: string}
+     */
+    private function getTopCentreThisMonth(){
+        $currentMonth = Carbon::now()->format('m');
+        $currentYear = Carbon::now()->format('Y');
+        $topCentreThisMonth = caseStudy::selectRaw("laboratory_id, Count(*) as count")
+            ->with("laboratory")
+            ->whereMonth('created_at', $currentMonth)
+            ->whereYear('created_at', $currentYear)
+            ->groupBy('laboratory_id')
+            ->orderBy('count', 'desc')
+            ->first();
+            
+        $returnArray = array(
+            "name" => "N/A",
+            "count" => 0
+        );
+        if($topCentreThisMonth){
+            $returnArray['name'] = $topCentreThisMonth->laboratory->lab_name;
+            $returnArray['count'] = $topCentreThisMonth->count;
+        }
+        return $returnArray;
+    }
+
+    /**
+     * Summary of getTopQCThisMonth
+     * @return array|array{count: int, name: string}
+     */
+    private function getTopQCThisMonth(){
+        $currentMonth = Carbon::now()->format('m');
+        $currentYear = Carbon::now()->format('Y');
+        $topQCThisMonth = caseStudy::selectRaw("qc_id, Count(*) as count")
+            ->with("qualityController")
+            ->whereNotNull('qc_id')
+            ->whereMonth('created_at', $currentMonth)
+            ->whereYear('created_at', $currentYear)
+            ->groupBy('qc_id')
+            ->orderBy('count', 'desc')
+            ->first();
+            
+        $returnArray = array(
+            "name" => "N/A",
+            "count" => 0
+        );
+        if($topQCThisMonth){
+            $returnArray['name'] = $topQCThisMonth->qualityController->name;
+            $returnArray['count'] = $topQCThisMonth->count;
+        }
+        return $returnArray;
+    }
+
+    /**
+     * Summary of getTopDoctorThisMonth
+     * @return array|array{count: int, name: string}
+     */
+    private function getTopDoctorThisMonth(){
+        $currentMonth = Carbon::now()->format('m');
+        $currentYear = Carbon::now()->format('Y');
+        $topDoctorThisMonth = caseStudy::selectRaw("doctor_id, Count(*) as count")
+            ->with("doctor")
+            ->whereNotNull('doctor_id')
+            ->whereMonth('created_at', $currentMonth)
+            ->whereYear('created_at', $currentYear)
+            ->groupBy('doctor_id')
+            ->orderBy('count', 'desc')
+            ->first();
+            
+        $returnArray = array(
+            "name" => "N/A",
+            "count" => 0
+        );
+        if($topDoctorThisMonth){
+            $returnArray['name'] = $topDoctorThisMonth->doctor->name;
+            $returnArray['count'] = $topDoctorThisMonth->count;
+        }
+        return $returnArray;
+    }
 }
