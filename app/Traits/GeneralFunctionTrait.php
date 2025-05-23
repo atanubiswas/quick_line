@@ -603,15 +603,63 @@ trait GeneralFunctionTrait{
         return $caseStudyId;
     }
 
+    private function getCurrentActiveCase(){
+        $authUser = Auth::user();
+        $roleName = $authUser->roles[0]->name;
+        
+        $currentActiveCase = caseStudy::when(in_array($roleName, ['Doctor', 'Quality Controller']), function ($query) use ($authUser) {
+                $query->where('laboratory_id', function($query) use ($authUser){
+                    $query->select('id')
+                        ->from('laboratories')
+                        ->where('user_id', $authUser->id);
+                });
+            })
+            ->when($roleName == 'Doctor', function ($query) use ($authUser) {
+                $query->where('doctor_id', function($query) use ($authUser){
+                    $query->select('id')
+                        ->from('doctors')
+                        ->where('user_id', $authUser->id);
+                });
+                $query->whereIn('study_status_id', [2,4]);
+            })
+            ->when($roleName == 'Quality Controller', function ($query) use ($authUser) {
+                $query->where('qc_id', function($query) use ($authUser){
+                    $query->select('id')
+                        ->from('users')
+                        ->where('user_id', $authUser->id);
+                });
+                $query->where('study_status_id', 3);
+            })
+            ->count();
+        return $currentActiveCase;
+    }
+
     /**
      * Summary of getTotalCaseThisMonth
      * @return int
      */
     private function getTotalCaseThisMonth(){
+        $authUser = Auth::user();
+        $roleName = $authUser->roles[0]->name;
+        
         $currentMonth = Carbon::now()->format('m');
         $currentYear = Carbon::now()->format('Y');
         $totalCaseThisMonth = caseStudy::whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
+            ->when($roleName == 'Doctor', function ($query) use ($authUser) {
+                return $query->where('doctor_id', function($query) use ($authUser){
+                    $query->select('id')
+                        ->from('doctors')
+                        ->where('user_id', $authUser->id);
+                });
+            })
+            ->when($roleName == 'Quality Controller', function ($query) use ($authUser) {
+                return $query->where('qc_id', function($query) use ($authUser){
+                    $query->select('id')
+                        ->from('users')
+                        ->where('user_id', $authUser->id);
+                });
+            })
             ->count();
         return $totalCaseThisMonth;
     }

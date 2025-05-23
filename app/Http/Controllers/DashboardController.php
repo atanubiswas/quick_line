@@ -14,10 +14,10 @@ class DashboardController extends Controller
         switch ($roleName) {
             case 'Admin':
                 return $this->adminDashboard();
-            // case 'Manager':
-            //     return $this->managerDashboard();
-            // case 'Doctor':
-            //     return $this->doctorDashboard();
+            case 'Manager':
+                return $this->adminDashboard();
+            case 'Doctor':
+                return $this->doctorDashboard();
             // case 'Laboratory':
             //     return $this->laboratoryDashboard();
             // case 'Assigner':
@@ -35,5 +35,13 @@ class DashboardController extends Controller
         $topQCThisMonth = $this->getTopQCThisMonth();
         $topDoctorThisMonth = $this->getTopDoctorThisMonth();
         return view ("admin.adminDashboard", compact('totalCaseThisMonth', 'topCentreThisMonth', 'topQCThisMonth', 'topDoctorThisMonth'));
+    }
+
+    private function doctorDashboard(){
+        $totalCaseThisMonth = $this->getTotalCaseThisMonth();
+        $topCentreThisMonth = $this->getCurrentActiveCase();
+        $topQCThisMonth = $this->getCurrentEmergencyCase();
+        $topDoctorThisMonth = $this->getCurrentReWorkCase();
+        return view ("admin.doctorDashboard", compact('totalCaseThisMonth', 'topCentreThisMonth', 'topQCThisMonth', 'topDoctorThisMonth'));
     }
 }
