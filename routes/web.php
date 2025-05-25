@@ -154,7 +154,7 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('/get-case-study-attachments', [CaseStudyController::class, 'getCaseStudyAttachments'])->name('admin.get-case-study-details');
         Route::post('/get-case-comments', [CaseStudyController::class, 'getCaseComments'])->name('admin.getCaseComments');
         Route::post('/save-case-comment', [CaseStudyController::class, 'saveCaseComment'])->name('admin.saveCaseComment');
-        
+        Route::post('/get-case-study-data-dashboard', [caseStudyController::class, 'getCaseStudyDataDashboard'])->name('admin.getCaseStudyDataDashboard');
 
    /*============== TIMELINE CONTROLLER =================*/
    Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {

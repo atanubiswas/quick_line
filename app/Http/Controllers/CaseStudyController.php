@@ -1121,4 +1121,49 @@ class CaseStudyController extends Controller
 
         return response()->download($tempPath)->deleteFileAfterSend(true);
     }
+
+    public function getCaseStudyDataDashboard(Request $request){
+        $validator = Validator::make($request->all(), [
+            'start_date' => 'sometimes|nullable|date',
+            'end_date' => 'sometimes|nullable|date',
+        ]);
+        if (!$validator->passes()) {
+            return response()->json(['error'=>$validator->errors()]);
+        }
+        if($request->has('end_date') && $request->end_date){
+            $endDate = Carbon::parse($request->end_date)->endOfDay();
+        } else {
+            $endDate = Carbon::now()->endOfDay();
+        }
+        if($request->has('start_date') && $request->start_date){
+            $startDate = Carbon::parse($request->start_date)->startOfDay();
+        } else {
+            $startDate = Carbon::now()->startOfMonth();
+        }
+        $authUserId = Auth::user()->id;
+        $roleName = Auth::user()->roles[0]->name;
+        $caseStudyList = caseStudy::whereBetween('created_at', [$startDate, $endDate])
+            ->when($roleName == 'Doctor', function($query) use ($authUserId) {
+                return $query->where('doctor_id', function($query) use ($authUserId) {
+                    $query->select('id')
+                        ->from('doctors')
+                        ->where('user_id', $authUserId);
+                });
+            })
+            ->when($roleName == 'Quality Controller', function($query) use ($authUserId) {
+                return $query->where('qc_id', $authUserId);
+            })
+            ->when($roleName == 'Centre', function($query) use ($authUserId) {
+                return $query->where('assigner_id', function($query) use ($authUserId) {
+                    $query->select('id')
+                        ->from('laboratories')
+                        ->where('user_id', $authUserId);
+                });
+            })
+            ->where("study_status_id", "=", 5)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+            return view('admin.doctorCSTableDashboard', compact('caseStudyList', 'startDate', 'endDate'));
+    }
 }

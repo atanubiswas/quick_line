@@ -603,16 +603,57 @@ trait GeneralFunctionTrait{
         return $caseStudyId;
     }
 
-    private function getCurrentActiveCase(){
+    private function getCurrentReWorkCase(){
         $authUser = Auth::user();
         $roleName = $authUser->roles[0]->name;
         
-        $currentActiveCase = caseStudy::when(in_array($roleName, ['Doctor', 'Quality Controller']), function ($query) use ($authUser) {
-                $query->where('laboratory_id', function($query) use ($authUser){
-                    $query->select('id')
-                        ->from('laboratories')
-                        ->where('user_id', $authUser->id);
-                });
+        $currentReWorkCase = caseStudy::where('study_status_id', "=", 4)
+        ->where('doctor_id', function($query) use ($authUser){
+            $query->select('id')
+                ->from('doctors')
+                ->where('user_id', $authUser->id);
+        })
+        ->count();
+        return $currentReWorkCase;
+    }
+
+    private function getCaseStudyList($stDate = null, $endDate = null){
+        $authUser = Auth::user();
+        $roleName = $authUser->roles[0]->name;
+
+        if($stDate === null){
+            $stDate = Carbon::parse($stDate)->startOfMonth();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+        }
+        
+        $caseStudyList = caseStudy::when($roleName == 'Doctor', function ($query) use ($authUser) {
+            $query->where('doctor_id', function($query) use ($authUser){
+                $query->select('id')
+                    ->from('doctors')
+                    ->where('user_id', $authUser->id);
+            });
+        })
+        ->when($roleName == 'Quality Controller', function ($query) use ($authUser) {
+            $query->where('qc_id', $authUser->id);
+        })
+        ->where(function($query) use ($stDate, $endDate){
+            if($stDate && $endDate){
+                $query->whereBetween('created_at', [$stDate, $endDate]);
+            }
+        })
+        ->where("study_status_id", '=', 5)
+        ->with("patient")
+        ->orderBy('created_at', 'desc')
+        ->get();
+        return $caseStudyList;
+    }
+
+    private function getCurrentActiveCase($isEmergency = false){
+        $authUser = Auth::user();
+        $roleName = $authUser->roles[0]->name;
+        
+        $currentActiveCase = caseStudy::when(in_array($roleName, ['Admin', 'Manager', 'Assigner']), function ($query) {
+                $query->where('study_status_id', 1);
             })
             ->when($roleName == 'Doctor', function ($query) use ($authUser) {
                 $query->where('doctor_id', function($query) use ($authUser){
@@ -623,12 +664,10 @@ trait GeneralFunctionTrait{
                 $query->whereIn('study_status_id', [2,4]);
             })
             ->when($roleName == 'Quality Controller', function ($query) use ($authUser) {
-                $query->where('qc_id', function($query) use ($authUser){
-                    $query->select('id')
-                        ->from('users')
-                        ->where('user_id', $authUser->id);
-                });
                 $query->where('study_status_id', 3);
+            })
+            ->when($isEmergency, function ($query) {
+                $query->where('is_emergency', 1);
             })
             ->count();
         return $currentActiveCase;
@@ -647,18 +686,16 @@ trait GeneralFunctionTrait{
         $totalCaseThisMonth = caseStudy::whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
             ->when($roleName == 'Doctor', function ($query) use ($authUser) {
-                return $query->where('doctor_id', function($query) use ($authUser){
+                $query->where('doctor_id', function($query) use ($authUser){
                     $query->select('id')
                         ->from('doctors')
                         ->where('user_id', $authUser->id);
                 });
+                $query->where('study_status_id', '=', 5);
             })
             ->when($roleName == 'Quality Controller', function ($query) use ($authUser) {
-                return $query->where('qc_id', function($query) use ($authUser){
-                    $query->select('id')
-                        ->from('users')
-                        ->where('user_id', $authUser->id);
-                });
+                $query->where('qc_id',  $authUser->id);
+                $query->where('study_status_id', '=', 5);
             })
             ->count();
         return $totalCaseThisMonth;
