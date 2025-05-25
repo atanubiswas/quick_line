@@ -42,7 +42,7 @@
                     {{$slNo++}}
                 </td>
                 <td>{{$caseStudy->case_study_id}}</td>
-                <td>{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('jS M Y, g:i a') }}</td>
+                <td data-order="{{ $caseStudy->created_at }}">{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('jS M Y, g:i a') }}</td>
                 <td>
                     <div>{{$caseStudy->patient->name}}</div>
                     @if($caseStudy->is_emergency == 1)

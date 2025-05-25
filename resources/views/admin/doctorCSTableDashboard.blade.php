@@ -2,7 +2,7 @@
     <div class="card-header">
         <div class="row">
             <div class="col-md-9">
-                <h3 class="card-title">Case Studies</h3>
+                <h3 class="card-title">Finished Case Studies</h3>
             </div>
             <div class="col-md-3 text-right">
                 <div class="input-group">
