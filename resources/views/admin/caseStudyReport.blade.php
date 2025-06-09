@@ -58,7 +58,7 @@
           @if($isPdf === true)
             <img src="{{$qrLocalPath}}" alt="QR Code" style="width: 150px; height: 150px; border: 2px dashed #333; padding: 10px;">
           @else
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&color=02013c&data={{$pdfPublicUrl}}" alt="QR Code" style="width: 150px; height: 150px; border: 2px dashed #333; padding: 10px;">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&color=02013c&data={{$pdfPublicUrl}}" alt="QR Code" style="width: 100px; height: 100px; border: 2px dashed #333; padding: 10px;">
           @endif
         </td>
       </tr>

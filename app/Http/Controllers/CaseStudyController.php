@@ -1080,23 +1080,16 @@ class CaseStudyController extends Controller
             $html = view('admin.caseStudyWord', compact(
                 'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left', 'studyNames', 'pdfPublicUrl', 'isPdf', 'qrLocalPath'
             ))->render();
+            // Remove all <script>...</script> tags and their content
+            $html = preg_replace('#<script(.*?)>(.*?)</script>#is', '', $html);
+            // Clean up HTML entities and other problematic characters
             $html = str_replace('<br>', '<br/>', $html);
             $html = str_replace('&amp;', 'and', $html);
-            $html = preg_replace('/&(?![a-zA-Z]+;)/', 'and', $html);
+            $html = preg_replace('/&(?![a-zA-Z]+;)/', '', $html);
             $html = str_replace('&quot;', "'", $html);
-            $html = str_replace('<o:p></o:p>', '', $html);
-            // dd($html);
-            // $tidy = new \tidy();
-            // $config = [
-            //     'output-xhtml' => true,
-            //     'clean' => true,
-            //     'show-body-only' => true,
-            //     'wrap' => 0
-            // ];
-            // $tidy->parseString($html, $config, 'utf8');
-            // $tidy->cleanRepair();
+            $html = str_replace('<o:p>', '', $html);
+            $html = str_replace('</o:p>', '', $html);
 
-            // $html = (string)$tidy;
             $mmToTwip = fn($mm) => $mm * 56.7;
             $phpWord = new PhpWord();
             

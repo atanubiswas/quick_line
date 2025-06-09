@@ -64,7 +64,7 @@
                 }
                 @endphp
                 @if($qrBase64)
-                  <img src="{{ $qrBase64 }}" alt="QR Code" width="150" />
+                  <img src="{{ $qrBase64 }}" alt="QR Code" width="100" />
                 @endif
             </td>
           </tr>

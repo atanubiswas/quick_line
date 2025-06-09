@@ -14,6 +14,8 @@
 <link rel="stylesheet" href="{{asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css')}}">
 <link rel="stylesheet" href="{{asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css')}}">
 <link rel="stylesheet" href="{{asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css')}}">
+<!-- summernote -->
+<link rel="stylesheet" href="{{asset('plugins/summernote/summernote-bs4.min.css')}}">
 @endsection
 @section('content')
 <div class="content-wrapper">
@@ -47,7 +49,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="input-group">
-                                        <select class="form-control select2" required="required" name="modality" id="modality">
+                                        <select class="form-control select2 modality" required="required" name="modality" id="modality">
                                             <option value="">Select Modality</option>
                                             @foreach($modalityes as $modality)
                                             <option value="{{$modality->id}}">{{$modality->name}}</option>
@@ -57,7 +59,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="input-group">
-                                        <select class="form-control select2" required="required" name="study" id="study">
+                                        <select class="form-control select2 study" required="required" name="study" id="study">
                                             <option value="">Select Study</option>
                                         </select>
                                         <button type="button" style="margin-left:10px;" class="btn bg-gradient-orange float-right" id="search_btn" name="search_btn">Search</button>
@@ -92,7 +94,7 @@
                 <!-- /.col -->
             </div>
             <!-- /.row -->
-            <div class="row" id="edit_lab_div">
+            <div class="row" id="edit_study_layout_div">
                 
             </div>
             <!-- /.row -->
@@ -119,9 +121,11 @@
 <script src="{{asset('plugins/datatables-buttons/js/buttons.colVis.min.js')}}"></script>
 <!--Plugin JavaScript file-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"></script>
+<!-- Summernote -->
+<script src="{{asset('plugins/summernote/summernote-bs4.min.js')}}"></script>
 <script>
 $(function () {
-    $("#modality").change(function(){
+    $(document).on("change", ".modality", function(){
         var modality = $(this).val();
         if(modality != ""){
             $.ajax({
@@ -132,18 +136,17 @@ $(function () {
                     "modality": modality
                 },
                 success: function(data){
-                    $("#study").html(data);
+                    $(".study").html(data);
                 }
             });
         }else{
-            $("#study").html("<option value=''>Select Study</option>");
+            $(".study").html("<option value=''>Select Study</option>");
         }
     });
 
     $("#search_btn").on("click", function(){
         let modality = $("#modality").val();
         let study = $("#study").val();
-        console.log(modality, study);
         $.ajax({
             url: "{{url('admin/get-study-layout-table')}}",
             type: "POST",
@@ -171,6 +174,35 @@ $(function () {
         "autoWidth": false,
         "responsive": true,
         "lengthMenu": [ [10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"] ]
+    });
+
+    $(document).on("click", ".study_layout_edit_btn", function(){
+        const thisButton = $(this);
+        thisButton.html('Opening <i class="fas fa-spinner fa-spin"></i>');
+        var study_layout_id = $(this).data("id");
+        var modality = $("#modality").val();
+        var study = $("#study").val();
+        var form_data = new FormData();
+        form_data.append('study_layout_id', study_layout_id);
+        form_data.append('modality', modality);
+        form_data.append('study', study);
+
+        $.ajax({
+            url: '{{url("admin/get-edit-study-layout-data")}}',
+            cache: false,
+            contentType: false,
+            processData: false,
+            data: form_data,
+            type: 'post',
+            success: function (data) {
+                thisButton.html('<i class="fas fa-edit"></i> Edit');
+                $("#edit_study_layout_div").html(data);
+                scrollToAnchor("edit_layout_form");
+            },
+            error: function (data){
+                thisButton.html('<i class="fas fa-edit"></i> Edit');
+            }
+        });
     });
 });
 </script>

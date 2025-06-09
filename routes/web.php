@@ -170,6 +170,8 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('/view-study-layout', [StudyLayoutController::class,'viewStudyLayout'])->name('admin.viewStudyLayout');
         Route::post('/get-study-layout', [StudyLayoutController::class,'getStudyLayout']);
         Route::post('/get-study-layout-table', [StudyLayoutController::class,'getStudyLayoutTable']);
+        Route::post('/get-edit-study-layout-data', [StudyLayoutController::class,'getEditStudyLayoutData'])->name('admin.getEditStudyLayoutData');
+        Route::post('/update-study-layout', [StudyLayoutController::class,'updateStudyLayout'])->name('admin.updateStudyLayout');
 
         Route::get('/view-studies', [StudyLayoutController::class,'viewStudies'])->name('admin.viewStudies');
         Route::post('/get-study-details', [StudyLayoutController::class,'getStudyDetails']);

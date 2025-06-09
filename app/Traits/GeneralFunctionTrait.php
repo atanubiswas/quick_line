@@ -780,4 +780,8 @@ trait GeneralFunctionTrait{
         }
         return $returnArray;
     }
+
+    private function sanitizeInput($input){
+        return strip_tags(trim($input));
+    }
 }

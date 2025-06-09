@@ -244,4 +244,74 @@ class StudyLayoutController extends Controller
         // }
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
     }
+
+    public function getEditStudyLayoutData(Request $request){
+        $validator = Validator::make($request->all(), [
+            "study_layout_id" => "required|exists:modality_study_layouts,id",
+            "modality" => "required|exists:modalities,id",
+            "study" => "required|exists:study_types,id",
+        ]);
+        $authUser = Auth::user();
+        $modalityes = Modality::all();
+        $doctors = Doctor::orderBy("name")->get();
+        $selectedModality = $this->sanitizeInput($request->modality);
+        $study_layout_id = $this->sanitizeInput($request->study_layout_id);
+        $studies = studyType::where("modality_id", $selectedModality)
+            ->orderBy("name")
+            ->get();
+        $selectedStudy = $this->sanitizeInput($request->study);
+        $studyLayout = modalityStudyLayout::where("id", $this->sanitizeInput($request->study_layout_id))
+            ->with('studyType', 'doctor')
+            ->first();
+        if($studyLayout == null){
+            return response()->json(['error' => [$this->getMessages('_NOTFOUNDMSG')]]);
+        }
+        $currentDoctor = $doctors->filter(function($query) use ($authUser){
+            return $query->user_id == $authUser->id;
+        })->first();
+        
+        if($currentDoctor != null){
+            $currentDoctorModalities = $currentDoctor->DoctorModality->pluck('modality_id')->toArray();
+            $modalityes = $modalityes->filter(function($query) use ($currentDoctorModalities){
+                return in_array($query->id, $currentDoctorModalities);
+            });
+        }
+        $roleId = $authUser->roles[0]->pivot->role_id;
+        return view('admin.editStudyLayout', ['study_layout_id'=>$study_layout_id, 'studyLayout' => $studyLayout, 'roleId' => $roleId, 'authUser' => $authUser, 'doctors' => $doctors, 'modalityes' => $modalityes, 'currentDoctor' => $currentDoctor, 'studies' => $studies, 'selectedModality' => $selectedModality, 'selectedStudy' => $selectedStudy]);
+    }
+
+    public function updateStudyLayout(Request $request){
+        $validator = Validator::make($request->all(), [
+            "study_layout_id" => "required|exists:modality_study_layouts,id",
+            "layout_name" => "required",
+            "study_id" => "required:exists:studies,id",
+            "modality" => "required:exists:modalities,id",
+            "doctor_id" => "required",
+            "layout" => "required",
+        ]);
+        if (!$validator->passes()) {
+            return response()->json(['error'=>$validator->errors()]);
+        }
+        try{
+            $studyLayout = modalityStudyLayout::find($request->study_layout_id);
+            if($studyLayout == null){
+                return response()->json(['error'=>[$this->getMessages('_NOTFOUNDMSG')]]);
+            }
+            $studyLayout->name  = $request->layout_name;
+            $studyLayout->study_type_id  = $request->study_id;
+            $studyLayout->layout = $request->layout;
+            if($request->doctor_id != 0){
+                $studyLayout->created_by = $request->doctor_id;
+            }
+            else if($request->doctor_id == 0 && $studyLayout->created_by != null){
+                $studyLayout->created_by = null;
+            }
+            $studyLayout->save();
+        }catch(\Exception $ex) {
+            return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
+        } catch(\Illuminate\Database\QueryException $ex){
+            return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
+        }
+        return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
+    }
 }
