@@ -3,26 +3,26 @@
   <body>
       @php $count = 1; @endphp
       @foreach($caseStudy->study as $study)
-        <table style="border-collapse: collapse; width: 100%;">
+        <table style="border-collapse: collapse; width: 100%; table-layout: fixed;" border="1">
           <tr>
-            <th width="300" style="border: 1px solid black; padding: 4px;">Patient Name:</th>
-            <th style="border: 1px solid black; padding: 4px;">{{ ucwords($caseStudy->patient->name) }}</th>
-            <th style="border: 1px solid black; padding: 4px;">Age / Gender:</th>
-            <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->patient->age }} / {{ ucwords($caseStudy->patient->gender) }}</th>
+              <th style="width: 25%; text-align: center; padding: 4px; border: 1px solid black;">Patient Name:</th>
+              <td style="width: 25%; text-align: center; padding: 4px; border: 1px solid black;">{{ ucwords($caseStudy->patient->name) }}</td>
+              <th style="width: 25%; text-align: center; padding: 4px; border: 1px solid black;">Age / Gender:</th>
+              <td style="width: 25%; text-align: center; padding: 4px; border: 1px solid black;">{{ $caseStudy->patient->age }} / {{ ucwords($caseStudy->patient->gender) }}</td>
           </tr>
           <tr>
-            <th style="border: 1px solid black; padding: 4px;">Patient Id:</th>
-            <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->patient->patient_id }}</th>
-            <th style="border: 1px solid black; padding: 4px;">Date and Time:</th>
-            <th style="border: 1px solid black; padding: 4px;">{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('jS \o\f M Y, h:i A')}}</th>
+              <th style="width: 25%; text-align: center; padding: 4px; border: 1px solid black;">Patient ID:</th>
+              <td style="width: 25%; text-align: center; padding: 4px; border: 1px solid black;">{{ $caseStudy->patient->patient_id }}</td>
+              <th style="width: 25%; text-align: center; padding: 4px; border: 1px solid black;">Date and Time:</th>
+              <td style="width: 25%; text-align: center; padding: 4px; border: 1px solid black;">{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('d/m/y g:i a') }}</td>
           </tr>
           <tr>
-            <th style="border: 1px solid black; padding: 4px;">Refd By:</th>
-            <th style="border: 1px solid black; padding: 4px;">{{ ucwords($caseStudy->ref_by) }}</th>
-            <th style="border: 1px solid black; padding: 4px;">Study:</th>
-            <th style="border: 1px solid black; padding: 4px;">{{ $study->type->name }}</th>
+              <th style="width: 25%; text-align: center; padding: 4px; border: 1px solid black;">Refd By:</th>
+              <td style="width: 25%; text-align: center; padding: 4px; border: 1px solid black;">{{ ucwords($caseStudy->ref_by) }}</td>
+              <th style="width: 25%; text-align: center; padding: 4px; border: 1px solid black;">Study:</th>
+              <td style="width: 25%; text-align: center; padding: 4px; border: 1px solid black;">{{ $study->type->name }}</td>
           </tr>
-        </table>
+      </table>
 
         <div class="main_study_result" style="margin-top: 30px;" id="main_study_result_{{ $study->id }}">
           {!! $study->report !!}
