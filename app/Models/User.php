@@ -72,4 +72,9 @@ class User extends Authenticatable
     public function getLab(){
         return $this->hasOne(Laboratory::class);
     }
+
+    // Assigner hasMany caseStudies
+    public function assignedCaseStudies() {
+        return $this->hasMany(caseStudy::class, 'assigner_id');
+    }
 }

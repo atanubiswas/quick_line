@@ -82,8 +82,73 @@
 
       </div>
       <!-- /.row -->
+      <!-- Assigner Case Assignment Table -->
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title">Assigner Case Assignment Count</h3>
+            </div>
+            <div class="card-body">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="start_date">Start Date:</label>
+                  <input type="date" id="start_date" class="form-control" value="{{ date('Y-m-d') }}">
+                </div>
+                <div class="col-md-6">
+                  <label for="end_date">End Date:</label>
+                  <input type="date" id="end_date" class="form-control" value="{{ date('Y-m-d') }}">
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="assigner_count_table">
+                  <thead>
+                    <tr>
+                      <th>Assigner Name</th>
+                      <th>Assigned Case Count</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @foreach($assignerCounts as $assigner)
+                      <tr>
+                        <td>{{ $assigner->name }}</td>
+                        <td>{{ $assigner->count }}</td>
+                      </tr>
+                    @endforeach
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /.Assigner Table -->
     </div><!--/. container-fluid -->
   </section>
   <!-- /.content -->
 </div>
+@endsection
+@section('extra_js')
+@parent
+<script>
+$(document).ready(function() {
+    function fetchAssignerCounts() {
+        var startDate = $('#start_date').val();
+        var endDate = $('#end_date').val();
+        $.ajax({
+            url: '{{ route('admin.assignerCounts') }}',
+            type: 'GET',
+            data: { start_date: startDate, end_date: endDate },
+            success: function(data) {
+                var tbody = '';
+                data.forEach(function(assigner) {
+                    tbody += '<tr><td>' + assigner.name + '</td><td>' + assigner.count + '</td></tr>';
+                });
+                $('#assigner_count_table tbody').html(tbody);
+            }
+        });
+    }
+    $('#start_date, #end_date').on('change', fetchAssignerCounts);
+});
+</script>
 @endsection

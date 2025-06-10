@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 use App\Traits\GeneralFunctionTrait;
+use App\Models\User;
+use App\Models\caseStudy;
 
 /**
  * Summary of DashboardController
@@ -47,7 +49,22 @@ class DashboardController extends Controller
         $topCentreThisMonth = $this->getTopCentreThisMonth();
         $topQCThisMonth = $this->getTopQCThisMonth();
         $topDoctorThisMonth = $this->getTopDoctorThisMonth();
-        return view ("admin.adminDashboard", compact('totalCaseThisMonth', 'topCentreThisMonth', 'topQCThisMonth', 'topDoctorThisMonth'));
+        // Get assigner counts for today by default
+        $today = Carbon::now()->toDateString();
+        $assignerCounts = User::whereHas('roles', function($q){
+            $q->where('name', 'Assigner');
+        })
+        ->withCount(['assignedCaseStudies' => function($q) use ($today) {
+            $q->whereDate('created_at', $today);
+        }])
+        ->get()
+        ->map(function($user){
+            return (object)[
+                'name' => $user->name,
+                'count' => $user->assigned_case_studies_count
+            ];
+        });
+        return view ("admin.adminDashboard", compact('totalCaseThisMonth', 'topCentreThisMonth', 'topQCThisMonth', 'topDoctorThisMonth', 'assignerCounts'));
     }
 
     /**
@@ -75,5 +92,26 @@ class DashboardController extends Controller
         $endDate = Carbon::now()->endOfDay()->toDateString();
 
         return view ("admin.qualityControllerDashboard", compact('totalCaseThisMonth', 'currentActiveCase', 'currentEmergencyCase', 'caseStudyList', 'startDate', 'endDate'));
+    }
+
+    // AJAX endpoint for assigner counts by date range
+    public function assignerCounts(Request $request) {
+        $start = $request->input('start_date', Carbon::now()->toDateString());
+        $end = $request->input('end_date', Carbon::now()->toDateString());
+        $assigners = User::whereHas('roles', function($q){
+            $q->where('name', 'Assigner');
+        })
+        ->withCount(['assignedCaseStudies' => function($q) use ($start, $end) {
+            $q->whereDate('created_at', '>=', $start)
+              ->whereDate('created_at', '<=', $end);
+        }])
+        ->get()
+        ->map(function($user){
+            return [
+                'name' => $user->name,
+                'count' => $user->assigned_case_studies_count
+            ];
+        });
+        return response()->json($assigners);
     }
 }

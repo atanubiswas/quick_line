@@ -57,6 +57,7 @@
                                         <th>Email</th>
                                         <th>Mobile Number</th>
                                         <th>User Type</th>
+                                        <th>Last Active At</th>
                                         <th>Status</th>
                                         <th>Controls</th>
                                     </tr>
@@ -86,6 +87,13 @@
                                         <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
                                         <td>{{$user->roles[0]->name}}</td>
                                         <td>
+                                            @if($user->last_active_at)
+                                                {{ \Carbon\Carbon::parse($user->last_active_at)->format('jS \of F, h:i a') }}
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
+                                        <td>
                                             <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" /> 
                                             <label for="user_status_{{$user->id}}"  @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') style="background-color: #aaa" @endif data-on-label="Active" data-off-label="Inactive"></label>
                                         </td>
@@ -114,6 +122,7 @@
                                         <th>Email</th>
                                         <th>Mobile Number</th>
                                         <th>User Type</th>
+                                        <th>Last Active At</th>
                                         <th>Status</th>
                                         <th>Controls</th>
                                     </tr>
@@ -143,6 +152,13 @@
                                         <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
                                         <td>{{$user->roles[0]->name}}</td>
                                         <td>
+                                            @if($user->last_active_at)
+                                                {{ \Carbon\Carbon::parse($user->last_active_at)->format('jS \of F, h:i a') }}
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
+                                        <td>
                                             <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" /> 
                                             <label for="user_status_{{$user->id}}"  @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') style="background-color: #aaa" @endif data-on-label="Active" data-off-label="Inactive"></label>
                                         </td>
@@ -171,6 +187,7 @@
                                         <th>Email</th>
                                         <th>Mobile Number</th>
                                         <th>User Type</th>
+                                        <th>Last Active At</th>
                                         <th>Status</th>
                                         <th>Controls</th>
                                     </tr>
@@ -200,6 +217,13 @@
                                         <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
                                         <td>{{$user->roles[0]->name}}</td>
                                         <td>
+                                            @if($user->last_active_at)
+                                                {{ \Carbon\Carbon::parse($user->last_active_at)->format('jS \of F, h:i a') }}
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
+                                        <td>
                                             <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" />
                                             <label for="user_status_{{$user->id}}"  @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') style="background-color: #aaa" @endif data-on-label="Active" data-off-label="Inactive"></label>
                                         </td>
@@ -228,6 +252,7 @@
                                         <th>Email</th>
                                         <th>Mobile Number</th>
                                         <th>User Type</th>
+                                        <th>Last Active At</th>
                                         <th>Status</th>
                                         <th>Controls</th>
                                     </tr>
@@ -257,6 +282,13 @@
                                         <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
                                         <td>{{$user->roles[0]->name}}</td>
                                         <td>
+                                            @if($user->last_active_at)
+                                                {{ \Carbon\Carbon::parse($user->last_active_at)->format('jS \of F, h:i a') }}
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
+                                        <td>
                                             <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" />
                                             <label for="user_status_{{$user->id}}"  @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') style="background-color: #aaa" @endif data-on-label="Active" data-off-label="Inactive"></label>
                                         </td>
@@ -285,6 +317,7 @@
                                         <th>Email</th>
                                         <th>Mobile Number</th>
                                         <th>User Type</th>
+                                        <th>Last Active At</th>
                                         <th>Status</th>
                                         <th>Controls</th>
                                     </tr>
@@ -313,6 +346,13 @@
                                         <td><a href="mailto:{{$user->email}}">{{$user->email}}</a></td>
                                         <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
                                         <td>{{$user->roles[0]->name}}</td>
+                                        <td>
+                                            @if($user->last_active_at)
+                                                {{ \Carbon\Carbon::parse($user->last_active_at)->format('jS \of F, h:i a') }}
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
                                         <td>
                                             <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" />
                                             <label for="user_status_{{$user->id}}"  @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') style="background-color: #aaa" @endif data-on-label="Active" data-off-label="Inactive"></label>
