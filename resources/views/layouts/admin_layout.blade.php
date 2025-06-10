@@ -27,6 +27,42 @@
     .small-box span{
       font-size: 20px;
     }
+    .online-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #28a745;
+        margin-right: 5px;
+        vertical-align: middle;
+    }
+    .offline-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #dc3545; /* red */
+        margin-right: 5px;
+        vertical-align: middle;
+    }
+    .online-dot-small {
+        display: inline-block;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #28a745;
+        margin-right: 5px;
+        vertical-align: middle;
+    }
+    .offline-dot-small {
+        display: inline-block;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #dc3545; /* red */
+        margin-right: 5px;
+        vertical-align: middle;
+    }
   </style>
   @yield('extra_css')
 </head>
