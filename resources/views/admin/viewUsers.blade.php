@@ -65,7 +65,23 @@
                                     @foreach($users as $user)
                                     @if($user->roles[0]->name == 'Manager')
                                     <tr>
-                                        <td><img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}</td>
+                                        <td>
+                                            @php
+                                                $isOnline = false;
+                                                if ($user->last_active_at) {
+                                                    $lastActive = \Carbon\Carbon::parse($user->last_active_at);
+                                                    $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                                }
+                                            @endphp
+                                            @if($user->roles[0]->name !== 'Admin')
+                                                @if($isOnline)
+                                                    <span class="online-dot"></span>
+                                                @else
+                                                    <span class="offline-dot"></span>
+                                                @endif
+                                            @endif
+                                            <img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}
+                                        </td>
                                         <td><a href="mailto:{{$user->email}}">{{$user->email}}</a></td>
                                         <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
                                         <td>{{$user->roles[0]->name}}</td>
@@ -106,7 +122,23 @@
                                     @foreach($users as $user)
                                     @if($user->roles[0]->name == 'Assigner')
                                     <tr>
-                                        <td><img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}</td>
+                                        <td>
+                                            @php
+                                                $isOnline = false;
+                                                if ($user->last_active_at) {
+                                                    $lastActive = \Carbon\Carbon::parse($user->last_active_at);
+                                                    $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                                }
+                                            @endphp
+                                            @if($user->roles[0]->name !== 'Admin')
+                                                @if($isOnline)
+                                                    <span class="online-dot"></span>
+                                                @else
+                                                    <span class="offline-dot"></span>
+                                                @endif
+                                            @endif
+                                            <img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}
+                                        </td>
                                         <td><a href="mailto:{{$user->email}}">{{$user->email}}</a></td>
                                         <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
                                         <td>{{$user->roles[0]->name}}</td>
@@ -147,7 +179,23 @@
                                     @foreach($users as $user)
                                     @if($user->roles[0]->name == 'Quality Controller')
                                     <tr>
-                                        <td><img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}</td>
+                                        <td>
+                                            @php
+                                                $isOnline = false;
+                                                if ($user->last_active_at) {
+                                                    $lastActive = \Carbon\Carbon::parse($user->last_active_at);
+                                                    $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                                }
+                                            @endphp
+                                            @if($user->roles[0]->name !== 'Admin')
+                                                @if($isOnline)
+                                                    <span class="online-dot"></span>
+                                                @else
+                                                    <span class="offline-dot"></span>
+                                                @endif
+                                            @endif
+                                            <img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}
+                                        </td>
                                         <td><a href="mailto:{{$user->email}}">{{$user->email}}</a></td>
                                         <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
                                         <td>{{$user->roles[0]->name}}</td>
@@ -188,7 +236,23 @@
                                     @foreach($users as $user)
                                     @if($user->roles[0]->name == 'Centre')
                                     <tr>
-                                        <td><img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}</td>
+                                        <td>
+                                            @php
+                                                $isOnline = false;
+                                                if ($user->last_active_at) {
+                                                    $lastActive = \Carbon\Carbon::parse($user->last_active_at);
+                                                    $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                                }
+                                            @endphp
+                                            @if($user->roles[0]->name !== 'Admin')
+                                                @if($isOnline)
+                                                    <span class="online-dot"></span>
+                                                @else
+                                                    <span class="offline-dot"></span>
+                                                @endif
+                                            @endif
+                                            <img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}
+                                        </td>
                                         <td><a href="mailto:{{$user->email}}">{{$user->email}}</a></td>
                                         <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
                                         <td>{{$user->roles[0]->name}}</td>
@@ -229,7 +293,23 @@
                                     @foreach($users as $user)
                                     @if($user->roles[0]->name == 'Doctor')
                                     <tr>
-                                        <td><img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}</td>
+                                        <td>
+                                            @php
+                                                $isOnline = false;
+                                                if ($user->last_active_at) {
+                                                    $lastActive = \Carbon\Carbon::parse($user->last_active_at);
+                                                    $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                                }
+                                            @endphp
+                                            @if($user->roles[0]->name !== 'Admin')
+                                                @if($isOnline)
+                                                    <span class="online-dot"></span>
+                                                @else
+                                                    <span class="offline-dot"></span>
+                                                @endif
+                                            @endif
+                                            <img src="{{$user->user_image}}" class="img-circle elevation-2 user-image-table" alt="User Image">{{$user->name}}
+                                        </td>
                                         <td><a href="mailto:{{$user->email}}">{{$user->email}}</a></td>
                                         <td><a href="tel:+91{{$user->mobile_number}}">{{$user->mobile_number}}</a></td>
                                         <td>{{$user->roles[0]->name}}</td>

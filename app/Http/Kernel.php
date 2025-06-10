@@ -37,7 +37,8 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\CheckUserStatus::class
+            \App\Http\Middleware\CheckUserStatus::class,
+            \App\Http\Middleware\UpdateLastActiveAt::class
         ],
 
         'api' => [
@@ -73,5 +74,6 @@ class Kernel extends HttpKernel
         '2fa' => \App\Http\Middleware\LoginSecurityMiddleware::class,
         'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
         'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
+        'update_last_active' => \App\Http\Middleware\UpdateLastActiveAt::class,
     ];
 }

@@ -6,24 +6,54 @@
                     <tr>
                         <th>Assign Doctor</th>
                         <th colspan="2">
-                            <select name="doctor_id" date-case-id="{{ $caseId }}" class="form-control select2 assign_doctor">
+                            <select name="doctor_id" date-case-id="{{ $caseId }}" class="form-control assign_doctor custom-doctor-select" style="width:100%">
                             <option value="">Select Doctor</option>
                                 @if($assignedDoctor !== null)
                                     <optgroup label="Preferred Doctor">
-                                        <option value="{{ $assignedDoctor->id }}">{{ $assignedDoctor->name }}</option>
+                                        <option value="{{ $assignedDoctor->id }}" data-online="{{ isset($assignedDoctor->user) && $assignedDoctor->user->last_active_at && \Carbon\Carbon::parse($assignedDoctor->user->last_active_at)->gt(now()->subMinutes(5)) ? '1' : '0' }}">
+                                            @php
+                                                $isOnline = false;
+                                                if (isset($assignedDoctor->user) && $assignedDoctor->user->last_active_at) {
+                                                    $lastActive = \Carbon\Carbon::parse($assignedDoctor->user->last_active_at);
+                                                    $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                                }
+                                                $dot = $isOnline ? '●' : '';
+                                            @endphp
+                                            {{ $dot }} {{ $assignedDoctor->name }}
+                                        </option>
                                     </optgroup>
                                 @endif
                                 
                                 <optgroup label="Faverite Doctors">
                                 @if($faveriteDoctors !== null)
                                     @foreach($faveriteDoctors as $doctor)
-                                        <option value="{{ $doctor->id }}">{{ $doctor->name }}</option>
+                                        <option value="{{ $doctor->id }}" data-online="{{ isset($doctor->user) && $doctor->user->last_active_at && \Carbon\Carbon::parse($doctor->user->last_active_at)->gt(now()->subMinutes(5)) ? '1' : '0' }}">
+                                            @php
+                                                $isOnline = false;
+                                                if (isset($doctor->user) && $doctor->user->last_active_at) {
+                                                    $lastActive = \Carbon\Carbon::parse($doctor->user->last_active_at);
+                                                    $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                                }
+                                                $dot = $isOnline ? '●' : '';
+                                            @endphp
+                                            {{ $dot }} {{ $doctor->name }}
+                                        </option>
                                     @endforeach
                                 @endif
                                 </optgroup>
                                 <optgroup label="All Doctors">
                                 @foreach ($doctors as $doctor)
-                                    <option value="{{ $doctor->id }}">{{ $doctor->name }}</option>
+                                    <option value="{{ $doctor->id }}" @if(isset($caseStudy->doctor) && $caseStudy->doctor->id == $doctor->id) selected="selected" @endif data-online="{{ isset($doctor->user) && $doctor->user->last_active_at && \Carbon\Carbon::parse($doctor->user->last_active_at)->gt(now()->subMinutes(5)) ? '1' : '0' }}">
+                                        @php
+                                            $isOnline = false;
+                                            if (isset($doctor->user) && $doctor->user->last_active_at) {
+                                                $lastActive = \Carbon\Carbon::parse($doctor->user->last_active_at);
+                                                $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                            }
+                                            $dot = $isOnline ? '●' : '';
+                                        @endphp
+                                        {{ $dot }} {{ $doctor->name }}
+                                    </option>
                                 @endforeach
                                 </optgroup>
                             </select>
@@ -33,24 +63,54 @@
                     <tr>
                         <th>Update Doctor</th>
                         <th colspan="2">
-                            <select name="doctor_id" date-case-id="{{ $caseId }}" class="form-control select2 assign_doctor">
+                            <select name="doctor_id" date-case-id="{{ $caseId }}" class="form-control select2 assign_doctor custom-doctor-select" style="width:100%">
                             <option value="">Select Doctor</option>
                                 @if($assignedDoctor !== null)
                                     <optgroup label="Preferred Doctor">
-                                        <option value="{{ $assignedDoctor->id }}">{{ $assignedDoctor->name }}</option>
+                                        <option value="{{ $assignedDoctor->id }}" data-online="{{ isset($assignedDoctor->user) && $assignedDoctor->user->last_active_at && \Carbon\Carbon::parse($assignedDoctor->user->last_active_at)->gt(now()->subMinutes(5)) ? '1' : '0' }}">
+                                            @php
+                                                $isOnline = false;
+                                                if (isset($assignedDoctor->user) && $assignedDoctor->user->last_active_at) {
+                                                    $lastActive = \Carbon\Carbon::parse($assignedDoctor->user->last_active_at);
+                                                    $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                                }
+                                                $dot = $isOnline ? '●' : '';
+                                            @endphp
+                                            {{ $dot }} {{ $assignedDoctor->name }}
+                                        </option>
                                     </optgroup>
                                 @endif
                                 
                                 <optgroup label="Faverite Doctors">
                                 @if($faveriteDoctors !== null)
                                     @foreach($faveriteDoctors as $doctor)
-                                        <option value="{{ $doctor->id }}">{{ $doctor->name }}</option>
+                                        <option value="{{ $doctor->id }}" data-online="{{ isset($doctor->user) && $doctor->user->last_active_at && \Carbon\Carbon::parse($doctor->user->last_active_at)->gt(now()->subMinutes(5)) ? '1' : '0' }}">
+                                            @php
+                                                $isOnline = false;
+                                                if (isset($doctor->user) && $doctor->user->last_active_at) {
+                                                    $lastActive = \Carbon\Carbon::parse($doctor->user->last_active_at);
+                                                    $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                                }
+                                                $dot = $isOnline ? '●' : '';
+                                            @endphp
+                                            {{ $dot }} {{ $doctor->name }}
+                                        </option>
                                     @endforeach
                                 @endif
                                 </optgroup>
                                 <optgroup label="All Doctors">
                                 @foreach ($doctors as $doctor)
-                                    <option value="{{ $doctor->id }}" @if($caseStudy->doctor->id == $doctor->id) selected="selected" @endif>{{ $doctor->name }}</option>
+                                    <option value="{{ $doctor->id }}" @if($caseStudy->doctor->id == $doctor->id) selected="selected" @endif data-online="{{ isset($doctor->user) && $doctor->user->last_active_at && \Carbon\Carbon::parse($doctor->user->last_active_at)->gt(now()->subMinutes(5)) ? '1' : '0' }}">
+                                        @php
+                                            $isOnline = false;
+                                            if (isset($doctor->user) && $doctor->user->last_active_at) {
+                                                $lastActive = \Carbon\Carbon::parse($doctor->user->last_active_at);
+                                                $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                            }
+                                            $dot = $isOnline ? '●' : '';
+                                        @endphp
+                                        {{ $dot }} {{ $doctor->name }}
+                                    </option>
                                 @endforeach
                                 </optgroup>
                             </select>
@@ -86,13 +146,33 @@
                                 <optgroup label="Faverite Doctors">
                                 @if($faveriteDoctors !== null)
                                     @foreach($faveriteDoctors as $doctor)
-                                        <option value="{{ $doctor->id }}" @if($caseStudy->doctor->id == $doctor->id) disabled @endif>{{ $doctor->name }}</option>
+                                        <option value="{{ $doctor->id }}" @if($caseStudy->doctor->id == $doctor->id) disabled @endif>
+                                            @php
+                                                $isOnline = false;
+                                                if (isset($doctor->user) && $doctor->user->last_active_at) {
+                                                    $lastActive = \Carbon\Carbon::parse($doctor->user->last_active_at);
+                                                    $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                                }
+                                                $dot = $isOnline ? '●' : '';
+                                            @endphp
+                                            {{ $dot }} {{ $doctor->name }}
+                                        </option>
                                     @endforeach
                                 @endif
                                 </optgroup>
                                 <optgroup label="All Doctors">
                                 @foreach ($doctors as $doctor)
-                                    <option value="{{ $doctor->id }}" @if($caseStudy->doctor->id == $doctor->id) disabled @endif>{{ $doctor->name }}</option>
+                                    <option value="{{ $doctor->id }}" @if($caseStudy->doctor->id == $doctor->id) disabled @endif>
+                                        @php
+                                            $isOnline = false;
+                                            if (isset($doctor->user) && $doctor->user->last_active_at) {
+                                                $lastActive = \Carbon\Carbon::parse($doctor->user->last_active_at);
+                                                $isOnline = $lastActive->gt(now()->subMinutes(5));
+                                            }
+                                            $dot = $isOnline ? '●' : '';
+                                        @endphp
+                                        {{ $dot }} {{ $doctor->name }}
+                                    </option>
                                 @endforeach
                                 </optgroup>
                             </select>
@@ -123,3 +203,22 @@
         @endforeach
     @endif
 </table>
+@section('extra_js')
+@parent
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<script>
+$(function() {
+    function formatDoctorOption (state) {
+        if (!state.id) return state.text;
+        // Use the smaller unicode dot, which is already in the text
+        return state.text;
+    }
+    $('.custom-doctor-select').select2({
+        templateResult: formatDoctorOption,
+        templateSelection: formatDoctorOption,
+        width: 'resolve'
+    });
+});
+</script>
+@endsection

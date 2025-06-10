@@ -2,6 +2,7 @@
 @section('title', "View Case Studies")
 @section('extra_css')
     <style type="text/css">
+        
         option:disabled {
             color: #cfcfcf;
         }
