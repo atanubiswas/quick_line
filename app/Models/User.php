@@ -77,4 +77,21 @@ class User extends Authenticatable
     public function assignedCaseStudies() {
         return $this->hasMany(caseStudy::class, 'assigner_id');
     }
+
+    // Quality Controller hasMany caseStudies
+    public function qcCaseStudies() {
+        return $this->hasMany(caseStudy::class, 'qc_id');
+    }
+
+    // Doctor hasMany caseStudies (via Doctor model)
+    public function doctorCaseStudies() {
+        return $this->hasManyThrough(
+            \App\Models\caseStudy::class, // Final model
+            \App\Models\Doctor::class,    // Intermediate model
+            'user_id',                      // Foreign key on Doctor table
+            'doctor_id',                    // Foreign key on caseStudy table
+            'id',                           // Local key on User table
+            'id'                            // Local key on Doctor table
+        )->whereColumn('case_studies.doctor_id', 'doctors.id');
+    }
 }

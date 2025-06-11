@@ -74,7 +74,8 @@ Route::group(['prefix' => 'admin'], function () {
        Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('admin.dashboard');
     });
     Route::get('/assigner-counts', [DashboardController::class, 'assignerCounts'])->name('admin.assignerCounts');
-   
+    Route::get('/qc-counts', [DashboardController::class, 'qcCounts'])->name('admin.qcCounts');
+    Route::get('/doctor-counts', [DashboardController::class, 'doctorCounts'])->name('admin.doctorCounts');
    /*================= USER CONTROLLER ===================*/
     Route::middleware(['role:Admin,Manager', '2fa'])->group(function(){
         Route::get('/add-user', [UserController::class, 'addUser'])->name('admin.addUser');

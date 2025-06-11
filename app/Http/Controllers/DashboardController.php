@@ -57,6 +57,7 @@ class DashboardController extends Controller
         ->withCount(['assignedCaseStudies' => function($q) use ($today) {
             $q->whereDate('created_at', $today);
         }])
+        ->orderBy('name', 'asc')
         ->get()
         ->map(function($user){
             return (object)[
@@ -64,7 +65,35 @@ class DashboardController extends Controller
                 'count' => $user->assigned_case_studies_count
             ];
         });
-        return view ("admin.adminDashboard", compact('totalCaseThisMonth', 'topCentreThisMonth', 'topQCThisMonth', 'topDoctorThisMonth', 'assignerCounts'));
+        $qcCounts = User::whereHas('roles', function($q){
+            $q->where('name', 'Quality Controller');
+        })
+        ->withCount(['qcCaseStudies' => function($q) use ($today) {
+            $q->whereDate('created_at', $today);
+        }])
+        ->orderBy('name', 'asc')
+        ->get()
+        ->map(function($user){
+            return (object)[
+                'name' => $user->name,
+                'count' => $user->qc_case_studies_count
+            ];
+        });
+        $doctorCounts = User::whereHas('roles', function($q){
+            $q->where('name', 'Doctor');
+        })
+        ->withCount(['doctorCaseStudies' => function($q) use ($today) {
+            $q->whereDate('case_studies.created_at', $today);
+        }])
+        ->orderBy('name', 'asc')
+        ->get()
+        ->map(function($user){
+            return (object)[
+                'name' => $user->name,
+                'count' => $user->doctor_case_studies_count
+            ];
+        });
+        return view ("admin.adminDashboard", compact('totalCaseThisMonth', 'topCentreThisMonth', 'topQCThisMonth', 'topDoctorThisMonth', 'assignerCounts', 'qcCounts', 'doctorCounts'));
     }
 
     /**
@@ -105,6 +134,7 @@ class DashboardController extends Controller
             $q->whereDate('created_at', '>=', $start)
               ->whereDate('created_at', '<=', $end);
         }])
+        ->orderBy('name', 'asc')
         ->get()
         ->map(function($user){
             return [
@@ -113,5 +143,49 @@ class DashboardController extends Controller
             ];
         });
         return response()->json($assigners);
+    }
+
+    // AJAX endpoint for QC counts by date range
+    public function qcCounts(Request $request) {
+        $start = $request->input('start_date', Carbon::now()->toDateString());
+        $end = $request->input('end_date', Carbon::now()->toDateString());
+        $qcs = User::whereHas('roles', function($q){
+            $q->where('name', 'Quality Controller');
+        })
+        ->withCount(['qcCaseStudies' => function($q) use ($start, $end) {
+            $q->whereDate('created_at', '>=', $start)
+              ->whereDate('created_at', '<=', $end);
+        }])
+        ->orderBy('name', 'asc')
+        ->get()
+        ->map(function($user){
+            return [
+                'name' => $user->name,
+                'count' => $user->qc_case_studies_count
+            ];
+        });
+        return response()->json($qcs);
+    }
+
+    // AJAX endpoint for Doctor counts by date range
+    public function doctorCounts(Request $request) {
+        $start = $request->input('start_date', Carbon::now()->toDateString());
+        $end = $request->input('end_date', Carbon::now()->toDateString());
+        $doctors = User::whereHas('roles', function($q){
+            $q->where('name', 'Doctor');
+        })
+        ->withCount(['doctorCaseStudies' => function($q) use ($start, $end) {
+            $q->whereDate('case_studies.created_at', '>=', $start)
+              ->whereDate('case_studies.created_at', '<=', $end);
+        }])
+        ->orderBy('name', 'asc')
+        ->get()
+        ->map(function($user){
+            return [
+                'name' => $user->name,
+                'count' => $user->doctor_case_studies_count
+            ];
+        });
+        return response()->json($doctors);
     }
 }
