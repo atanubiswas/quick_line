@@ -16,4 +16,9 @@ class studyType extends Model
     public function layout(){
         return $this->hasMany('App\Models\modalityStudyLayout')->orderBy("name");
     }
+
+    public function priceGroup()
+    {
+        return $this->belongsTo(\App\Models\StudyPriceGroup::class, 'price_group_id');
+    }
 }

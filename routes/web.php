@@ -19,6 +19,7 @@ use App\Http\Controllers\StudyLayoutController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\LoginSecurityController;
 use App\Http\Controllers\PathologyTestController;
+use App\Http\Controllers\BillingController;
 
 
 /*
@@ -241,4 +242,13 @@ Route::group(['prefix' => 'admin'], function () {
        Route::get('/view-pathology-test', [PathologyTestController::class, 'viewPathologyTest'])->name('admin.viewPathologyTest');
        Route::get('/admin/add-pathology-test-package', [PathologyTestController::class, 'addPathologyTestPackage'])->name('admin.addPathologyTestPackage');
    });
+
+   /*================= BILLING CONTROLLER ==================*/
+   Route::middleware(['auth'])->group(function () {
+    Route::middleware(['role:Admin,Manager'])->group(function () {
+        Route::get('/billing/center-prices', [BillingController::class, 'index'])->name('admin.billing.center_prices');
+        Route::get('/billing/get-center-prices', [BillingController::class, 'getCenterPrices'])->name('admin.billing.get_center_prices');
+        Route::post('/billing/update-center-prices', [BillingController::class, 'updateCenterPrices'])->name('admin.billing.update_center_prices');
+    });
+});
 });

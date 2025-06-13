@@ -128,6 +128,19 @@ Quick Line is a Laravel-based web application for managing medical case studies,
 - user_id (FK)
 - column_name, old_value, new_value (nullable)
 
+### study_price_group
+- id (PK)
+- name (unique)
+- default_price (decimal)
+- timestamps
+
+### study_center_prices
+- id (PK)
+- center_id (FK to laboratories)
+- study_type_id (FK to study_types)
+- price (decimal)
+- timestamps
+
 ## Usage Instructions
 
 - Access the application at `/admin`.
