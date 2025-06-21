@@ -22,10 +22,12 @@
                 @endforeach
             </td>
         </tr>
+        @if(in_array($roleId, [1, 5, 6]))
         <tr>
             <td>Centre Name</td>
             <td>{{ $caseStudy->laboratory->lab_name }}</td>
         </tr>
+        @endif
     </tbody>
 </table>
 @if(in_array($roleId, [1, 3, 5, 6]) && $caseStudy->study_status_id < 3)

@@ -28,6 +28,12 @@
                                 @endforeach
                             </select>
                         </div>
+                        <div style="flex:1; margin-left: 15px;">
+                            <label for="modality_select">Modality</label>
+                            <select id="modality_select" class="form-control">
+                                <option value="">-- Select Modality --</option>
+                            </select>
+                        </div>
                         <button id="save-center-prices" class="btn btn-success ml-3 mb-1" style="height:38px;display:none;">Save</button>
                     </div>
                 </div>
@@ -44,14 +50,15 @@
 <script>
 $(document).ready(function() {
     $('#save-center-prices').hide();
-    $('#center_select').on('change', function() {
-        var centerId = $(this).val();
-        if (!centerId) {
+    $('#modality_select').on('change', function() {
+        var centerId = $('#center_select').val();
+        var modalityId = $('#modality_select').val();
+        if (!centerId || !modalityId) {
             $('#grouped-dropzones').html('');
             $('#save-center-prices').hide();
             return;
         }
-        $.getJSON("{{ route('admin.billing.get_center_prices') }}", { center_id: centerId }, function(data) {
+        $.getJSON("{{ route('admin.billing.get_center_prices') }}", { center_id: centerId, modality_id: modalityId }, function(data) {
             // Group study types by price_group
             var groups = {};
             data.forEach(function(row) {
@@ -83,13 +90,13 @@ $(document).ready(function() {
             Object.keys(groups).forEach(function(groupId) {
                 var group = groups[groupId];
                 html += '<div class="col-md-3">';
-                html += '<div class="card mb-3">';
+                html += '<div class="card mb-3" style="min-height:340px;max-height:420px;overflow:hidden;">';
                 html += '<div class="card-header bg-secondary text-white">';
                 html += '<div class="d-flex justify-content-between align-items-center">';
                 html += '<span>' + group.group_name + '</span>';
                 html += '<input type="number" step="0.01" min="0" class="form-control form-control-sm w-50 group-price-input" data-group-id="' + groupId + '" value="' + group.default_price + '" style="max-width:120px;">';
                 html += '</div></div>';
-                html += '<div class="card-body">';
+                html += '<div class="card-body p-2" style="overflow-y:auto;max-height:260px;">';
                 html += '<ul class="list-group dropzone" data-group-id="' + groupId + '" style="min-height:100px;">';
                 group.study_types.forEach(function(st) {
                     html += '<li class="list-group-item draggable" data-study-type-id="' + st.study_type_id + '">' + st.study_type_name + ' <span class="badge badge-info float-right">' + st.price + '</span></li>';
@@ -110,6 +117,7 @@ $(document).ready(function() {
             // Save button click handler
             $('#save-center-prices').off('click').on('click', function() {
                 var centerId = $('#center_select').val();
+                var modalityId = $('#modality_select').val();
                 var prices = [];
                 $('.dropzone').each(function() {
                     var groupId = $(this).data('group-id');
@@ -127,6 +135,7 @@ $(document).ready(function() {
                     type: 'POST',
                     data: {
                         center_id: centerId,
+                        modality_id: modalityId,
                         prices: prices,
                         _token: '{{ csrf_token() }}'
                     },
@@ -137,6 +146,25 @@ $(document).ready(function() {
                     }
                 });
             });
+        });
+    });
+
+    $('#center_select').on('change', function() {
+        var centerId = $(this).val();
+        // Always reset grouped-dropzones and hide save button, regardless of modality_select value
+        $('#grouped-dropzones').html('');
+        $('#save-center-prices').hide();
+        $('#modality_select').html('<option value="">-- Select Modality --</option>');
+        if (!centerId) {
+            return;
+        }
+        // Fetch modalities for the selected center
+        $.getJSON("{{ route('admin.billing.getLabModalities') }}", { center_id: centerId }, function(data) {
+            if (data.length > 0) {
+                data.forEach(function(modality) {
+                    $('#modality_select').append('<option value="' + modality.id + '">' + modality.name + '</option>');
+                });
+            }
         });
     });
 });

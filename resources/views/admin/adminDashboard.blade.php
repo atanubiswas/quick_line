@@ -85,7 +85,7 @@
       <!-- Date Picker Block -->
       <div class="row mt-4">
         <div class="col-12">
-          <div class="card card-secondary">
+          <div class="card card-purple">
             <div class="card-header">
               <h3 class="card-title">Filter by Date Range</h3>
             </div>
@@ -131,11 +131,15 @@
                   </tbody>
                 </table>
               </div>
+              <!-- Line Chart for Assigner Daily Counts -->
+              <div class="mt-4">
+                <!-- <canvas id="assigner_line_chart" height="100"></canvas> -->
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <!-- /.Assigner Table -->
+      <!-- /.Assigner Table & Chart -->
       <!-- Quality Controller Case Assignment Table -->
       <div class="row mt-4">
         <div class="col-12">
@@ -162,11 +166,15 @@
                   </tbody>
                 </table>
               </div>
+              <!-- Line Chart for QC Daily Counts -->
+              <div class="mt-4">
+                <!-- <canvas id="qc_line_chart" height="100"></canvas> -->
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <!-- /.Quality Controller Table -->
+      <!-- /.Quality Controller Table & Chart -->
       <!-- Doctor Case Assignment Table -->
       <div class="row mt-4">
         <div class="col-12">
@@ -193,11 +201,15 @@
                   </tbody>
                 </table>
               </div>
+              <!-- Line Chart for Doctor Daily Counts -->
+              <div class="mt-4">
+                <!-- <canvas id="doctor_line_chart" height="100"></canvas> -->
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <!-- /.Doctor Table -->
+      <!-- /.Doctor Table & Chart -->
     </div><!--/. container-fluid -->
   </section>
   <!-- /.content -->
@@ -205,6 +217,7 @@
 @endsection
 @section('extra_js')
 @parent
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 $(document).ready(function() {
     function fetchAssignerCounts() {
@@ -255,10 +268,182 @@ $(document).ready(function() {
             }
         });
     }
+    var assignerLineChart = null;
+    var qcLineChart = null;
+    var doctorLineChart = null;
+    function fetchAssignerLineChart() {
+        var startDate = $('#start_date').val();
+        var endDate = $('#end_date').val();
+        $.ajax({
+            url: '{{ route('admin.assignerDailyCounts') }}',
+            type: 'GET',
+            data: { start_date: startDate, end_date: endDate },
+            success: function(resp) {
+                var ctx = document.getElementById('assigner_line_chart').getContext('2d');
+                var labels = resp.dates.map(function(dateStr) {
+                    var d = new Date(dateStr);
+                    var yy = String(d.getFullYear()).slice(-2);
+                    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    var month = months[d.getMonth()];
+                    var dd = ('0' + d.getDate()).slice(-2);
+                    var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    var day = days[d.getDay()];
+                    return dd + '-' + month + ' (' + day + ')';
+                });
+                var datasets = resp.series.map(function(assigner, idx) {
+                    var color = getColor(idx);
+                    return {
+                        label: assigner.name,
+                        data: assigner.data,
+                        borderColor: color,
+                        backgroundColor: color + '33',
+                        fill: false,
+                        tension: 0.2
+                    };
+                });
+                if(assignerLineChart) assignerLineChart.destroy();
+                assignerLineChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: 'Assigner Daily Assignment Count' }
+                        },
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            y: { beginAtZero: true, precision: 0 }
+                        }
+                    }
+                });
+            }
+        });
+    }
+    function fetchQCLineChart() {
+        var startDate = $('#start_date').val();
+        var endDate = $('#end_date').val();
+        $.ajax({
+            url: '{{ route('admin.qcDailyCounts') }}',
+            type: 'GET',
+            data: { start_date: startDate, end_date: endDate },
+            success: function(resp) {
+                var ctx = document.getElementById('qc_line_chart').getContext('2d');
+                var labels = resp.dates.map(function(dateStr) {
+                    var d = new Date(dateStr);
+                    var yy = String(d.getFullYear()).slice(-2);
+                    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    var month = months[d.getMonth()];
+                    var dd = ('0' + d.getDate()).slice(-2);
+                    var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    var day = days[d.getDay()];
+                    return dd + '-' + month + ' (' + day + ')';
+                });
+                var datasets = resp.series.map(function(qc, idx) {
+                    var color = getColor(idx);
+                    return {
+                        label: qc.name,
+                        data: qc.data,
+                        borderColor: color,
+                        backgroundColor: color + '33',
+                        fill: false,
+                        tension: 0.2
+                    };
+                });
+                if(qcLineChart) qcLineChart.destroy();
+                qcLineChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: 'QC Daily Assignment Count' }
+                        },
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            y: { beginAtZero: true, precision: 0 }
+                        }
+                    }
+                });
+            }
+        });
+    }
+    function fetchDoctorLineChart() {
+        var startDate = $('#start_date').val();
+        var endDate = $('#end_date').val();
+        $.ajax({
+            url: '{{ route('admin.doctorDailyCounts') }}',
+            type: 'GET',
+            data: { start_date: startDate, end_date: endDate },
+            success: function(resp) {
+                var ctx = document.getElementById('doctor_line_chart').getContext('2d');
+                var labels = resp.dates.map(function(dateStr) {
+                    var d = new Date(dateStr);
+                    var yy = String(d.getFullYear()).slice(-2);
+                    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    var month = months[d.getMonth()];
+                    var dd = ('0' + d.getDate()).slice(-2);
+                    var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    var day = days[d.getDay()];
+                    return dd + '-' + month + ' (' + day + ')';
+                });
+                var datasets = resp.series.map(function(doctor, idx) {
+                    var color = getColor(idx);
+                    return {
+                        label: doctor.name,
+                        data: doctor.data,
+                        borderColor: color,
+                        backgroundColor: color + '33',
+                        fill: false,
+                        tension: 0.2
+                    };
+                });
+                if(doctorLineChart) doctorLineChart.destroy();
+                doctorLineChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: 'Doctor Daily Assignment Count' }
+                        },
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            y: { beginAtZero: true, precision: 0 }
+                        }
+                    }
+                });
+            }
+        });
+    }
+    // Helper to get color for each line
+    function getColor(idx) {
+        var colors = [
+            '#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997', '#e83e8c', '#343a40'
+        ];
+        return colors[idx % colors.length];
+    }
     function fetchAllCounters() {
         fetchAssignerCounts();
         fetchQCCounters();
         fetchDoctorCounters();
+        fetchAssignerLineChart();
+        fetchQCLineChart();
+        fetchDoctorLineChart();
     }
     $('#start_date, #end_date').on('change', fetchAllCounters);
     // Ensure future dates are disabled and end date is not before start date

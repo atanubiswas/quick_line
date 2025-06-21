@@ -95,6 +95,19 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="study_price_group">Study Price Group <em>*</em></label>
+                                        <select class="form-control select2" name="study_price_group" id="study_price_group" required>
+                                            <option value="">Select Price Group</option>
+                                            @foreach(\App\Models\StudyPriceGroup::all() as $group)
+                                                <option value="{{$group->id}}">{{$group->name}}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                         </form>
                     </div>
                     <div class="modal-footer justify-content-between">

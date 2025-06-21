@@ -2217,27 +2217,32 @@
         });
 
         $('#case_study_attachment').on('hidden.bs.modal', function () {
-            $startDate = $('#start_date').val();
-            $endDate = $('#end_date').val();
-            $doctor_id = $('#doctor_search').val();
-            $centre_id = $('#centre').val();
-            $qc_id = $('#qc_search').val();
-            $status = $('#status_search').val();
-
-            const params = {
-                sdt: $startDate,
-                edt: $endDate,
-                did: $doctor_id,
-                cid: $centre_id,
-                qid: $qc_id,
-                st: $status,
-            };
-            const url = new URL(window.location.href);
-            Object.entries(params).forEach(([key, value]) => {
-                url.searchParams.set(key, value);
-            });
-            url.searchParams.set('_', Date.now());
-            window.location.href = url.toString();
+            @if(in_array($roleId, [1, 5, 6]))
+                $startDate = $('#start_date').val();
+                $endDate = $('#end_date').val();
+                $doctor_id = $('#doctor_search').val();
+                $centre_id = $('#centre').val();
+                $qc_id = $('#qc_search').val();
+                $status = $('#status_search').val();
+                
+                const params = {
+                    sdt: $startDate,
+                    edt: $endDate,
+                    did: $doctor_id,
+                    cid: $centre_id,
+                    qid: $qc_id,
+                    st: $status,
+                };
+                const url = new URL(window.location.href);
+                Object.entries(params).forEach(([key, value]) => {
+                    url.searchParams.set(key, value);
+                });
+                url.searchParams.set('_', Date.now());
+                window.location.href = url.toString();
+            @else
+                // For other roles, just reload the page
+                location.reload();
+            @endif
         });
 
         $(document).on('click', '.upload-attachment-btn', function() {

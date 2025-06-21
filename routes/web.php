@@ -77,6 +77,9 @@ Route::group(['prefix' => 'admin'], function () {
     Route::get('/assigner-counts', [DashboardController::class, 'assignerCounts'])->name('admin.assignerCounts');
     Route::get('/qc-counts', [DashboardController::class, 'qcCounts'])->name('admin.qcCounts');
     Route::get('/doctor-counts', [DashboardController::class, 'doctorCounts'])->name('admin.doctorCounts');
+    Route::get('/assigner-daily-counts', [DashboardController::class, 'assignerDailyCounts'])->name('admin.assignerDailyCounts');
+    Route::get('/qc-daily-counts', [DashboardController::class, 'qcDailyCounts'])->name('admin.qcDailyCounts');
+    Route::get('/doctor-daily-counts', [DashboardController::class, 'doctorDailyCounts'])->name('admin.doctorDailyCounts');
    /*================= USER CONTROLLER ===================*/
     Route::middleware(['role:Admin,Manager', '2fa'])->group(function(){
         Route::get('/add-user', [UserController::class, 'addUser'])->name('admin.addUser');
@@ -249,6 +252,9 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('/billing/center-prices', [BillingController::class, 'index'])->name('admin.billing.center_prices');
         Route::get('/billing/get-center-prices', [BillingController::class, 'getCenterPrices'])->name('admin.billing.get_center_prices');
         Route::post('/billing/update-center-prices', [BillingController::class, 'updateCenterPrices'])->name('admin.billing.update_center_prices');
+        Route::get('/billing/generate-bill', [BillingController::class, 'generateBill'])->name('admin.billing.generate_bill');
+        Route::get('/billing/generate-bill-data', [BillingController::class, 'generateBillData'])->name('admin.billing.generate_bill_data');
+        Route::get('/lab-modalities', [BillingController::class, 'getLabModalities'])->name('admin.billing.getLabModalities');
     });
 });
 });

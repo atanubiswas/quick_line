@@ -188,4 +188,98 @@ class DashboardController extends Controller
         });
         return response()->json($doctors);
     }
+
+    // AJAX endpoint for assigner daily counts by date range (for line chart)
+    public function assignerDailyCounts(Request $request) {
+        $start = $request->input('start_date', Carbon::now()->toDateString());
+        $end = $request->input('end_date', Carbon::now()->toDateString());
+        $assigners = User::whereHas('roles', function($q){
+            $q->where('name', 'Assigner');
+        })->orderBy('name', 'asc')->get();
+
+        $dates = collect();
+        $period = Carbon::parse($start)->daysUntil(Carbon::parse($end)->addDay());
+        foreach ($period as $date) {
+            $dates->push($date->toDateString());
+        }
+
+        $result = [];
+        foreach ($assigners as $assigner) {
+            $counts = [];
+            foreach ($dates as $date) {
+                $count = $assigner->assignedCaseStudies()->whereDate('created_at', $date)->count();
+                $counts[] = $count;
+            }
+            $result[] = [
+                'name' => $assigner->name,
+                'data' => $counts
+            ];
+        }
+        return response()->json([
+            'dates' => $dates,
+            'series' => $result
+        ]);
+    }
+    // AJAX endpoint for QC daily counts by date range (for line chart)
+    public function qcDailyCounts(Request $request) {
+        $start = $request->input('start_date', Carbon::now()->toDateString());
+        $end = $request->input('end_date', Carbon::now()->toDateString());
+        $qcs = User::whereHas('roles', function($q){
+            $q->where('name', 'Quality Controller');
+        })->orderBy('name', 'asc')->get();
+
+        $dates = collect();
+        $period = Carbon::parse($start)->daysUntil(Carbon::parse($end)->addDay());
+        foreach ($period as $date) {
+            $dates->push($date->toDateString());
+        }
+
+        $result = [];
+        foreach ($qcs as $qc) {
+            $counts = [];
+            foreach ($dates as $date) {
+                $count = $qc->qcCaseStudies()->whereDate('created_at', $date)->count();
+                $counts[] = $count;
+            }
+            $result[] = [
+                'name' => $qc->name,
+                'data' => $counts
+            ];
+        }
+        return response()->json([
+            'dates' => $dates,
+            'series' => $result
+        ]);
+    }
+    // AJAX endpoint for Doctor daily counts by date range (for line chart)
+    public function doctorDailyCounts(Request $request) {
+        $start = $request->input('start_date', Carbon::now()->toDateString());
+        $end = $request->input('end_date', Carbon::now()->toDateString());
+        $doctors = User::whereHas('roles', function($q){
+            $q->where('name', 'Doctor');
+        })->orderBy('name', 'asc')->get();
+
+        $dates = collect();
+        $period = Carbon::parse($start)->daysUntil(Carbon::parse($end)->addDay());
+        foreach ($period as $date) {
+            $dates->push($date->toDateString());
+        }
+
+        $result = [];
+        foreach ($doctors as $doctor) {
+            $counts = [];
+            foreach ($dates as $date) {
+                $count = $doctor->doctorCaseStudies()->whereDate('case_studies.created_at', $date)->count();
+                $counts[] = $count;
+            }
+            $result[] = [
+                'name' => $doctor->name,
+                'data' => $counts
+            ];
+        }
+        return response()->json([
+            'dates' => $dates,
+            'series' => $result
+        ]);
+    }
 }

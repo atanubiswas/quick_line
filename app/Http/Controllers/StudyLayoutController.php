@@ -150,6 +150,7 @@ class StudyLayoutController extends Controller
         $validator = Validator::make($request->all(), [
             "study_name" => "required",
             "modality_id" => "required|exists:modalities,id",
+            "study_price_group" => "required|exists:study_price_group,id",
         ]);
         if (!$validator->passes()) {
             return response()->json(['error'=>$validator->errors()]);
@@ -158,6 +159,7 @@ class StudyLayoutController extends Controller
             $studyType = new studyType();
             $studyType->name  = $request->study_name;
             $studyType->modality_id = $request->modality_id;
+            $studyType->price_group_id = $request->study_price_group;
             $studyType->save();
         }catch(\Exception $ex) {
             return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
