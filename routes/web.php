@@ -255,6 +255,12 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('/billing/generate-bill', [BillingController::class, 'generateBill'])->name('admin.billing.generate_bill');
         Route::get('/billing/generate-bill-data', [BillingController::class, 'generateBillData'])->name('admin.billing.generate_bill_data');
         Route::get('/lab-modalities', [BillingController::class, 'getLabModalities'])->name('admin.billing.getLabModalities');
+        Route::post('/billing/save-bill', [BillingController::class, 'saveBill'])->name('admin.billing.save_bill');
+        Route::get('/billing/saved-bills', [BillingController::class, 'savedBills'])->name('admin.billing.saved_bills');
+        Route::post('/billing/mark-paid', [BillingController::class, 'markPaid'])->name('admin.billing.mark_paid');
+        Route::get('/billing/get-bill-data', [BillingController::class, 'getBillData'])->name('admin.billing.get_bill_data');
+        Route::post('/billing/delete-bill', [BillingController::class, 'deleteBill'])->name('admin.billing.delete_bill');
+        Route::get('/admin/billing/export-pdf', [BillingController::class, 'exportPdf'])->name('admin.billing.export_pdf');
     });
 });
 });

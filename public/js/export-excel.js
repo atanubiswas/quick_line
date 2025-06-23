@@ -21,8 +21,12 @@ function exportTableToExcel(tableID, filename = '') {
     var centreSelect = document.getElementById('centre_select');
     var centreName = '';
     if (centreSelect) {
-        var selectedOption = centreSelect.options[centreSelect.selectedIndex];
-        centreName = selectedOption ? selectedOption.text.trim() : '';
+        if (centreSelect.tagName === 'SELECT') {
+            var selectedOption = centreSelect.options[centreSelect.selectedIndex];
+            centreName = selectedOption ? selectedOption.text.trim() : '';
+        } else {
+            centreName = centreSelect.value ? centreSelect.value.trim() : '';
+        }
     }
     var startDate = '';
     var endDate = '';
@@ -53,13 +57,25 @@ function exportTableToExcel(tableID, filename = '') {
     // Info rows before table
     var infoHTML = '';
     if (centreName) {
-        infoHTML += '<tr><td colspan="9"><b>Centre Name:</b> ' + centreName + '</td></tr>';
+        infoHTML += '<tr><td colspan="9" style="background:#e6f2ff;font-size:14px;font-weight:bold;color:#1a237e;">Centre Name: ' + centreName + '</td></tr>';
     }
     var formattedStart = formatDateWithSuffix(startDate);
     var formattedEnd = formatDateWithSuffix(endDate);
     if (startDate || endDate) {
-        infoHTML += '<tr><td colspan="9"><b>Date Between:</b> ' + (formattedStart ? formattedStart : '') + (formattedEnd ? ' to ' + formattedEnd : '') + '</td></tr>';
+        infoHTML += '<tr><td colspan="9" style="background:#e6f2ff;font-size:14px;font-weight:bold;color:#1a237e;">Date Between: ' + (formattedStart ? formattedStart : '') + (formattedEnd ? ' to ' + formattedEnd : '') + '</td></tr>';
     }
+    // Add Total Study and Total Amount rows
+    var totalStudy = 0;
+    var totalAmount = 0;
+    var rows = tableClone.querySelectorAll('tbody tr');
+    rows.forEach(function(row) {
+        var cells = row.querySelectorAll('td');
+        if (cells.length === 9) {
+            var amount = parseFloat(cells[8].textContent.trim());
+            if (!isNaN(amount)) totalAmount += amount;
+            totalStudy++;
+        }
+    });
     var infoTable = infoHTML ? '<table>' + infoHTML + '</table><br>' : '';
 
     // Add border style for table and cells

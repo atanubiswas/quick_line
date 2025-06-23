@@ -94,7 +94,10 @@ $(document).ready(function() {
                 html += '<div class="card-header bg-secondary text-white">';
                 html += '<div class="d-flex justify-content-between align-items-center">';
                 html += '<span>' + group.group_name + '</span>';
-                html += '<input type="number" step="0.01" min="0" class="form-control form-control-sm w-50 group-price-input" data-group-id="' + groupId + '" value="' + group.default_price + '" style="max-width:120px;">';
+                html += '<div class="d-flex align-items-center" style="gap:5px;">';
+                html += '<input type="number" step="0.01" min="0" class="form-control form-control-sm w-50 group-price-input" data-group-id="' + groupId + '" value="' + group.default_price + '" style="max-width:90px;">';
+                html += '<input type="text" class="form-control form-control-sm group-search-input" placeholder="Search..." data-group-id="' + groupId + '" style="max-width:90px;">';
+                html += '</div>';
                 html += '</div></div>';
                 html += '<div class="card-body p-2" style="overflow-y:auto;max-height:260px;">';
                 html += '<ul class="list-group dropzone" data-group-id="' + groupId + '" style="min-height:100px;">';
@@ -113,6 +116,17 @@ $(document).ready(function() {
                 items: '> .draggable',
                 forcePlaceholderSize: true
             }).disableSelection();
+
+            // Search box filter logic
+            $('.group-search-input').on('input', function() {
+                var groupId = $(this).data('group-id');
+                var search = $(this).val().toLowerCase();
+                var $dropzone = $('.dropzone[data-group-id="' + groupId + '"]');
+                $dropzone.find('.draggable').each(function() {
+                    var text = $(this).text().toLowerCase();
+                    $(this).toggle(text.indexOf(search) !== -1);
+                });
+            });
 
             // Save button click handler
             $('#save-center-prices').off('click').on('click', function() {
