@@ -123,6 +123,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"></script>
 <!-- Summernote -->
 <script src="{{asset('plugins/summernote/summernote-bs4.min.js')}}"></script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function () {
     $(document).on("change", ".modality", function(){
@@ -201,6 +203,44 @@ $(function () {
             },
             error: function (data){
                 thisButton.html('<i class="fas fa-edit"></i> Edit');
+            }
+        });
+    });
+
+    $(document).on("click", ".delete-layout-btn", function() {
+        var btn = $(this);
+        var id = btn.data('id');
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You are about to delete this Study Layout.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                btn.prop('disabled', true).html('Deleting...');
+                $.ajax({
+                    url: '{{ route("admin.deleteStudyLayout") }}',
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        id: id
+                    },
+                    success: function(res) {
+                        if(res.success) {
+                            btn.closest('tr').fadeOut();
+                            Swal.fire('Deleted!', 'Study Layout has been deleted.', 'success');
+                        } else {
+                            Swal.fire('Error', 'Delete failed!', 'error');
+                            btn.prop('disabled', false).html('<i class="fas fa-trash"></i> Delete');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'Delete failed!', 'error');
+                        btn.prop('disabled', false).html('<i class="fas fa-trash"></i> Delete');
+                    }
+                });
             }
         });
     });

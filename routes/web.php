@@ -9,6 +9,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\TimeLineController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\CollectorController;
@@ -19,7 +20,6 @@ use App\Http\Controllers\StudyLayoutController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\LoginSecurityController;
 use App\Http\Controllers\PathologyTestController;
-use App\Http\Controllers\BillingController;
 
 
 /*
@@ -178,6 +178,7 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('/get-study-layout-table', [StudyLayoutController::class,'getStudyLayoutTable']);
         Route::post('/get-edit-study-layout-data', [StudyLayoutController::class,'getEditStudyLayoutData'])->name('admin.getEditStudyLayoutData');
         Route::post('/update-study-layout', [StudyLayoutController::class,'updateStudyLayout'])->name('admin.updateStudyLayout');
+        Route::post('/admin/delete-study-layout', [StudyLayoutController::class, 'deleteStudyLayout'])->name('admin.deleteStudyLayout');
 
         Route::get('/view-studies', [StudyLayoutController::class,'viewStudies'])->name('admin.viewStudies');
         Route::post('/get-study-details', [StudyLayoutController::class,'getStudyDetails']);

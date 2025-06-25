@@ -80,6 +80,7 @@ class CaseStudyController extends Controller
                         $query->where("is_emergency", 1);
                     }
                 })
+                ->orderBy('id', 'asc')
                 ->get();
         }
         elseif(in_array(auth()->user()->roles[0]->id, [4])){

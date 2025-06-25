@@ -1209,7 +1209,7 @@
                             "autoWidth": false,
                             "responsive": true,
                             "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]],
-                            "order": [[2, 'desc']],
+                            "order": [[0, 'asc']],
                             rowId: function(data) {
                                 return 'row-' + data.id; // Ensuring a unique ID for each row
                             }
@@ -1710,7 +1710,7 @@
             "autoWidth": false,
             "responsive": true,
             "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]],
-            "order": [[2, 'desc']],
+            "order": [[0, 'asc']],
             rowId: function(data) {
                 return 'row-' + data.id; // Ensuring a unique ID for each row
             }

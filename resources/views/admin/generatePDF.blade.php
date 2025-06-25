@@ -53,10 +53,7 @@
               <strong> &nbsp;&nbsp;End Of Report&nbsp;&nbsp; </strong>
               @php echo str_repeat('-', 20); @endphp
       </div>
-      <p style="font-size: 14px; margin-top: 20px;"><strong>Disclaimer</strong>: The science of radiology is based upon interpretation of shadows of normal and abnormal 
-      tissue. This is neither complete nor accurate; hence, findings should always be interpreted in to the light of 
-      clinico-pathological correlation. This is a professional opinion, not a diagnosis. Not meant for medico 
-      legal purposes.</p>
+      <p style="font-size: 14px; margin-top: 20px;"><strong>Disclaimer</strong>: It is an online interpretation of Medical Imaging based on clinical data. All modern machines/procedures have their own limitation. If there is any clinical discrepancy, this investigation may be repeated or reassessed by other tests. patient's identification in online reporting is not established, so in no way can this report be utilized for any Medico Legal Purpose.</p>
       @if(count($caseStudy['study'])>$count++)
         <div style="page-break-before: always;"></div>
       @endif

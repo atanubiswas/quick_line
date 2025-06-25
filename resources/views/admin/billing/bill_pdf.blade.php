@@ -27,13 +27,13 @@
                 <td style="width:33%; text-align:left; vertical-align:middle; border:none;">
                     <table style="margin: 0; font-size: 13px; border:none; width:100%;">
                         <tr>
-                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">Address:</span> 192.P.K.Guha Road, Kolkata 700028, West Bengal.</td>
+                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">Address:</span> 189/22.P.K.Guha Road, Kolkata 700028, West Bengal.</td>
                         </tr>
                         <tr>
-                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">Phone:</span> +91 93301 57724</td>
+                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">Phone:</span> +91 933 015 7724</td>
                         </tr>
                         <tr>
-                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">Mobile:</span> +91 933 015 7724</td>
+                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">Mobile:</span> +91 743 955 4275</td>
                         </tr>
                     </table>
                 </td>

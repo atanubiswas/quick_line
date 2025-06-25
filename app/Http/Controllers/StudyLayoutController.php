@@ -316,4 +316,21 @@ class StudyLayoutController extends Controller
         }
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
     }
+
+    /**
+     * Soft delete a Study Layout and set deleted_by
+     */
+    public function deleteStudyLayout(Request $request)
+    {
+        $id = $request->id;
+        $user = Auth::user();
+        $layout = modalityStudyLayout::find($id);
+        if (!$layout) {
+            return response()->json(['success' => false, 'message' => 'Not found']);
+        }
+        $layout->deleted_by = $user->id;
+        $layout->save();
+        $layout->delete();
+        return response()->json(['success' => true]);
+    }
 }

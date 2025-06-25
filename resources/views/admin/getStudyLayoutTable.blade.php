@@ -25,6 +25,7 @@
                 <td>{{ $doctor }}</td>
                 <td>
                     <button type="button" data-id="{{$studyLayout->id}}" class="btn study_layout_edit_btn btn-block bg-gradient-warning btn-xs"><i class="fas fa-edit"></i> Edit</button>
+                    <button type="button" data-id="{{$studyLayout->id}}" class="btn delete-layout-btn btn-block btn-danger btn-xs mt-1"><i class="fas fa-trash"></i> Delete</button>
                 </td>
             </tr>
         @endforeach
