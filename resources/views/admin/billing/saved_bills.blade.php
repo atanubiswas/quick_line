@@ -113,10 +113,10 @@
                                                             <td>{{ $row['patient_name'] }}</td>
                                                             <td>{{ $row['gender_age'] }}</td>
                                                             <td>{{ $row['modality'] }}</td>
-                                                            <td>{{ $row['study_type'] }}</td>
-                                                            <td>{{ $row['date'] }}</td>
-                                                            <td>{{ $row['reported_on'] }}</td>
-                                                            <td>{{ is_numeric($row['amount']) ? number_format($row['amount'], 2) : $row['amount'] }}</td>
+                                                            <td>{{ isset($row['study_type'])?$row['study_type']:"-" }}</td>
+                                                            <td>{{ isset($row['date'])?$row['date']:"-" }}</td>
+                                                            <td>{{ isset($row['reported_on'])?$row['reported_on']:"-" }}</td>
+                                                            <td>@if(isset($row['amount'])){{ is_numeric($row['amount']) ? number_format($row['amount'], 2) : $row['amount'] }}@else - @endif</td>
                                                         </tr>
                                                         @endforeach
                                                         <tr>
@@ -207,7 +207,7 @@ $(document).ready(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: '/admin/billing/mark-paid',
+                    url: '{{ route("admin.billing.mark_paid") }}',
                     method: 'POST',
                     data: {
                         bill_id: billId,
@@ -239,7 +239,7 @@ $(document).ready(function() {
         $('#billDataModalBody').html('<div class="text-center"><span class="spinner-border"></span> Loading...</div>');
         $('#billDataModal').modal('show');
         $.ajax({
-            url: '/admin/billing/get-bill-data',
+            url: '{{ route("admin.billing.get_bill_data") }}',
             method: 'GET',
             data: { bill_id: billId },
             success: function(res) {
@@ -268,7 +268,7 @@ $(document).ready(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: '/admin/billing/delete-bill',
+                    url: '{{ route("admin.billing.delete_bill") }}',
                     method: 'POST',
                     data: {
                         bill_id: billId,
@@ -293,11 +293,27 @@ $(document).ready(function() {
 
     // Download Excel for saved bills
     $('.download-excel-btn').on('click', function() {
-        var billId = $(this).data('bill-id');
+        var btn = $(this);
+        var originalText = btn.text();
+        btn.text('Downloading...').prop('disabled', true);
+        var billId = btn.data('bill-id');
         var centreName = $('#excel_centre_name_' + billId).val();
         var startDate = $('#excel_start_date_' + billId).val();
         var endDate = $('#excel_end_date_' + billId).val();
         exportSavedBillToExcel('bill_excel_table_' + billId, centreName, startDate, endDate);
+        setTimeout(function() {
+            btn.text(originalText).prop('disabled', false);
+        }, 2000); // fallback in case export is fast
+    });
+
+    // Download PDF for saved bills
+    $(document).on('submit', 'form[action$="export_pdf"]', function(e) {
+        var btn = $(this).find('button[type="submit"]');
+        var originalText = btn.text();
+        btn.text('Downloading...').prop('disabled', true);
+        setTimeout(function() {
+            btn.text(originalText).prop('disabled', false);
+        }, 4000); // fallback, as form submit will reload or download
     });
 });
 </script>

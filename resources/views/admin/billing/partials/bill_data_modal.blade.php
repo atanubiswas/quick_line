@@ -26,10 +26,10 @@
                     <td>{{ $row['patient_name'] }}</td>
                     <td>{{ $row['gender_age'] }}</td>
                     <td>{{ $row['modality'] }}</td>
-                    <td>{{ $row['study_type'] }}</td>
-                    <td>{{ $row['date'] }}</td>
-                    <td>{{ $row['reported_on'] }}</td>
-                    <td>{{ number_format($row['amount'], 2) }}</td>
+                    <td>{{ isset($row['study_type'])?$row['study_type']:"-" }}</td>
+                    <td>{{ isset($row['date'])?$row['date']:"-" }}</td>
+                    <td>{{ isset($row['reported_on'])?$row['reported_on']:"-" }}</td>
+                    <td>@if(isset($row['amount'])){{ is_numeric($row['amount']) ? number_format($row['amount'], 2) : $row['amount'] }}@else - @endif</td>
                 </tr>
                 @endforeach
             </tbody>

@@ -24,7 +24,20 @@
     <div class="header" style="margin-bottom: 20px;">
         <table style="width:100%; border:none;">
             <tr>
-                <td style="width:300px; vertical-align:top; border:none;">
+                <td style="width:33%; text-align:left; vertical-align:middle; border:none;">
+                    <table style="margin: 0; font-size: 13px; border:none; width:100%;">
+                        <tr>
+                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">Address:</span> 192.P.K.Guha Road, Kolkata 700028, West Bengal.</td>
+                        </tr>
+                        <tr>
+                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">Phone:</span> +91 93301 57724</td>
+                        </tr>
+                        <tr>
+                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">Mobile:</span> +91 933 015 7724</td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width:34%; text-align:center; vertical-align:middle; border:none;">
                     @php
                         $logoPath = public_path('images'.DIRECTORY_SEPARATOR.'logo_pdf.png');
                         $logoType = pathinfo($logoPath, PATHINFO_EXTENSION);
@@ -33,61 +46,56 @@
                     @endphp
                     <img src="{{ $logoSrc }}" class="logo" alt="Quick Line Logo">
                 </td>
-                <td style="text-align:right; vertical-align:top; border:none;">
-                    <table class="info-table" style="margin-bottom:0; border:none;">
+                <td style="width:33%; text-align:right; vertical-align:middle; border:none;">
+                    <table style="margin: 0 0 0 auto; font-size: 13px; border:none; width:100%;">
                         <tr>
-                            <td style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff;">Invoice Details</td>
+                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">Email:</span> info@quickline.co.in</td>
                         </tr>
                         <tr>
-                            <td style="border:none;">Total Amount: {{ number_format($totalAmount, 2) }}</td>
-                        <tr>
-                            <td style="border:none;">Invoice No.: {{ isset($invoice_number) ? $invoice_number : '-' }}</td>
+                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">Website:</span> https://quickline.in</td>
                         </tr>
                         <tr>
-                            <td style="border:none;">Invoice Date: {{ isset($invoice_date) ? \Carbon\Carbon::parse($invoice_date)->format('d-m-Y') : now()->format('d-m-Y') }}</td>
+                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">PAN No:</span> AAACQ8401C</td>
                         </tr>
                         <tr>
-                            <td style="border:none;">Period: {{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }} to {{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }}</td>
-                        </tr>
-                        <tr>
-                            <td style="border:none;">PAN: AAACQ8401C</td>
-                        </tr>
-                        <tr>
-                            <td style="border:none;">GST: 19AAACQ8401C1ZQ</td>
+                            <td style="border:none; font-weight:normal;"><span style="font-weight: bold;">GST No:</span> 19AAACQ8401C1ZQ</td>
                         </tr>
                     </table>
                 </td>
             </tr>
             <tr>
-                <td colspan="2" style="text-align:center; font-size: 18px; font-weight: bold; padding-top: 10px; border:none;">
+                <td colspan="3" style="text-align:center; font-size: 18px; padding-top: 10px; border:none;">
                     <div style="margin-top: 10px;">
                         <table style="font-size:12px; border:none;">
                             <tr>
-                                <td style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff;">Bill To</td>
+                                <td width="50%" style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff;">Bill To</td>
+                                <td width="50%"  style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff;">Invoice Details</td>
                             </tr>
                             <tr>
-                                <td style="border:none; font-weight:bold;">Centre Name: {{ $centre ? $centre->lab_name : '-' }}</td>
-                            </tr>
-                            <tr>
-                                <td style="border:none; font-weight:bold;">Email: {{ $centre && isset($centre->lab_login_email) ? $centre->lab_login_email : '-' }}</td>
-                            </tr>
-                            <tr>
-                                <td style="border:none; font-weight:bold;">Phone: {{ $centre && isset($centre->lab_phone_number) ? $centre->lab_phone_number : '-' }}</td>
-                            </tr>
-                            <tr>
-                                <td style="border:none; font-weight:bold; vertical-align:top;">Address: {{ $centre && isset($centre->lab_primary_location) ? $centre->lab_primary_location : '-' }}</td>
+                                <td style="border:none; text-align:left; vertical-align:top; padding-top:6px;">
+                                    <div><span style="font-weight:bold;">Centre Name:</span> {{ $centre ? $centre->lab_name : '-' }}</div>
+                                    <div><span style="font-weight:bold;">Email:</span> {{ $centre && isset($centre->lab_login_email) ? $centre->lab_login_email : '-' }}</div>
+                                    <div><span style="font-weight:bold;">Phone:</span> {{ $centre && isset($centre->lab_phone_number) ? $centre->lab_phone_number : '-' }}</div>
+                                    <div><span style="font-weight:bold;">Address:</span> {{ $centre && isset($centre->lab_primary_location) ? $centre->lab_primary_location : '-' }}</div>
+                                </td>
+                                <td style="border:none; text-align:left; vertical-align:top; padding-top:6px;">
+                                    <div><span style="font-weight:bold;">Total Amount:</span> &#8377; {{ number_format($totalAmount, 2) }}</div>
+                                    <div><span style="font-weight:bold;">Invoice No:</span> {{ isset($invoice_number) ? $invoice_number : '-' }}</div>
+                                    <div><span style="font-weight:bold;">Invoice Date:</span> {{ isset($invoice_date) ? \Carbon\Carbon::parse($invoice_date)->format('d-m-Y') : now()->format('d-m-Y') }}</div>
+                                    <div><span style="font-weight:bold;">Period:</span> {{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }} to {{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }}</div>
+                                </td>
                             </tr>
                         </table>
                     </div>
                 </td>
             </tr>
             <tr>
-                <td colspan="2" style="text-align:center; font-size: 18px; font-weight: bold; padding-top: 10px; border:none;">
+                <td colspan="3" style="text-align:center; font-size: 18px; padding-top: 10px; border:none;">
                     <div style="margin-top: 10px;">
                         <table style="font-size:12px; border:none; width:100%;">
                             <tr>
-                                <td style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff; width:50%;">Bank Details</td>
-                                <td style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff; width:50%;">UPI Details</td>
+                                <td width="50%" style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff; width:50%;">Bank Details</td>
+                                <td width="50%" style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff; width:50%;">UPI Details</td>
                             </tr>
                             <tr>
                                 <td style="border:none; text-align:left; vertical-align:top; padding-top:6px;">
@@ -163,5 +171,8 @@
             </tr>
         </tbody>
     </table>
+    <footer style="width:100%; text-align:center; margin-top:40px; font-size:14px; color:#4469BB; font-weight:bold;">
+        Thanks for your contribution.
+    </footer>
 </body>
 </html>
