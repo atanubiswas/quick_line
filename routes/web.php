@@ -20,6 +20,7 @@ use App\Http\Controllers\StudyLayoutController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\LoginSecurityController;
 use App\Http\Controllers\PathologyTestController;
+use App\Http\Controllers\DatabaseDownloadController;
 
 
 /*
@@ -248,20 +249,33 @@ Route::group(['prefix' => 'admin'], function () {
    });
 
    /*================= BILLING CONTROLLER ==================*/
-   Route::middleware(['auth'])->group(function () {
-    Route::middleware(['role:Admin,Manager'])->group(function () {
-        Route::get('/billing/center-prices', [BillingController::class, 'index'])->name('admin.billing.center_prices');
-        Route::get('/billing/get-center-prices', [BillingController::class, 'getCenterPrices'])->name('admin.billing.get_center_prices');
-        Route::post('/billing/update-center-prices', [BillingController::class, 'updateCenterPrices'])->name('admin.billing.update_center_prices');
-        Route::get('/billing/generate-bill', [BillingController::class, 'generateBill'])->name('admin.billing.generate_bill');
-        Route::get('/billing/generate-bill-data', [BillingController::class, 'generateBillData'])->name('admin.billing.generate_bill_data');
-        Route::get('/lab-modalities', [BillingController::class, 'getLabModalities'])->name('admin.billing.getLabModalities');
-        Route::post('/billing/save-bill', [BillingController::class, 'saveBill'])->name('admin.billing.save_bill');
-        Route::get('/billing/saved-bills', [BillingController::class, 'savedBills'])->name('admin.billing.saved_bills');
-        Route::post('/billing/mark-paid', [BillingController::class, 'markPaid'])->name('admin.billing.mark_paid');
-        Route::get('/billing/get-bill-data', [BillingController::class, 'getBillData'])->name('admin.billing.get_bill_data');
-        Route::post('/billing/delete-bill', [BillingController::class, 'deleteBill'])->name('admin.billing.delete_bill');
-        Route::get('/admin/billing/export-pdf', [BillingController::class, 'exportPdf'])->name('admin.billing.export_pdf');
+    Route::middleware(['auth'])->group(function () {
+        Route::middleware(['role:Admin,Manager'])->group(function () {
+            Route::get('/billing/center-prices', [BillingController::class, 'index'])->name('admin.billing.center_prices');
+            Route::get('/billing/get-center-prices', [BillingController::class, 'getCenterPrices'])->name('admin.billing.get_center_prices');
+            Route::post('/billing/update-center-prices', [BillingController::class, 'updateCenterPrices'])->name('admin.billing.update_center_prices');
+            Route::get('/billing/generate-bill', [BillingController::class, 'generateBill'])->name('admin.billing.generate_bill');
+            Route::get('/billing/generate-bill-data', [BillingController::class, 'generateBillData'])->name('admin.billing.generate_bill_data');
+            Route::get('/lab-modalities', [BillingController::class, 'getLabModalities'])->name('admin.billing.getLabModalities');
+            Route::post('/billing/save-bill', [BillingController::class, 'saveBill'])->name('admin.billing.save_bill');
+            Route::get('/billing/saved-bills', [BillingController::class, 'savedBills'])->name('admin.billing.saved_bills');
+            Route::post('/billing/mark-paid', [BillingController::class, 'markPaid'])->name('admin.billing.mark_paid');
+            Route::get('/billing/get-bill-data', [BillingController::class, 'getBillData'])->name('admin.billing.get_bill_data');
+            Route::post('/billing/delete-bill', [BillingController::class, 'deleteBill'])->name('admin.billing.delete_bill');
+            Route::get('/admin/billing/export-pdf', [BillingController::class, 'exportPdf'])->name('admin.billing.export_pdf');
+
+            /* ============== DOCTOR BILLING ============= */
+            Route::get('/billing/doctor-prices', [BillingController::class, 'doctorPrices'])->name('admin.billing.doctor_prices');
+            Route::get('/billing/get-doctor-prices', [BillingController::class, 'getDoctorPrices'])->name('admin.billing.get_doctor_prices');
+            Route::post('/billing/update-doctor-prices', [BillingController::class, 'updateDoctorPrices'])->name('admin.billing.update_doctor_prices');
+            Route::get('/billing/doctor-generate-bill', [BillingController::class, 'generateDoctorBill'])->name('admin.billing.doctor_generate_bill');
+            Route::get('/billing/doctor-generate-bill-data', [BillingController::class, 'generateDoctorBillData'])->name('admin.billing.doctor_generate_bill_data');
+            Route::get('/billing/doctor-generate-bill-pdf', [BillingController::class, 'generateDoctorBillPdf'])->name('admin.billing.doctor_generate_bill_pdf');
+            Route::post('/billing/save-doctor-bill', [BillingController::class, 'saveDoctorBill'])->name('admin.billing.save_doctor_bill');
+            Route::get('/billing/saved-doctor-bills', [BillingController::class, 'savedDoctorBills'])->name('admin.billing.saved_doctor_bills');
+            Route::post('/billing/mark-doctor-bill-paid', [BillingController::class, 'markDoctorBillPaid'])->name('admin.billing.mark_doctor_bill_paid');
+            Route::post('/billing/delete-doctor-bill', [BillingController::class, 'deleteDoctorBill'])->name('admin.billing.delete_doctor_bill');
+        });
     });
-});
+    Route::get('/download-db', [DatabaseDownloadController::class, 'downloadAllTables']);
 });

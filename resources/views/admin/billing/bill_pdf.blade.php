@@ -79,7 +79,7 @@
                                     <div><span style="font-weight:bold;">Address:</span> {{ $centre && isset($centre->lab_primary_location) ? $centre->lab_primary_location : '-' }}</div>
                                 </td>
                                 <td style="border:none; text-align:left; vertical-align:top; padding-top:6px;">
-                                    <div><span style="font-weight:bold;">Total Amount:</span> &#8377; {{ number_format($totalAmount, 2) }}</div>
+                                    <div><span style="font-weight:bold;">Total Amount:</span> {{ number_format($totalAmount, 2) }}</div>
                                     <div><span style="font-weight:bold;">Invoice No:</span> {{ isset($invoice_number) ? $invoice_number : '-' }}</div>
                                     <div><span style="font-weight:bold;">Invoice Date:</span> {{ isset($invoice_date) ? \Carbon\Carbon::parse($invoice_date)->format('d-m-Y') : now()->format('d-m-Y') }}</div>
                                     <div><span style="font-weight:bold;">Period:</span> {{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }} to {{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }}</div>
