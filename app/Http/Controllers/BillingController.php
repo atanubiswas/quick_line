@@ -374,8 +374,8 @@ class BillingController extends Controller
             $result[] = [
                 'price_group_id' => $group->id,
                 'price_group_name' => $group->name,
-                'default_price' => $group->default_price,
-                'price' => isset($prices[$group->id]) ? $prices[$group->id]->price : $group->default_price,
+                'default_price' => $group->dr_default_price,
+                'price' => isset($prices[$group->id]) ? $prices[$group->id]->price : $group->dr_default_price,
             ];
         }
         return response()->json($result);
@@ -499,7 +499,7 @@ class BillingController extends Controller
             return back()->with('error', 'Some studies do not have a price set for this doctor. Please update prices in the doctor billing section.');
         }
         // Fetch bill number from doctor_bills table if exists
-        $doctorBill = \App\Models\DoctorBill::where('doctor_id', $doctorId)
+        $doctorBill = DoctorBill::where('doctor_id', $doctorId)
             ->where('start_date', $startDate)
             ->where('end_date', $endDate)
             ->first();
@@ -605,5 +605,61 @@ class BillingController extends Controller
             $number = 'QL_DR_' . strtoupper(uniqid());
         } while (DoctorBill::where('bill_number', $number)->exists());
         return $number;
+    }
+
+    // Show the quality controller price management page
+    public function qualityControllerPrices()
+    {
+        return view('admin.billing.quality_controller_prices');
+    }
+
+    // AJAX: Get list of Quality Controllers
+    public function getQualityControllersList()
+    {
+        $qcRoleId = \DB::table('roles')->where('name', 'Quality Controller')->value('id');
+        $qcIds = \DB::table('role_users')->where('role_id', $qcRoleId)->pluck('user_id');
+        $qcs = \DB::table('users')->whereIn('id', $qcIds)->select('id', 'name')->orderBy('name')->get();
+        return response()->json($qcs);
+    }
+
+    // AJAX: Get prices for a quality controller
+    public function getQualityControllerPrices(Request $request)
+    {
+        $userId = $request->input('user_id');
+        $groups = StudyPriceGroup::orderBy('name', 'asc')->get();
+        $prices = \DB::table('quality_controller_pricings')
+            ->where('user_id', $userId)
+            ->get()->keyBy('price_group_id');
+        $result = [];
+        foreach ($groups as $group) {
+            $result[] = [
+                'price_group_id' => $group->id,
+                'price_group_name' => $group->name,
+                'default_price' => $group->qc_default_price,
+                'price' => isset($prices[$group->id]) ? $prices[$group->id]->price : $group->qc_default_price,
+            ];
+        }
+        return response()->json($result);
+    }
+
+    // AJAX: Update prices for a quality controller
+    public function updateQualityControllerPrices(Request $request)
+    {
+        $userId = $request->input('user_id');
+        $prices = $request->input('prices', []);
+        foreach ($prices as $groupId => $price) {
+            \DB::table('quality_controller_pricings')->updateOrInsert(
+                [
+                    'user_id' => $userId,
+                    'price_group_id' => $groupId,
+                ],
+                [
+                    'price' => $price,
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+        }
+        return response()->json(['success' => true]);
     }
 }

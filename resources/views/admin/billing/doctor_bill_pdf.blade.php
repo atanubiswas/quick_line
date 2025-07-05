@@ -59,17 +59,22 @@
                     <h2 style="margin: 10px 0;">Doctor Bill</h2>
                 </td>
             </tr>
+        </table>
+        <table style="width:100%; border:none;">
             <tr>
-                <td style="width:33%; vertical-align:top; border:none;">
+                <td width="50%" style="border-top:none; border-right:1px solid #fff; border-bottom:none; boder-left:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff; width:50%;">Pay To</td>
+                <td width="50%" style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff; width:50%;">Bill Details</td>
+            </tr>
+            <tr>
+                <td style="vertical-align:top; border:none;">
                     <div><strong>Doctor Name:</strong> {{ $doctor ? $doctor->name : '-' }}</div>
                     <div><strong>Email:</strong> {{ $doctor && isset($doctor->email) ? $doctor->email : '-' }}</div>
                     <div><strong>Phone:</strong> {{ $doctor && isset($doctor->phone) ? $doctor->phone : '-' }}</div>
                 </td>
-                <td style="width:33%; border:none;">&nbsp;</td>
-                <td style="width:33%; vertical-align:top; border:none;">
+                <td style="wvertical-align:top; border:none;">
                     <div><strong>Bill Number:</strong> {{ isset($bill_number) ? $bill_number : '-' }}</div>
-                    <div><strong>Total Amount:</strong> &#8377; {{ number_format($totalAmount, 2) }}</div>
-                    <div><strong>Period:</strong> {{ $startDate }} to {{ $endDate }}</div>
+                    <div><strong>Total Amount:</strong> {{ number_format($totalAmount, 2) }}</div>
+                    <div><strong>Period:</strong> {{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }} to {{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }}</div>
                 </td>
             </tr>
         </table>

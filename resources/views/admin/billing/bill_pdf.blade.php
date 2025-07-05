@@ -68,7 +68,7 @@
                     <div style="margin-top: 10px;">
                         <table style="font-size:12px; border:none;">
                             <tr>
-                                <td width="50%" style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff;">Bill To</td>
+                                <td width="50%" style="border-top:none; border-right:1px solid #fff; border-bottom:none; boder-left:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff;">Bill To</td>
                                 <td width="50%"  style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff;">Invoice Details</td>
                             </tr>
                             <tr>
@@ -94,7 +94,7 @@
                     <div style="margin-top: 10px;">
                         <table style="font-size:12px; border:none; width:100%;">
                             <tr>
-                                <td width="50%" style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff; width:50%;">Bank Details</td>
+                                <td width="50%" style="border-top:none; border-right:1px solid #fff; border-bottom:none; boder-left:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff; width:50%;">Bank Details</td>
                                 <td width="50%" style="border:none; font-size: 14px; font-weight: bold; background-color: #4469BB; color: #ffffff; width:50%;">UPI Details</td>
                             </tr>
                             <tr>
