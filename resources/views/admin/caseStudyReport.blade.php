@@ -2,24 +2,24 @@
 <div class="print_block">
   @php $count = 1; @endphp
   @foreach($caseStudy->study as $study)
-    <table style="border-collapse: collapse; width: 100%;">
+    <table style="border-collapse: collapse; width: 100%; font-size: 16px;">
       <tr>
-        <th style="border: 1px solid black; padding: 4px;">Patient Name:</th>
-        <th style="border: 1px solid black; padding: 4px;">{{ ucwords($caseStudy->patient->name) }}</th>
-        <th style="border: 1px solid black; padding: 4px;">Age / Gender:</th>
-        <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->patient->age }} / {{ ucwords($caseStudy->patient->gender) }}</th>
+        <th style="border: 1px solid black; padding: 4px; font-size: 16px;">Patient Name:</th>
+        <th style="border: 1px solid black; padding: 4px; font-size: 16px;">{{ ucwords($caseStudy->patient->name) }}</th>
+        <th style="border: 1px solid black; padding: 4px; font-size: 16px;">Age / Gender:</th>
+        <th style="border: 1px solid black; padding: 4px; font-size: 16px;">{{ $caseStudy->patient->age }} / {{ ucwords($caseStudy->patient->gender) }}</th>
       </tr>
       <tr>
-        <th style="border: 1px solid black; padding: 4px;">Patient Id:</th>
-        <th style="border: 1px solid black; padding: 4px;">{{ $caseStudy->patient->patient_id }}</th>
-        <th style="border: 1px solid black; padding: 4px;">Date & Time:</th>
-        <th style="border: 1px solid black; padding: 4px;">{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('jS \o\f M Y, h:i A')}}</th>
+        <th style="border: 1px solid black; padding: 4px; font-size: 16px;">Patient Id:</th>
+        <th style="border: 1px solid black; padding: 4px; font-size: 16px;">{{ $caseStudy->patient->patient_id }}</th>
+        <th style="border: 1px solid black; padding: 4px; font-size: 16px;">Date & Time:</th>
+        <th style="border: 1px solid black; padding: 4px; font-size: 16px;">{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('jS \\o\\f M Y, h:i A')}}</th>
       </tr>
       <tr>
-        <th style="border: 1px solid black; padding: 4px;">Refd By:</th>
-        <th style="border: 1px solid black; padding: 4px;">{{ ucwords($caseStudy->ref_by) }}</th>
-        <th style="border: 1px solid black; padding: 4px;">Study:</th>
-        <th style="border: 1px solid black; padding: 4px;">{{ $study->type->name }}</th>
+        <th style="border: 1px solid black; padding: 4px; font-size: 16px;">Refd By:</th>
+        <th style="border: 1px solid black; padding: 4px; font-size: 16px;">{{ ucwords($caseStudy->ref_by) }}</th>
+        <th style="border: 1px solid black; padding: 4px; font-size: 16px;">Study:</th>
+        <th style="border: 1px solid black; padding: 4px; font-size: 16px;">{{ $study->type->name }}</th>
       </tr>
     </table>
 
