@@ -141,7 +141,9 @@
                                         @endif
                                         @if($caseStudy->study_status_id != '3')
                                             @foreach($study->type->layout as $layout)
-                                                <option value="{{ $layout->id }}">{{ $layout->name }}</option>
+                                                @if($layout->created_by == NULL or $layout->created_by == $authUser->id)
+                                                    <option value="{{ $layout->id }}">{{ $layout->name }}</option>
+                                                @endif
                                             @endforeach
                                         @endif
                                     </select>

@@ -367,8 +367,9 @@
                         <div class="card card-purple">
                             <div class="card-header">
                                 @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]))
-                                <div class="row">
-                                    <div class="col-md-2">
+                                <!-- Split dropdowns into two rows and add Modality dropdown -->
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
                                         @if($roleId != 3)
                                         <div class="input-group">
                                             <select id="doctor_search" name="doctor_search" class="form-control select2" style="width: 100%;">
@@ -380,7 +381,7 @@
                                         </div>
                                         @endif
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-3">
                                         @if($roleId != 3)
                                         <div class="input-group">
                                             <select id="qc_search" name="qc_search" class="form-control select2" style="width: 100%;">
@@ -392,7 +393,7 @@
                                         </div>
                                         @endif
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-3">
                                         @if($roleId != 3)
                                         <div class="input-group">
                                             <select id="centre" name="centre" class="form-control select2" style="width: 100%;">
@@ -404,7 +405,19 @@
                                         </div>
                                         @endif
                                     </div>
-                                    <div class="col-md-2">
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
+                                        <div class="input-group">
+                                            <select id="modality_search" name="modality_search" class="form-control select2" style="width: 100%;">
+                                                <option value="">All Modalities</option>
+                                                @foreach($modalities as $modality)
+                                                    <option value="{{$modality->id}}">{{$modality->name}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
                                         <div class="input-group">
                                             <select id="status_search" name="status_search" class="form-control select2" style="width: 100%;">
                                                 <option value="">All Status</option>
@@ -422,7 +435,7 @@
                                             <button style="margin-left: 10px;" type="button" id="search_btn" name="search_btn" class="btn bg-gradient-orange float-right btn-sm">Search</button>
                                         </div>
                                     </div>
-                                    <div class="col-md-1">
+                                    <div class="col-md-3 text-right">
                                         <button type="button" id="add_case_study_btn" class="btn bg-gradient-success float-right btn-sm" data-toggle="modal" data-target="#add-case-study-modal">Add {{$pageName}}</button>
                                     </div>
                                 </div>
@@ -1184,6 +1197,7 @@
                 let doctor_id = $('#doctor_search').val();
                 let qc_id = $('#qc_search').val();
                 let status = $('#status_search').val();
+                let modality_id = $('#modality_search').val(); // <-- Get selected modality
                 
                 $.ajax({
                     url: "{{ url('admin/get-case-study-search-result') }}",
@@ -1195,7 +1209,8 @@
                         "centre_id": centre_id,
                         "doctor_id": doctor_id,
                         "qc_id": qc_id,
-                        "status": status
+                        "status": status,
+                        "modality_id": modality_id // <-- Send modality id
                     },
                     success: function(response) {
                         $("#search_btn").html("Search");

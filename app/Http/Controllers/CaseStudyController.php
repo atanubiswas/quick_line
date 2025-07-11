@@ -27,6 +27,7 @@ use App\Models\Laboratory;
 use App\Models\studyImages;
 use App\Models\studyStatus;
 use App\Models\caseComment;
+use App\Models\Modality;
 use App\Models\caseAttachment;
 
 use App\Traits\GeneralFunctionTrait;
@@ -191,7 +192,8 @@ class CaseStudyController extends Controller
             ->orderBy("id")
             ->get();
         
-        return view('admin.viewCaseStudy', compact('pageName', 'CaseStudies', 'Labrotories', 'roleId', 'centre_id', 'centre_name', 'authUserId', 'doctors', 'qualityControllers', 'status', 'todayCount', 'yesterdayCount', 'weekCount', 'monthCount', 'activeCount', 'unreadCount', 'pendingCount', 'qaPendingCount', 'reWorkCount', 'finishedCount', 'emergencyCount'));
+        $modalities = Modality::orderBy('id')->get();
+        return view('admin.viewCaseStudy', compact('pageName', 'CaseStudies', 'Labrotories', 'roleId', 'centre_id', 'centre_name', 'authUserId', 'doctors', 'qualityControllers', 'status', 'todayCount', 'yesterdayCount', 'weekCount', 'monthCount', 'activeCount', 'unreadCount', 'pendingCount', 'qaPendingCount', 'reWorkCount', 'finishedCount', 'emergencyCount', 'modalities'));
     }
 
     /**
@@ -436,6 +438,7 @@ class CaseStudyController extends Controller
         $doctor_id = $request->doctor_id;
         $qc_id = $request->qc_id;
         $status = $request->status;
+        $modalityId = $request->modality_id;
         
         $CaseStudies = caseStudy::orderBy('created_at', 'desc')
         ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
@@ -454,6 +457,9 @@ class CaseStudyController extends Controller
         })
         ->when(!empty($status), function($query) use($status){
             $query->where("study_status_id", $status);
+        })
+        ->when(!empty($modalityId), function($query) use($modalityId){
+            $query->where("modality_id", $modalityId);
         })
         ->get();
         

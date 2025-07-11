@@ -180,7 +180,7 @@
         <div class="col-12">
           <div class="card card-danger">
             <div class="card-header">
-              <h3 class="card-title">Doctor Case Completed Count</h3>
+              <h3 class="card-title">Doctor Case Completed Count (by Study Price Group)</h3>
             </div>
             <div class="card-body">
               <div class="table-responsive">
@@ -188,14 +188,20 @@
                   <thead>
                     <tr>
                       <th>Doctor Name</th>
-                      <th>Assigned Case Count</th>
+                      @foreach($studyPriceGroups as $group)
+                        <th>{{ $group }}</th>
+                      @endforeach
+                      <th>Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     @foreach($doctorCounts as $doctor)
                       <tr>
-                        <td>{{ $doctor->name }}</td>
-                        <td>{{ $doctor->count }}</td>
+                        <td>{{ $doctor['name'] }}</td>
+                        @foreach($studyPriceGroups as $group)
+                          <td>{{ $doctor['groups'][$group] ?? 0 }}</td>
+                        @endforeach
+                        <td>{{ array_sum($doctor['groups']) }}</td>
                       </tr>
                     @endforeach
                   </tbody>
@@ -260,9 +266,25 @@ $(document).ready(function() {
             type: 'GET',
             data: { start_date: startDate, end_date: endDate },
             success: function(data) {
+                // Get study price groups from the table header
+                var groupNames = [];
+                $('#doctor_count_table thead th').each(function(i, th) {
+                    var name = $(th).text().trim();
+                    if (name !== 'Doctor Name' && name !== 'Total') {
+                        groupNames.push(name);
+                    }
+                });
                 var tbody = '';
                 data.forEach(function(doctor) {
-                    tbody += '<tr><td>' + doctor.name + '</td><td>' + doctor.count + '</td></tr>';
+                    var row = '<tr><td>' + doctor.name + '</td>';
+                    var total = 0;
+                    groupNames.forEach(function(group) {
+                        var val = (doctor.groups && doctor.groups[group]) ? doctor.groups[group] : 0;
+                        row += '<td>' + val + '</td>';
+                        total += parseInt(val, 10);
+                    });
+                    row += '<td>' + total + '</td></tr>';
+                    tbody += row;
                 });
                 $('#doctor_count_table tbody').html(tbody);
             }

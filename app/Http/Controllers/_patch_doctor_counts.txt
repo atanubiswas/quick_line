@@ -1,0 +1,10 @@
+// PATCH PLAN for doctorCounts in DashboardController.php
+// 1. Get all study price groups (names)
+// 2. For each doctor, count completed cases per price group (via studies -> studyType -> priceGroup)
+// 3. Return $doctorCounts and $studyPriceGroups to view
+
+// For AJAX: doctorCounts() should return [{name, groups: {groupName: count, ...}}]
+// For view: adminDashboard() should return $doctorCounts and $studyPriceGroups
+
+// Eloquent: caseStudy has doctor_id, hasMany studies, study has study_type_id, studyType has price_group_id
+// So: For each doctor, for each price group, count studies where study_type.price_group_id = group.id

@@ -8,6 +8,10 @@ use Illuminate\Http\Request;
 use App\Traits\GeneralFunctionTrait;
 use App\Models\User;
 use App\Models\caseStudy;
+use App\Models\StudyPriceGroup;
+use App\Models\Doctor;
+use App\Models\study;
+use App\Models\studyType;
 
 /**
  * Summary of DashboardController
@@ -49,7 +53,6 @@ class DashboardController extends Controller
         $topCentreThisMonth = $this->getTopCentreThisMonth();
         $topQCThisMonth = $this->getTopQCThisMonth();
         $topDoctorThisMonth = $this->getTopDoctorThisMonth();
-        // Get assigner counts for today by default
         $today = Carbon::now()->toDateString();
         $assignerCounts = User::whereHas('roles', function($q){
             $q->where('name', 'Assigner');
@@ -79,21 +82,36 @@ class DashboardController extends Controller
                 'count' => $user->qc_case_studies_count
             ];
         });
-        $doctorCounts = User::whereHas('roles', function($q){
+        // Get all study price groups
+        $studyPriceGroups = StudyPriceGroup::orderBy('id')->pluck('name')->toArray();
+        // Get all doctors
+        $doctors = User::whereHas('roles', function($q){
             $q->where('name', 'Doctor');
-        })
-        ->withCount(['doctorCaseStudies' => function($q) use ($today) {
-            $q->whereDate('case_studies.created_at', $today);
-        }])
-        ->orderBy('name', 'asc')
-        ->get()
-        ->map(function($user){
-            return (object)[
+        })->orderBy('name', 'asc')->get();
+        // For each doctor, count cases per price group
+        $doctorCounts = $doctors->map(function($user) use ($today, $studyPriceGroups) {
+            $caseStudies = $user->doctorCaseStudies()
+                ->whereDate('case_studies.created_at', $today)
+                ->where('case_studies.study_status_id', 5)
+                ->whereNull('case_studies.deleted_at')
+                ->get();
+            $groupCounts = array_fill_keys($studyPriceGroups, 0);
+            foreach ($caseStudies as $caseStudy) {
+                foreach ($caseStudy->study as $study) {
+                    if ($study->type && $study->type->priceGroup) {
+                        $groupName = $study->type->priceGroup->name;
+                        if (isset($groupCounts[$groupName])) {
+                            $groupCounts[$groupName]++;
+                        }
+                    }
+                }
+            }
+            return [
                 'name' => $user->name,
-                'count' => $user->doctor_case_studies_count
+                'groups' => $groupCounts
             ];
         });
-        return view ("admin.adminDashboard", compact('totalCaseThisMonth', 'topCentreThisMonth', 'topQCThisMonth', 'topDoctorThisMonth', 'assignerCounts', 'qcCounts', 'doctorCounts'));
+        return view ("admin.adminDashboard", compact('totalCaseThisMonth', 'topCentreThisMonth', 'topQCThisMonth', 'topDoctorThisMonth', 'assignerCounts', 'qcCounts', 'doctorCounts', 'studyPriceGroups'));
     }
 
     /**
@@ -171,22 +189,34 @@ class DashboardController extends Controller
     public function doctorCounts(Request $request) {
         $start = $request->input('start_date', Carbon::now()->toDateString());
         $end = $request->input('end_date', Carbon::now()->toDateString());
+        $studyPriceGroups = StudyPriceGroup::orderBy('id')->pluck('name')->toArray();
         $doctors = User::whereHas('roles', function($q){
             $q->where('name', 'Doctor');
-        })
-        ->withCount(['doctorCaseStudies' => function($q) use ($start, $end) {
-            $q->whereDate('case_studies.created_at', '>=', $start)
-              ->whereDate('case_studies.created_at', '<=', $end);
-        }])
-        ->orderBy('name', 'asc')
-        ->get()
-        ->map(function($user){
+        })->orderBy('name', 'asc')->get();
+        $doctorCounts = $doctors->map(function($user) use ($start, $end, $studyPriceGroups) {
+            $caseStudies = $user->doctorCaseStudies()
+                ->whereDate('case_studies.created_at', '>=', $start)
+                ->whereDate('case_studies.created_at', '<=', $end)
+                ->where('case_studies.study_status_id', 5)
+                ->whereNull('case_studies.deleted_at')
+                ->get();
+            $groupCounts = array_fill_keys($studyPriceGroups, 0);
+            foreach ($caseStudies as $caseStudy) {
+                foreach ($caseStudy->study as $study) {
+                    if ($study->type && $study->type->priceGroup) {
+                        $groupName = $study->type->priceGroup->name;
+                        if (isset($groupCounts[$groupName])) {
+                            $groupCounts[$groupName]++;
+                        }
+                    }
+                }
+            }
             return [
                 'name' => $user->name,
-                'count' => $user->doctor_case_studies_count
+                'groups' => $groupCounts
             ];
         });
-        return response()->json($doctors);
+        return response()->json($doctorCounts);
     }
 
     // AJAX endpoint for assigner daily counts by date range (for line chart)
