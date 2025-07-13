@@ -6,6 +6,9 @@
   <meta name="_token" content="{!! csrf_token() !!}" />
   <title>Admin | @yield('title')</title>
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="{{ asset('dist/img/fab_icon.png') }}?v=2">
+
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome Icons -->
