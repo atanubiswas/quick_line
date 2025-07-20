@@ -364,6 +364,10 @@
                 @endif
                 <div class="row">
                     <div class="col-12">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <input type="checkbox" id="autorefresh_toggle">
+                            <label for="autorefresh_toggle">Auto Refresh</label>
+                        </div>
                         <div class="card card-purple">
                             <div class="card-header">
                                 @if(in_array(auth()->user()->roles[0]->id, [1, 3, 5, 6]))
@@ -437,6 +441,20 @@
                                     </div>
                                     <div class="col-md-3 text-right">
                                         <button type="button" id="add_case_study_btn" class="btn bg-gradient-success float-right btn-sm" data-toggle="modal" data-target="#add-case-study-modal">Add {{$pageName}}</button>
+                                    </div>
+                                </div>
+                                @elseif(in_array(auth()->user()->roles[0]->id, [4]))
+                                <div class="row">
+                                    <div class="col-md-9">
+                                        <h3 class="card-title" style="color: #fff;">View {{$pageName}} Data</h3>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="input-group">
+                                            <input type="text" id="daterange" class="form-control daterange" data-target="#datepicker"/>
+                                            <input type="hidden" id="start_date" name="start_date" value="{{ Carbon\Carbon::now()->format('Y-m-d') }}">
+                                            <input type="hidden" id="end_date" name="end_date" value="{{ Carbon\Carbon::now()->format('Y-m-d') }}">
+                                            <button style="margin-left: 10px;" type="button" id="dr_search_btn" name="dr_search_btn" class="btn bg-gradient-orange float-right btn-sm">Search</button>
+                                        </div>
                                     </div>
                                 </div>
                                 @else
@@ -967,6 +985,104 @@
 
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script>
+        // --- Auto Refresh Feature ---
+        let autoRefreshEnabled = true;
+        let autoRefreshInterval = null;
+        const refreshTime = 60000; // 60 seconds
+
+        // --- Sound Notification Setup ---
+        let lastCaseIds = [];
+        let firstLoad = true;
+        function playBuzz() {
+            let audio = new Audio('/sounds/chime.mp3');
+            audio.currentTime = 0;
+            audio.volume = 1;
+            audio.play().catch(function(e){
+                // If autoplay is blocked, try to play after user interaction
+                document.body.addEventListener('click', function once() {
+                    audio.play();
+                    document.body.removeEventListener('click', once);
+                });
+            });
+        }
+        function playIntenseBuzz() {
+            let audio = new Audio('/sounds/emergency.mp3');
+            audio.currentTime = 0;
+            audio.volume = 1;
+            audio.play().catch(function(e){
+                document.body.addEventListener('click', function once() {
+                    audio.play();
+                    document.body.removeEventListener('click', once);
+                });
+            });
+        }
+
+        function refreshPageContent() {
+            // Only refresh the main table, not the whole page
+            $.ajax({
+                url: window.location.href,
+                type: 'GET',
+                dataType: 'html',
+                success: function(data) {
+                    let newBody = $(data).find('#main-card-body').html();
+                    if (newBody) {
+                        // --- Detect new cases ---
+                        let newCaseIds = [];
+                        let emergencyFound = false;
+                        // Find all case rows
+                        let tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = newBody;
+                        let rows = tempDiv.querySelectorAll('tr[id^="row-"]');
+                        rows.forEach(function(row) {
+                            let id = row.id.replace('row-', '');
+                            newCaseIds.push(id);
+                            // Emergency detection
+                            if (row.querySelector('.badge.bg-gradient-danger')) {
+                                let badgeText = row.querySelector('.badge.bg-gradient-danger').textContent;
+                                if (badgeText.toLowerCase().includes('emergency')) {
+                                    emergencyFound = true;
+                                }
+                            }
+                        });
+                        // Compare with previous, skip sound on first load
+                        if (!firstLoad) {
+                            let isNewCase = newCaseIds.some(id => !lastCaseIds.includes(id));
+                            if (isNewCase) {
+                                playBuzz();
+                            }
+                        } else {
+                            firstLoad = false;
+                        }
+                        lastCaseIds = newCaseIds;
+                        $('#main-card-body').html(newBody);
+                    }
+                }
+            });
+        }
+
+        function setAutoRefresh(enabled) {
+            autoRefreshEnabled = enabled;
+            if (autoRefreshEnabled) {
+                if (!autoRefreshInterval) {
+                    autoRefreshInterval = setInterval(refreshPageContent, refreshTime);
+                }
+            } else {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+        }
+
+        $(document).ready(function() {
+            // Checkbox toggle
+            $('#autorefresh_toggle').on('change', function() {
+                setAutoRefresh(this.checked);
+            });
+            setAutoRefresh($('#autorefresh_toggle').is(':checked'));
+        });
+    </script>
+    <script>
         $(function () {
             let allFiles = [];
             let cropperInstances = {};
@@ -1141,7 +1257,7 @@
                         "case_id": case_study_id
                     },
                     success: function (response) {
-                        location.reload();
+                        // location.reload();
                     },
                     error: function (response) {
                         location.reload();
@@ -1198,6 +1314,7 @@
                 let qc_id = $('#qc_search').val();
                 let status = $('#status_search').val();
                 let modality_id = $('#modality_search').val(); // <-- Get selected modality
+                let is_doctor = false;
                 
                 $.ajax({
                     url: "{{ url('admin/get-case-study-search-result') }}",
@@ -1210,7 +1327,8 @@
                         "doctor_id": doctor_id,
                         "qc_id": qc_id,
                         "status": status,
-                        "modality_id": modality_id // <-- Send modality id
+                        "modality_id": modality_id, // <-- Send modality id
+                        "is_doctor": is_doctor
                     },
                     success: function(response) {
                         $("#search_btn").html("Search");
@@ -1232,6 +1350,55 @@
                     },
                     error: function(response){
                         $("#search_btn").html("Search");
+                    }
+                });
+            });
+
+            $("#dr_search_btn").click(function () {
+                $(this).html('Search <i class="fas fa-spinner fa-spin"></i>');
+                let start_date = $('#start_date').val();
+                let end_date = $('#end_date').val();
+                let centre_id = $('#centre').val();
+                let doctor_id = $('#doctor_search').val();
+                let qc_id = $('#qc_search').val();
+                let status = $('#status_search').val();
+                let modality_id = $('#modality_search').val(); // <-- Get selected modality
+                let is_doctor = true;
+                
+                $.ajax({
+                    url: "{{ url('admin/get-case-study-search-result') }}",
+                    type: "POST",
+                    data: {
+                        "_token": "{{ csrf_token() }}",
+                        "start_date": start_date,
+                        "end_date": end_date,
+                        "centre_id": centre_id,
+                        "doctor_id": doctor_id,
+                        "qc_id": qc_id,
+                        "status": status,
+                        "modality_id": modality_id, // <-- Send modality id
+                        "is_doctor": is_doctor
+                    },
+                    success: function(response) {
+                        $("#dr_search_btn").html("Search");
+                        $("#main-card-body").html(response);
+                        study_table = $('#study_table').DataTable({
+                            "paging": true,
+                            "lengthChange": true,
+                            "searching": true,
+                            "ordering": true,
+                            "info": true,
+                            "autoWidth": false,
+                            "responsive": true,
+                            "lengthMenu": [[10, 25, 50, 100, 500, -1], [10, 25, 50, 100, 500, "All"]],
+                            "order": [[0, 'asc']],
+                            rowId: function(data) {
+                                return 'row-' + data.id; // Ensuring a unique ID for each row
+                            }
+                        });
+                    },
+                    error: function(response){
+                        $("#dr_search_btn").html("Search");
                     }
                 });
             });

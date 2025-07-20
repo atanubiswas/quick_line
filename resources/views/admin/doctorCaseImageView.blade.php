@@ -161,9 +161,11 @@
                                     </select>
                                 </div>
                                 @endif
+                                @if(($authUser->roles[0]->pivot->role_id == 2 && in_array($caseStudy->study_status_id, [3])) || ($authUser->roles[0]->pivot->role_id == 4 && in_array($caseStudy->study_status_id, [2, 4])))
                                 <div class="form-group">
                                     <button type="button" class="btn btn-success float-right save-study" id="save_btn_{{ $study->id }}" data-index="{{ $study->id }}" data-study-status-id="{{ $caseStudy->study_status_id }}">Save</button>
                                 </div>
+                                @endif
                             </div>
                         </form>
                     </div>
@@ -174,23 +176,140 @@
     @endif
 </div>
 <script>
-    $( function() {
-        $( "#tabs" ).tabs();
-        $('.layout-doctor').summernote({
-            height: 300,
-            fontNames: ['Arial', 'Arial Black', 'Comic Sans MS', 'Courier New', 'Merriweather'],
-            fontNamesIgnoreCheck: ['Merriweather'],
-            toolbar: [
-            // [groupName, [list of button]]
-            ['style', ['bold', 'italic', 'underline', 'clear']],
-            ['font', ['strikethrough', 'superscript', 'subscript']],
-            ['fontname', ['fontname']],
-            ['fontsize', ['fontsize']],
-            ['color', ['color']],
-            ['para', ['ul', 'ol', 'paragraph']],
-            ['height', ['height']]
-            ]
+    $(function() {
+        // Fix aria-hidden focus error when closing modal
+        $('#doc_image_view').on('hide.bs.modal', function () {
+            var modal = this;
+            var active = document.activeElement;
+            if (active && modal.contains(active)) {
+                active.blur();
+                console.log('[Modal Blur] Removed focus from element inside modal before closing.');
+            }
         });
+        var caseId = $('#unique_case_study_id').val();
+        // Initialize tabs FIRST
+        $("#tabs").tabs({
+            activate: function(event, ui) {
+                // When a tab is activated, initialize Summernote for any .layout-doctor in the panel if not already initialized
+                $(ui.newPanel).find('.layout-doctor').each(function() {
+                    var $textarea = $(this);
+                    if (!$textarea.hasClass('summernote-initialized')) {
+                        var studyId = $textarea.attr('id').split('_')[1];
+                        var status = $textarea.closest('form').find('.doctor-layout-selector').length ? $textarea.closest('form').find('.doctor-layout-selector').data('status') : null;
+                        if (!status) {
+                            status = $textarea.data('status') || null;
+                        }
+                        $textarea.summernote({
+                            height: 300,
+                            fontNames: [
+                                'Arial', 'Arial Black', 'Comic Sans MS', 'Courier New', 'Merriweather',
+                                'Times New Roman', 'Georgia', 'Tahoma', 'Verdana', 'Trebuchet MS',
+                                'Impact', 'Lucida Console', 'Palatino Linotype', 'Garamond', 'Bookman',
+                                'Candara', 'Calibri', 'Optima', 'Segoe UI', 'Franklin Gothic Medium',
+                                'Gill Sans', 'Geneva', 'Futura', 'Rockwell', 'Monaco', 'Brush Script MT'
+                            ],
+                            fontNamesIgnoreCheck: ['Merriweather', 'Brush Script MT', 'Futura', 'Rockwell'],
+                            toolbar: [
+                                ['style', ['bold', 'italic', 'underline', 'clear']],
+                                ['font', ['strikethrough', 'superscript', 'subscript']],
+                                ['fontname', ['fontname']],
+                                ['fontsize', ['fontsize']],
+                                ['color', ['color']],
+                                ['para', ['ul', 'ol', 'paragraph']],
+                                ['height', ['height']]
+                            ],
+                            callbacks: {
+                                onInit: function() {
+                                    var layoutKey = 'draft_layout_' + caseId + '_' + studyId;
+                                    var statusVal = $textarea.closest('form').find('.doctor-layout-selector').length ? $textarea.closest('form').find('.doctor-layout-selector').data('status') : null;
+                                    if (!statusVal) {
+                                        statusVal = $textarea.data('status') || null;
+                                    }
+                                    statusVal = statusVal || '{{ $study->status ?? "" }}';
+                                    console.log('[Draft Load] studyId:', studyId, 'status:', statusVal, 'layoutKey:', layoutKey);
+                                    if (statusVal != '1') {
+                                        var draft = localStorage.getItem(layoutKey);
+                                        console.log('[Draft Load] Found draft:', draft);
+                                        if (draft) {
+                                            $textarea.summernote('code', draft);
+                                        }
+                                    }
+                                },
+                                onChange: function(contents, $editable) {
+                                    var layoutKey = 'draft_layout_' + caseId + '_' + studyId;
+                                    console.log('[Draft Save - onChange] studyId:', studyId, 'layoutKey:', layoutKey, 'value:', contents);
+                                    localStorage.setItem(layoutKey, contents);
+                                }
+                            }
+                        });
+                        $textarea.addClass('summernote-initialized');
+                    }
+                });
+            }
+        });
+        // Initialize Summernote for visible tab panels on page load
+        $('#tabs > div:visible').find('.layout-doctor').each(function() {
+            var $textarea = $(this);
+            if (!$textarea.hasClass('summernote-initialized')) {
+                var studyId = $textarea.attr('id').split('_')[1];
+                var status = $textarea.closest('form').find('.doctor-layout-selector').length ? $textarea.closest('form').find('.doctor-layout-selector').data('status') : null;
+                if (!status) {
+                    status = $textarea.data('status') || null;
+                }
+                $textarea.summernote({
+                    height: 300,
+                    fontNames: [
+                        'Arial', 'Arial Black', 'Comic Sans MS', 'Courier New', 'Merriweather',
+                        'Times New Roman', 'Georgia', 'Tahoma', 'Verdana', 'Trebuchet MS',
+                        'Impact', 'Lucida Console', 'Palatino Linotype', 'Garamond', 'Bookman',
+                        'Candara', 'Calibri', 'Optima', 'Segoe UI', 'Franklin Gothic Medium',
+                        'Gill Sans', 'Geneva', 'Futura', 'Rockwell', 'Monaco', 'Brush Script MT'
+                    ],
+                    fontNamesIgnoreCheck: ['Merriweather', 'Brush Script MT', 'Futura', 'Rockwell'],
+                    toolbar: [
+                        ['style', ['bold', 'italic', 'underline', 'clear']],
+                        ['font', ['strikethrough', 'superscript', 'subscript']],
+                        ['fontname', ['fontname']],
+                        ['fontsize', ['fontsize']],
+                        ['color', ['color']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['height', ['height']]
+                    ],
+                    callbacks: {
+                        onInit: function() {
+                            var layoutKey = 'draft_layout_' + caseId + '_' + studyId;
+                            var statusVal = $textarea.closest('form').find('.doctor-layout-selector').length ? $textarea.closest('form').find('.doctor-layout-selector').data('status') : null;
+                            if (!statusVal) {
+                                statusVal = $textarea.data('status') || null;
+                            }
+                            statusVal = statusVal || '{{ $study->status ?? "" }}';
+                            console.log('[Draft Load] studyId:', studyId, 'status:', statusVal, 'layoutKey:', layoutKey);
+                            if (statusVal != '1') {
+                                var draft = localStorage.getItem(layoutKey);
+                                console.log('[Draft Load] Found draft:', draft);
+                                if (draft) {
+                                    $textarea.summernote('code', draft);
+                                }
+                            }
+                        },
+                        onChange: function(contents, $editable) {
+                            var layoutKey = 'draft_layout_' + caseId + '_' + studyId;
+                            console.log('[Draft Save - onChange] studyId:', studyId, 'layoutKey:', layoutKey, 'value:', contents);
+                            localStorage.setItem(layoutKey, contents);
+                        }
+                    }
+                });
+                $textarea.addClass('summernote-initialized');
+            }
+        });
+
+        // Draft save/load logic
+        // ...existing code...
+
+        // Save draft on change
+        // Removed: draft save on input/change, now handled by Summernote onChange
+        });
+
         $('#tabs ul li a[href="#tabs-images"]').addClass('my-image-class');
         @foreach($caseStudy->study as $study)
             @if($study->status == '1')
@@ -215,7 +334,14 @@
         $(document).on('change', '.doctor-layout-selector', function() {
             var layoutId = $(this).val();
             var studyId = $(this).data('index');
-            
+            var caseId = $('#unique_case_study_id').val();
+            var layoutKey = 'draft_layout_' + caseId + '_' + studyId;
+            // Save current draft before changing layout
+            var $textarea = $('#layout_' + studyId);
+            var value = $textarea.hasClass('summernote') ? $textarea.summernote('code') : $textarea.val();
+            console.log('[Draft Save Before Layout Change] studyId:', studyId, 'layoutKey:', layoutKey, 'value:', value);
+            localStorage.setItem(layoutKey, value);
+            // Now load new layout
             $.ajax({
                 url: "{{ route('admin.getLayout') }}",
                 type: "POST",
@@ -231,6 +357,22 @@
         });
 
         $('#doc_image_view').on('shown.bs.modal', function () {
+            // Reload draft for each unsaved study when modal is opened
+            var caseId = $('#unique_case_study_id').val();
+            @foreach($caseStudy->study as $study)
+                var studyId = '{{ $study->id }}';
+                var status = '{{ $study->status }}';
+                var layoutKey = 'draft_layout_' + caseId + '_' + studyId;
+                console.log('[Modal Draft Load] studyId:', studyId, 'status:', status, 'layoutKey:', layoutKey);
+                if (status != '1') {
+                    var draft = localStorage.getItem(layoutKey);
+                    console.log('[Modal Draft Load] Found draft:', draft);
+                    if (draft) {
+                        $('#layout_' + studyId).summernote('code', draft);
+                    }
+                }
+            @endforeach
+
             $('.save-study').off('click').on('click', function () {
                 $(this).html('Saving <i class="fas fa-spinner fa-spin"></i>');
                 var studyId = $(this).data('index');
@@ -264,6 +406,9 @@
                             },
                             success: function (data) {
                                 $('.save-study').html('Save');
+                                // Remove draft after successful save
+                                var layoutKey = 'draft_layout_' + caseId + '_' + studyId;
+                                localStorage.removeItem(layoutKey);
                                 if ($.isEmptyObject(data.error)) {
                                     if(status_id < 3){
                                         swal.fire({
@@ -288,5 +433,4 @@
                 });
             });
         });
-    });
 </script>

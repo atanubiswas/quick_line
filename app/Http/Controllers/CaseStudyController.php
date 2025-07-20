@@ -435,7 +435,17 @@ class CaseStudyController extends Controller
         else{
             $centre_id = $request->centre_id;
         }
-        $doctor_id = $request->doctor_id;
+
+        $isDoctor = $request->is_doctor;
+        if($isDoctor === false || $isDoctor === 'false' || $isDoctor === null){
+            $doctor_id = $request->doctor_id;
+        }
+        else{
+            $doctorIdArray = doctor::where("user_id", $authUser->id)
+            ->get()
+            ->pluck("id");
+            $doctor_id = $doctorIdArray[0];
+        }
         $qc_id = $request->qc_id;
         $status = $request->status;
         $modalityId = $request->modality_id;

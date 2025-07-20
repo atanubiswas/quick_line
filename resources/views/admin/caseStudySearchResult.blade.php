@@ -108,7 +108,9 @@
                     <button class="btn btn-custom-class btn-xs bg-gradient-purple view-comments-btn" title="Case Comments" data-index="{{ $caseStudy->id }}"><i class="fas fa-comments"></i></button>
                     <button class="btn btn-custom-class btn-xs bg-gradient-orange attachment-btn position-relative" title="Attachments" data-index="{{ $caseStudy->id }}"> <i class="fas fa-paperclip"></i> @if(count($caseStudy->attachments) > 0) <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"> {{ count($caseStudy->attachments) }} </span> @endif </button>
                 </td>
+                @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                 <td>{{$caseStudy->laboratory->lab_name}}&nbsp;<i class="fas fa-info-circle me-1 text-info" style="cursor: pointer;" title="Phone Number: {{ $caseStudy->laboratory->lab_phone_number }}"></i></td>
+                @endif
             </tr>
         @endforeach
     </tbody>
