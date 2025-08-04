@@ -52,8 +52,19 @@ class CaseStudyController extends Controller
         
         $pageName = $this->pageName;
         $centre_name = "";
-        $allCaseStudies = caseStudy::select("created_at", "study_status_id")->whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->get();
-        $todayStudies = caseStudy::select('study_status_id', 'is_emergency')->whereBetween('created_at', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()])->get();
+        // Efficient count queries
+        $now = Carbon::now();
+        $todayCount = caseStudy::whereDate('created_at', $now->toDateString())->count();
+        $yesterdayCount = caseStudy::whereDate('created_at', $now->copy()->subDay()->toDateString())->count();
+        $weekCount = caseStudy::whereBetween('created_at', [$now->copy()->startOfWeek(), $now])->count();
+        $monthCount = caseStudy::whereMonth('created_at', $now->month)->whereYear('created_at', $now->year)->count();
+        $activeCount = caseStudy::whereIn('study_status_id', [1,2,3,4])->whereMonth('created_at', $now->month)->whereYear('created_at', $now->year)->count();
+        $unreadCount = caseStudy::whereDate('created_at', $now->toDateString())->where('study_status_id', 1)->count();
+        $pendingCount = caseStudy::whereDate('created_at', $now->toDateString())->where('study_status_id', 2)->count();
+        $qaPendingCount = caseStudy::whereDate('created_at', $now->toDateString())->where('study_status_id', 3)->count();
+        $reWorkCount = caseStudy::whereDate('created_at', $now->toDateString())->where('study_status_id', 4)->count();
+        $finishedCount = caseStudy::whereDate('created_at', $now->toDateString())->where('study_status_id', 5)->count();
+        $emergencyCount = caseStudy::whereDate('created_at', $now->toDateString())->where('is_emergency', 1)->count();
         if(in_array(auth()->user()->roles[0]->id, [1, 5, 6])){
             $CaseStudies = caseStudy::orderBy('created_at', 'desc')
                 ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
@@ -116,64 +127,7 @@ class CaseStudyController extends Controller
             $CaseStudies = array();
         }
 
-        /* =============== CODE FOR CALCULATING THE COUNTS ================= */
-        $now = Carbon::now();
-
-        // Today
-        $todayCount = $allCaseStudies->filter(function($case) use ($now) {
-            return Carbon::parse($case->created_at)->isToday();
-        })->count();
-
-        // Yesterday
-        $yesterdayCount = $allCaseStudies->filter(function($case) use ($now) {
-            return Carbon::parse($case->created_at)->isYesterday();
-        })->count();
-
-        // This week (from Monday to now)
-        $weekCount = $allCaseStudies->filter(function($case) use ($now) {
-            return Carbon::parse($case->created_at)->isSameWeek($now);
-        })->count();
-
-        // This month
-        $monthCount = $allCaseStudies->filter(function($case) use ($now) {
-            return Carbon::parse($case->created_at)->isSameMonth($now);
-        })->count();
-
-        // Actives
-        $activeCount = $allCaseStudies->filter(function($case) {
-            return in_array($case->study_status_id, [1, 2, 3, 4]);
-        })->count();
-
-        // Unread
-        $unreadCount = $todayStudies->filter(function($case) {
-            return in_array($case->study_status_id, [1]);
-        })->count();
-
-        // Pending
-        $pendingCount = $todayStudies->filter(function($case) {
-            return in_array($case->study_status_id, [2]);
-        })->count();
-
-        // QA Pending
-        $qaPendingCount = $todayStudies->filter(function($case) {
-            return in_array($case->study_status_id, [3]);
-        })->count();
-
-        // Re Work
-        $reWorkCount = $todayStudies->filter(function($case) {
-            return in_array($case->study_status_id, [4]);
-        })->count();
-
-        // Finished
-        $finishedCount = $todayStudies->filter(function($case) {
-            return in_array($case->study_status_id, [5]);
-        })->count();
-
-        // Emergency
-        $emergencyCount = $todayStudies->filter(function($case) {
-            return in_array($case->is_emergency, [1]);
-        })->count();
-        /* =============== CODE FOR CALCULATING THE COUNTS ================= */
+        // ...existing code...
 
         $authUser = Auth::user();
         $authUserId = $authUser->id;
@@ -353,14 +307,16 @@ class CaseStudyController extends Controller
             $allStudies = study::where("case_study_id", $request->case_id)
                 ->with('type.modality')
                 ->get();
-            $doctors = Doctor::whereHas('modalities', function ($query) {
-                    $query->where('modality_id', 1);
+            $doctors = Doctor::whereHas('modalities', function ($query) use($caseStudy) {
+                    $query->where('modality_id', $caseStudy->modality_id)
+                    ->where('doctor_modalities.status', '1');
                 })
                 ->orderBy('name', 'asc')
                 ->whereNotIn("id", function($query) use ($lab_id){
                     $query->select('doctor_id')->from('lab_black_listed_doctors')->where('laboratorie_id', $lab_id)->where("status", 1);
                 })
                 ->get();
+                
             $assignedDoctor = Doctor::whereIn("id", function($query) use($caseDetails){
                     $query->select('doctor_id')->from('lab_preferred_doctors')
                         ->where('modality_id', $caseDetails->modality_id)
@@ -540,35 +496,73 @@ class CaseStudyController extends Controller
             ? $caseStudy->laboratory->labFormFieldValue->where("form_field_id", 15)->first()->value."mm" 
             : "30mm";
         
-        // Define filename and save to storage
-        $fileName = 'case-study-report-' . $caseStudy->case_study_id . '-'. str_replace(" ", "-", $caseStudy->patient->name).'.pdf';
+        // Define filename and paths
+        $fileName = 'case-study-report-' . $caseStudy->case_study_id . '-' . str_replace([" ", "/"], ["-", "-"], $caseStudy->patient->name) . '.pdf';
         $filePath = 'pdfs'.DIRECTORY_SEPARATOR. $fileName;
+        $fullStoragePath = storage_path('app'.DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.$filePath);
+        
+        // Create pdfs directory if it doesn't exist
+        if (!Storage::disk('public')->exists('pdfs')) {
+            Storage::disk('public')->makeDirectory('pdfs');
+        }
+        
+        // Define QR code path outside the conditional block
+        $qrFilename = $caseStudy->case_study_id . '.png';
+        $qrPath = 'qr-codes'.DIRECTORY_SEPARATOR. $qrFilename;
+
+        // Check if PDF already exists
+        $pdfNeedsGeneration = !Storage::disk('public')->exists($filePath);
+        
         // Get the public URL
         $pdfPublicUrl = asset("storage".DIRECTORY_SEPARATOR."{$filePath}");
         
-        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&color=02013c&data={$pdfPublicUrl}";
-        $qrImage = Http::withoutVerifying()->get($qrUrl)->body();
-        $qrFilename = $caseStudy->case_study_id . '.png';
-        $qrPath = 'qr-codes'.DIRECTORY_SEPARATOR. $qrFilename;
-        Storage::disk('public')->put($qrPath, $qrImage);
-        $qrLocalPath = public_path('storage'.DIRECTORY_SEPARATOR. $qrPath);
+        /* =====================  CODE FOR GENERATING AND DOWNLOADING QR CODE ===================== */
+            // Create qr-codes directory if it doesn't exist
+            if (!Storage::disk('public')->exists('qr-codes')) {
+                Storage::disk('public')->makeDirectory('qr-codes');
+            }
+            
+            $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&color=02013c&data={$pdfPublicUrl}";
+            $qrImage = Http::withoutVerifying()->get($qrUrl)->body();
+            Storage::disk('public')->put($qrPath, $qrImage);
+            $qrLocalPath = public_path('storage'.DIRECTORY_SEPARATOR. $qrPath);
+        /* =====================  END OF QR CODE GENERATION ===================== */
+
+        // Only generate QR code and PDF if needed
+        if ($pdfNeedsGeneration) {
+            // Create PDF from the same view
+            $isPdf = true;
+            $pdf = Pdf::loadView('admin.caseStudyReport', compact(
+                'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left', 'studyNames', 'pdfPublicUrl', 'isPdf', 'qrLocalPath'
+            ))
+            ->setPaper('A4', 'portrait')
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'sans-serif',
+                'enable_remote' => true,
+                'chroot' => public_path('storage'),
+                // 'margin_top' => (int) str_replace('mm', '', $top),
+                // 'margin_right' => (int) str_replace('mm', '', $right),
+                // 'margin_bottom' => (int) str_replace('mm', '', $bottom),
+                // 'margin_left' => (int) str_replace('mm', '', $left),
+                'dpi' => 96,
+                'defaultPaperSize' => 'a4',
+                'defaultPaperOrientation' => 'portrait',
+                'page_width' => '210mm',
+                'page_height' => '297mm'
+            ]);
+            
+            // Save the generated PDF
+            Storage::disk('public')->put($filePath, $pdf->output());
+            
+            // Clean up the QR code file as it's now embedded in the PDF
+            Storage::disk('public')->delete($qrPath);
+        } else {
+            // If PDF exists, just get the path to the existing QR code
+            $qrLocalPath = public_path('storage'.DIRECTORY_SEPARATOR. $qrPath);
+        }
         
-        // Create PDF from the same view
-        $isPdf = true;
-        $pdf = Pdf::loadView('admin.caseStudyReport', compact(
-            'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left', 'studyNames', 'pdfPublicUrl', 'isPdf', 'qrLocalPath'
-        ))
-        ->setPaper('A4', 'portrait');
-        // ->setOptions([
-        //     'isHtml5ParserEnabled' => true,
-        //     'isRemoteEnabled' => true,
-        //     'defaultFont' => 'sans-serif',
-        //     'margin_top' => (int) $top,      // margin values in mm or points
-        //     'margin_right' => (int) $right,
-        //     'margin_bottom' => (int) $bottom,
-        //     'margin_left' => (int) $left,
-        // ]);
-        Storage::disk('public')->put($filePath, $pdf->output());
         $isPdf = false;
     
         return view('admin.caseStudyReport', compact(
@@ -611,6 +605,22 @@ class CaseStudyController extends Controller
             'top', 'right', 'bottom', 'left'
         ));
         $pdf->setPaper('A4', 'portrait');
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'sans-serif',
+            'enable_remote' => true,
+            'chroot' => public_path('storage'),
+            'margin_top' => (int) $top,
+            'margin_right' => (int) $right,
+            'margin_bottom' => (int) $bottom,
+            'margin_left' => (int) $left,
+            'dpi' => 96,
+            'defaultPaperSize' => 'a4',
+            'defaultPaperOrientation' => 'portrait',
+            'page_width' => '210mm',
+            'page_height' => '297mm'
+        ]);
     
         // Save the PDF
         $pdfFilename = str_replace(" ", "-", $caseStudy->patient->patient_id."_".$caseStudy->patient->name) . '-' . time() . '.pdf';
@@ -1093,7 +1103,6 @@ class CaseStudyController extends Controller
             $qrLocalPath = public_path('storage'.DIRECTORY_SEPARATOR. $qrPath);
             $isPdf = true;
             
-
             $html = view('admin.caseStudyWord', compact(
                 'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left', 'studyNames', 'pdfPublicUrl', 'isPdf', 'qrLocalPath'
             ))->render();

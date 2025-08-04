@@ -24,7 +24,7 @@
           </tr>
       </table>
 
-        <div class="main_study_result" style="margin-top: 30px;" id="main_study_result_{{ $study->id }}">
+        <div class="main_study_result" style="margin-top: 5px; width: 100%;" id="main_study_result_{{ $study->id }}">
           {!! $study->report !!}
         </div>
         
@@ -69,14 +69,6 @@
             </td>
           </tr>
         </table>
-
-        <div style="width:100%;margin: 50px 0;">
-            <div style="text-align: center;">
-                @php echo str_repeat('-', 100); @endphp
-                <strong> &nbsp;&nbsp;End Of Report&nbsp;&nbsp; </strong>
-                @php echo str_repeat('-', 100); @endphp
-            </div>
-        </div>
         <p style="font-size: 14px; margin-top: 20px;"><strong>Disclaimer</strong>: It is an online interpretation of Medical Imaging based on clinical data. All modern machines/procedures have their own limitation. If there is any clinical discrepancy, this investigation may be repeated or reassessed by other tests. patient's identification in online reporting is not established, so in no way can this report be utilized for any Medico Legal Purpose.</p>
       @endforeach
   </body>

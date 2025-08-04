@@ -1,3 +1,17 @@
+@if($isPdf === true)
+<style>
+    @page {
+        margin-top: {{ str_replace('mm', '', $top) }}mm;
+        margin-right: {{ str_replace('mm', '', $right) }}mm;
+        margin-bottom: {{ str_replace('mm', '', $bottom) }}mm;
+        margin-left: {{ str_replace('mm', '', $left) }}mm;
+    }
+
+    body {
+        margin: 0;
+    }
+</style>
+@endif
 <a name="view_report"></a>
 <div class="print_block">
   @php $count = 1; @endphp
@@ -63,14 +77,6 @@
         </td>
       </tr>
     </table>
-
-    <div style="width:100%;margin: 50px 0;">
-        <div style="text-align: center;">
-            @php echo str_repeat('-', 20); @endphp
-            <strong> &nbsp;&nbsp;End Of Report&nbsp;&nbsp; </strong>
-            @php echo str_repeat('-', 20); @endphp
-        </div>
-    </div>
     <p style="font-size: 14px; margin-top: 20px;"><strong>Disclaimer</strong>: It is an online interpretation of Medical Imaging based on clinical data. All modern machines/procedures have their own limitation. If there is any clinical discrepancy, this investigation may be repeated or reassessed by other tests. patient's identification in online reporting is not established, so in no way can this report be utilized for any Medico Legal Purpose.</p>
     @if(count($caseStudy['study'])>$count++)
       <div class="b4-page-break" style="margin-top: 250px;"></div>
@@ -80,6 +86,9 @@
 </div>
 <div style="width:155px; float: right; margin: 5px;">
 <button type="button" @if($isPdf === true) style="display: none;" @endif class="btn btn-block bg-gradient-warning btn-small word_button" id="word_button" data-index="{{ $caseStudy->id }}"><i class="fas fa-file-word"></i>Download Word File</button>
+</div>
+<div style="width:155px; float: right; margin: 5px;">
+<button type="button" @if($isPdf === true) style="display: none;" @endif class="btn btn-block bg-gradient-warning btn-small pdf_button" id="pdf_button" data-index="{{ $caseStudy->id }}"><i class="fas fa-file-pdf"></i>Download PDF</button>
 </div>
 <div style="width:150px; float: right; margin: 5px;">
 <button type="button" @if($isPdf === true) style="display: none;" @endif class="btn btn-block bg-gradient-warning btn-small print_button" id="print_report"><i class="fas fa-print"></i>Print Report</button>
@@ -189,6 +198,15 @@
     $('#word_button').on('click', function () {
         var id = $(this).data('index');
         let url = `/quick_line_new/public/admin/download-word/${id}`;
+        window.open(url, '_blank');
+    });
+
+    $('#pdf_button').on('click', function () {
+        var id = $(this).data('index');
+        let name = '{{ str_replace([" ", "/"], ["-", "-"], $caseStudy->patient->name) }}';
+        let caseStudyId = '{{ $caseStudy->case_study_id }}';
+        let fileName = `case-study-report-${caseStudyId}-${name}.pdf`;
+        let url = `/quick_line_new/public/storage/pdfs/${fileName}`;
         window.open(url, '_blank');
     });
   });

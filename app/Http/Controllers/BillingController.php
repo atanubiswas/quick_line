@@ -607,6 +607,132 @@ class BillingController extends Controller
         return $number;
     }
 
+    // Generate Developer Bill
+    public function generateDeveloperBill(Request $request)
+    {
+        // Default to last month's 1st and last date if not provided
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        if (!$startDate || !$endDate) {
+            $lastMonth = now()->subMonth();
+            $startDate = $lastMonth->copy()->startOfMonth()->format('Y-m-d');
+            $endDate = $lastMonth->copy()->endOfMonth()->format('Y-m-d');
+        }
+        return view('admin.billing.developer_generate_bill', compact('startDate', 'endDate'));
+    }
+
+    // AJAX endpoint to get bill data for developer for a date range
+    public function generateDeveloperBillData(Request $request)
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        // Get all completed cases in the date range with only required columns
+        $cases = caseStudy::where('study_status_id', 5)
+            ->whereDate('case_studies.created_at', '>=', $startDate)
+            ->whereDate('case_studies.created_at', '<=', $endDate)
+            ->select([
+                'case_studies.case_study_id',
+                'case_studies.created_at',
+                'patients.name as patient_name',
+                'patients.gender',
+                'patients.age'
+            ])
+            ->join('patients', 'case_studies.patient_id', '=', 'patients.id')
+            ->get();
+
+        $totalAmount = 0;
+        $data = collect();
+
+        // Fixed price per case
+        $pricePerCase = 1;
+
+        foreach ($cases as $case) {
+            $totalAmount += $pricePerCase;
+            
+            $data->push([
+                'case_id' => $case->case_study_id,
+                'patient_name' => $case->patient_name ?? '-',
+                'gender_age' => ucfirst($case->gender) . ' / ' . $case->age,
+                'date' => $case->created_at ? date('d-M-Y', strtotime($case->created_at)) : '-',
+                'amount' => $pricePerCase,
+            ]);
+        }
+
+        return response()->json(['data' => $data, 'total_amount' => $totalAmount]);
+    }
+
+    // Export developer bill as PDF
+    public function generateDeveloperBillPdf(Request $request)
+    {
+        \Log::info('Starting PDF generation');
+        try {
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+
+            if (!$startDate || !$endDate) {
+                return back()->with('error', 'Start date and end date are required.');
+            }
+
+            // Developer details (static)
+            $developer = [
+                'name' => 'Pampa Biswas Karmakar',
+                'email' => 'pampaBiswasKarmakar@quickline.com',
+                'phone' => '+91 9432102777'
+            ];
+
+            // Get all completed cases with optimized query
+            $cases = caseStudy::where('study_status_id', 5)
+                ->whereDate('case_studies.created_at', '>=', $startDate)
+                ->whereDate('case_studies.created_at', '<=', $endDate)
+                ->select([
+                    'case_studies.case_study_id',
+                    'case_studies.created_at',
+                    'patients.name as patient_name',
+                    'patients.gender',
+                    'patients.age'
+                ])
+                ->join('patients', 'case_studies.patient_id', '=', 'patients.id')
+                ->get();
+
+            if ($cases->isEmpty()) {
+                return back()->with('error', 'No data found for the selected date range.');
+            }
+
+            $totalAmount = 0;
+            $billDataArr = [];
+            $pricePerCase = 1;
+
+            foreach ($cases as $case) {
+                $totalAmount += $pricePerCase;
+                $billDataArr[] = [
+                    'case_id' => $case->case_study_id,
+                    'patient_name' => $case->patient_name ?? '-',
+                    'gender_age' => ucfirst($case->gender) . ' / ' . $case->age,
+                    'date' => $case->created_at ? date('d-M-Y', strtotime($case->created_at)) : '-',
+                    'amount' => $pricePerCase,
+                ];
+            }
+
+            $bill_number = 'DEV_' . date('Ymd') . '_' . strtoupper(uniqid());
+            $pdf = Pdf::loadView('admin.billing.developer_bill_pdf', [
+                'billData' => $billDataArr,
+                'totalAmount' => $totalAmount,
+                'developer' => $developer,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'bill_number' => $bill_number,
+            ]);
+            $pdf->setPaper('A4', 'portrait');
+            $fileName = 'Developer_Bill_' . str_replace([' ', '-'], '_', $startDate) . '_to_' . str_replace([' ', '-'], '_', $endDate) . '.pdf';
+            return $pdf->download($fileName);
+        } catch (\Exception $e) {
+            \Log::error('PDF Generation Error: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            return back()->with('error', 'Error generating PDF: ' . $e->getMessage());
+        }
+    }
+
     // Show the quality controller price management page
     public function qualityControllerPrices()
     {
