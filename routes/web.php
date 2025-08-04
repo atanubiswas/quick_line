@@ -276,6 +276,11 @@ Route::group(['prefix' => 'admin'], function () {
             Route::post('/billing/mark-doctor-bill-paid', [BillingController::class, 'markDoctorBillPaid'])->name('admin.billing.mark_doctor_bill_paid');
             Route::post('/billing/delete-doctor-bill', [BillingController::class, 'deleteDoctorBill'])->name('admin.billing.delete_doctor_bill');
 
+            /* ================ DEVELOPER BILLING =============== */
+            Route::get('/billing/developer-generate-bill', [BillingController::class, 'generateDeveloperBill'])->name('admin.billing.developer_generate');
+            Route::post('/billing/developer-generate-bill-data', [BillingController::class, 'generateDeveloperBillData'])->name('admin.billing.developer_generate_data');
+            Route::get('/billing/developer-generate-bill-pdf', [BillingController::class, 'generateDeveloperBillPdf'])->name('admin.billing.developer_generate_pdf');
+
             /* ================ QUALITY CONTROLLER BILLING =============== */
             Route::get('/billing/quality-controller-prices', [BillingController::class, 'qualityControllerPrices'])->name('admin.billing.quality-controller-prices');
             Route::get('/billing/quality-controllers-list', [BillingController::class, 'getQualityControllersList']);
