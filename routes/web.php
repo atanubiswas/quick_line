@@ -88,6 +88,8 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('/view-user', [UserController::class, 'viewUser'])->name('admin.viewUser');
         Route::post('/change-user-status', [UserController::class,'changeStatus']);
         Route::post('/reset-password', [UserController::class,'resetPassword'])->name('admin.resetPassword');
+        Route::post('/get-qc-modalities', [UserController::class,'getQcModalities'])->name('admin.getQcModalities');
+        Route::post('/edit-qc-modalities', [UserController::class,'editQcModalities'])->name('admin.editQcModalities');
     });
     Route::middleware(['role:Admin,Centre,Quality Controller,Doctor,Manager,Assigner', '2fa'])->group(function () {
         Route::get('/change-password', [UserController::class, 'changePassword'])->name('admin.changePassword');
