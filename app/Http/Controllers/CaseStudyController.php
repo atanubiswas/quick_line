@@ -66,7 +66,8 @@ class CaseStudyController extends Controller
         $finishedCount = caseStudy::whereDate('created_at', $now->toDateString())->where('study_status_id', 5)->count();
         $emergencyCount = caseStudy::whereDate('created_at', $now->toDateString())->where('is_emergency', 1)->count();
         if(in_array(auth()->user()->roles[0]->id, [1, 5, 6])){
-            $CaseStudies = caseStudy::orderBy('created_at', 'desc')
+            $CaseStudies = caseStudy::orderBy('study_status_id', 'asc')
+                ->orderBy('created_at', 'desc')
                 ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
                 ->whereBetween('created_at', [$start_date, $end_date])
                 ->when(!empty($centre_id), function($query) use($centre_id){
@@ -114,7 +115,8 @@ class CaseStudyController extends Controller
             $centre = Laboratory::where("user_id", auth()->user()->id)->first();
             $centre_id = $centre->id;
             $centre_name = $centre->lab_name;
-            $CaseStudies = caseStudy::orderBy('created_at', 'desc')
+            $CaseStudies = caseStudy::orderBy('study_status_id', 'asc')
+                ->orderBy('created_at', 'desc')
                 ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
                 ->where('laboratory_id', $centre->id)
                 ->whereBetween('created_at', [$start_date, $end_date])
@@ -128,7 +130,46 @@ class CaseStudyController extends Controller
         }
 
         // ...existing code...
-
+        /* ==============   ADDING THE BLINKING EFFECT   ============== */
+        foreach($CaseStudies as $study) {
+            if($study->study_status_id != 5) {
+                if ($study->created_at < now()->subHours(3)) {
+                    $isBlink = true;
+                    $blinkingColor = '#ff0000'; // Red color for 3 hours past
+                    $blinkingClass = 'blinking_red';
+                    $blinkingLabel = '3 Hours Past';
+                }
+                else if ($study->created_at < now()->subHours(2)) {
+                    $isBlink = true;
+                    $blinkingColor = '#d95b11'; // Orange color for 2 hours past
+                    $blinkingClass = 'blinking_orange';
+                    $blinkingLabel = '2 Hours Past';
+                }
+                else if ($study->created_at < now()->subHour()) {
+                    $isBlink = true;
+                    $blinkingColor = '#ffc107'; // Yellow color for 1 hour past
+                    $blinkingClass = 'blinking_yellow';
+                    $blinkingLabel = '1 Hour Past';
+                }
+                else{
+                    $isBlink = false;
+                    $blinkingClass = '';
+                    $blinkingLabel = '';
+                    $blinkingColor = '';
+                }
+            }
+            else{
+                $isBlink = false;
+                $blinkingClass = '';
+                $blinkingLabel = '';
+                $blinkingColor = '';
+            }
+            $study->isBlink = $isBlink;
+            $study->blinkingColor = $blinkingColor; // Default color if not set
+            $study->blinkingClass = $blinkingClass;
+            $study->blinkingLabel = $blinkingLabel;
+        }
+        /* ==============   ADDING THE BLINKING EFFECT   ============== */
         $authUser = Auth::user();
         $authUserId = $authUser->id;
         $roleId = $authUser->roles[0]->pivot->role_id;

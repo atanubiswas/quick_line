@@ -271,6 +271,64 @@
             background-color: #f1f1f1 !important;
             color: black !important;
         }
+
+        .blinking_red {
+            -webkit-animation: 1s blink ease infinite;
+            -moz-animation: 1s blink ease infinite;
+            -ms-animation: 1s blink ease infinite;
+            -o-animation: 1s blink ease infinite;
+            animation: 1s blink ease infinite;
+        }
+
+        .blinking_orange {
+            -webkit-animation: 2s blink ease infinite;
+            -moz-animation: 2s blink ease infinite;
+            -ms-animation: 2s blink ease infinite;
+            -o-animation: 2s blink ease infinite;
+            animation: 2s blink ease infinite;
+        }
+
+        .blinking_yellow {
+            -webkit-animation: 3s blink ease infinite;
+            -moz-animation: 3s blink ease infinite;
+            -ms-animation: 3s blink ease infinite;
+            -o-animation: 3s blink ease infinite;
+            animation: 3s blink ease infinite;
+        }
+
+        @-webkit-keyframes blink {
+            from, to { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        @-moz-keyframes blink {
+            from, to { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        @-o-keyframes blink {
+            from, to { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes blink {
+            from, to { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        .countdown-timer {
+            font-size: 14px;
+            font-weight: bold;
+            padding: 3px 6px;
+            border-radius: 4px;
+            background: #ccc;
+            color: white;
+            width: fit-content;
+            margin-top: 4px;
+        }
+        .green { color: green; }
+        .orange { color: orangered; }
+        .red { color: red; }
     </style>
 
     <!-- DataTables -->
@@ -480,6 +538,9 @@
                                             <th style="width: 5%;">History</th>
                                             <th style="width: 5%;">Status</th>
                                             <th>Doctor</th>
+                                            @if(!in_array(auth()->user()->roles[0]->id, [6]))
+                                            <th>Case Coordinator</th>
+                                            @endif
                                             <th style="width: 100px;">Controls</th>
                                             @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                             <th>Centre</th>
@@ -509,8 +570,23 @@
                                                     <span title="@if($caseStudy->study_status_id==1) Open By: @else Assigned By: @endif{{ $caseStudy->assigner->name }}" class="badge text-black"><i class="fas fa-user"></i></span>
                                                     @endif
                                                     {{$slNo++}}
+                                                    @if($caseStudy->isBlink)
+                                                        <svg height="10" width="10" class="{{$caseStudy->blinkingClass}}" role="img" aria-label="{{ $caseStudy->blinkingLabel }}">
+                                                            <title>{{ $caseStudy->blinkingLabel }}</title>
+                                                            <circle cx="5" cy="5" r="5" fill="{{ $caseStudy->blinkingColor}}" />
+                                                        </svg>
+                                                    @endif
                                                 </td>
-                                                <td>{{$caseStudy->case_study_id}}</td>
+                                                <td>
+                                                    @php
+                                                        $timeData = 120;
+                                                        if($caseStudy->is_emergency == 1) {
+                                                            $timeData = 45;
+                                                        }
+                                                    @endphp
+                                                    <span @if($caseStudy->study_status_id !==5) class="case-id-time-counter" @endif data-created="{{ $caseStudy->created_at }}" data-time="{{$timeData}}"  @if($caseStudy->study_status_id !==5)style="cursor: pointer; text-decoration: underline;"@endif>{{$caseStudy->case_study_id}}</span>
+                                                    <div class="countdown-timer green" style="display:none;"></div>
+                                                </td>
                                                 <td>{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('jS M Y, g:i a') }}</td>
                                                 <td>
                                                     <div>{{$caseStudy->patient->name}}</div>
@@ -550,6 +626,18 @@
                                                     </span>
                                                 </td>
                                                 <td>{!!$doctor!!}</td>
+                                                @if(!in_array(auth()->user()->roles[0]->id, [6]))
+                                                <td>
+                                                    @if(!empty($caseStudy->assigner_id))
+                                                        {{$caseStudy->assigner->name}}
+                                                        @if(!empty($caseStudy->assigner->mobile_number))
+                                                            <br/><strong>M: </strong>({{$caseStudy->assigner->mobile_number}})
+                                                        @endif
+                                                    @else
+                                                        <span class="badge bg-gradient-danger">Not Assigned</span>
+                                                    @endif
+                                                </td>
+                                                @endif
                                                 <td>
                                                     @if(in_array(auth()->user()->roles[0]->id, [1, 5, 6]))
                                                         <button class="btn btn-custom-class btn-xs bg-gradient-purple assigner_view_image" title="View Images" data-pt-name="{{ $caseStudy->patient->name }}" data-index="{{ $caseStudy->id }}"><i class="fas fa-eye"></i></button>
@@ -1345,7 +1433,13 @@
                             "order": [[0, 'asc']],
                             rowId: function(data) {
                                 return 'row-' + data.id; // Ensuring a unique ID for each row
-                            }
+                            },
+                            columnDefs: [
+                                { responsivePriority: 1, targets: 0 }, // Always show first column
+                                { responsivePriority: 2, targets: 1 }, // Show this second
+                                { responsivePriority: 10001, targets: 2 }, // Hide early on mobile
+                                { responsivePriority: 10002, targets: 3 }  // Hide even earlier
+                            ]
                         });
                     },
                     error: function(response){
@@ -2647,6 +2741,63 @@
                 confirmButtonText: 'OK'
             });
             });
+        });
+
+        let intervals = {};
+
+        $("#study_table").on("mouseenter", ".case-id-time-counter", function () {
+            let $this = $(this);
+            let createdAt = new Date($this.data("created")).getTime();
+            let totalMinutes = parseInt($this.data("time"));
+            let totalMs = totalMinutes * 60 * 1000;
+            let endTime = createdAt + totalMs;
+            let $timer = $this.siblings(".countdown-timer");
+
+            $timer.show();
+
+            let caseId = $this.text();
+            clearInterval(intervals[caseId]); // avoid duplicates
+
+            intervals[caseId] = setInterval(function () {
+                let now = new Date().getTime();
+                let distance = endTime - now;
+
+                if (distance <= 0) {
+                    clearInterval(intervals[caseId]);
+                    $timer.text("0:00").removeClass("green orange").addClass("red");
+                    return;
+                }
+
+                let hours = Math.floor((distance / (1000 * 60 * 60)));
+                let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                let percentageLeft = (distance / totalMs) * 100;
+
+                $timer.removeClass("green orange red");
+                if (percentageLeft <= 20) {
+                    $timer.addClass("red");
+                } else if (percentageLeft <= 50) {
+                    $timer.addClass("orange");
+                } else {
+                    $timer.addClass("green");
+                }
+
+                let timeString = "";
+                if (hours > 0) {
+                    timeString = hours + ":" + (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+                } else {
+                    timeString = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+                }
+
+                $timer.text(timeString);
+            }, 1000);
+        });
+
+        $("#study_table").on("mouseleave", ".case-id-time-counter", function () {
+            let caseId = $(this).text();
+            clearInterval(intervals[caseId]);
+            $(this).siblings(".countdown-timer").hide();
         });
     });
     </script>

@@ -32,7 +32,9 @@ class BillingController extends Controller
     // Show the price management page
     public function index()
     {
-        $centers = Laboratory::orderBy('lab_name', 'asc')->get();
+        $centers = Laboratory::orderBy('lab_name', 'asc')
+            ->where('status', 1)
+            ->get();
         return view('admin.billing.center_prices', compact('centers'));
     }
 
@@ -85,9 +87,10 @@ class BillingController extends Controller
     {
         $centerId = $request->input('center_id');
         $prices = $request->input('prices', []);
+        $countSuccess = $countFail = 0;
         foreach ($prices as $item) {
             if (!isset($item['study_type_id']) || !isset($item['price']) || !isset($item['price_group_id'])) continue;
-            StudyCenterPrice::updateOrCreate(
+            $result = StudyCenterPrice::updateOrCreate(
                 [
                     'center_id' => $centerId,
                     'study_type_id' => $item['study_type_id'],
@@ -97,13 +100,21 @@ class BillingController extends Controller
                     'price_group_id' => $item['price_group_id']
                 ]
             );
+
+            if ($result) {
+                $countSuccess++;
+            } else {
+                $countFail++;
+            }
         }
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'count_success' => $countSuccess, 'count_fail' => $countFail]);
     }
 
     // Show the Generate Bill page
     public function generateBill(Request $request) {
-        $centres = Laboratory::orderBy("lab_name")->get();
+        $centres = Laboratory::orderBy("lab_name")
+            ->where('status', 1)
+            ->get();
         return view('admin.billing.generate_bill', compact('centres'));
     }
 
