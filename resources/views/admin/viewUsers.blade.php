@@ -19,6 +19,9 @@
 <link rel="stylesheet" href="{{asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css')}}">
 <link rel="stylesheet" href="{{asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css')}}">
 <link rel="stylesheet" href="{{asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css')}}">
+
+<link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">
+<link rel="stylesheet" href="{{asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css')}}">
 @endsection
 @section('content')
 <div class="content-wrapper">
@@ -188,12 +191,13 @@
                                         <th>Mobile Number</th>
                                         <th>User Type</th>
                                         <th>Last Active At</th>
+                                        <th>QC Modalities</th>
                                         <th>Status</th>
-                                        <th>Controls</th>
+                                        <th width="5%">Controls</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($users as $user)
+                                    @foreach($qcUsers as $user)
                                     @if($user->roles[0]->name == 'Quality Controller')
                                     <tr>
                                         <td>
@@ -224,11 +228,17 @@
                                             @endif
                                         </td>
                                         <td>
+                                            @foreach($user->modalities as $modality)
+                                                <span class="badge badge-info">{{$modality->name}}</span>
+                                            @endforeach
+                                        </td>
+                                        <td>
                                             <input type="checkbox" @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') disabled @endif id="user_status_{{$user->id}}" data-id="{{$user->id}}" @if($user->status==1) checked="checked" @endif class="user_status" switch="bool" />
                                             <label for="user_status_{{$user->id}}"  @if($authUser->roles[0]->name !== 'Admin' && $user->roles[0]->name == 'Manager') style="background-color: #aaa" @endif data-on-label="Active" data-off-label="Inactive"></label>
                                         </td>
                                         <td>
-                                            <button type="button" class="btn btn-warning btn-sm reset_password" data-id="{{$user->id}}"><i class="fas fa-key"></i> Reset Password
+                                            <button type="button" class="btn btn-success btn-sm get_qc_modalities" data-id="{{$user->id}}"><i class="fas fa-flask"></i> Edit Modalities</button>
+                                            <button type="button" class="btn btn-warning btn-sm reset_password" data-id="{{$user->id}}"><i class="fas fa-key"></i> Reset Password</button>
                                         </td>
                                     </tr>
                                     @endif
@@ -378,6 +388,14 @@
     </section>
     <!-- /.content -->
 </div>
+
+<div class="modal fade" id="qc_modality_modal" tabindex="-1" role="dialog" aria-labelledby="qc_modality_modal" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" id="qc_modality_modal_content">
+
+    </div>
+  </div>
+</div>
 @endsection
 
 @section("extra_js")
@@ -517,7 +535,23 @@ $(function () {
             });
         });
     });
-    
+
+    $(document).on('click', '.get_qc_modalities', function () {
+        var user_id = $(this).data("id");
+        $.ajax({
+            url: '{{url("admin/get-qc-modalities")}}',
+            type: 'POST',
+            data: {user_id: user_id},
+            success: function (data) {
+                $('#qc_modality_modal_content').html(data);
+                $('#qc_modality_modal').modal('show');
+            },
+            error: function (xhr, status, error) {
+                printErrorMsg("Failed to load QC modalities. Please try again.");
+            }
+        });
+    });
+
     function changeUserStatus(user_id, isChecked) {
         var form_data = new FormData();
         form_data.append('user_id', user_id);

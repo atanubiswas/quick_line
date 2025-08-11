@@ -94,4 +94,14 @@ class User extends Authenticatable
             'id'                            // Local key on Doctor table
         )->whereColumn('case_studies.doctor_id', 'doctors.id');
     }
+
+    public function modalities() {
+        // return $this->hasMany(qualityControllerModality::class, 'qc_user_id');
+        return $this->belongsToMany(
+            \App\Models\Modality::class,
+            'quality_controller_modalities',
+            'qc_user_id',
+            'modality_id'
+        );
+    }
 }

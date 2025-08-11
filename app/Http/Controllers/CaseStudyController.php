@@ -105,10 +105,15 @@ class CaseStudyController extends Controller
                 ->get();
         }
         elseif(in_array(auth()->user()->roles[0]->id, [2])){
-            $doctor = Doctor::where("user_id", auth()->user()->id)->first();
+            $userId = auth()->user()->id;
             $CaseStudies = caseStudy::orderBy('created_at', 'desc')
                 ->with('assigner', 'patient', 'laboratory', 'doctor', 'status', 'modality.DoctorModality.Doctor')
                 ->whereIn('study_status_id', [3])
+                ->whereIn('modality_id', function($query) use($userId) {
+                    $query->select('modality_id')
+                        ->from('quality_controller_modalities')
+                        ->where('qc_user_id', $userId);
+                })
                 ->get();
         }
         elseif(in_array(auth()->user()->roles[0]->id, [3])){

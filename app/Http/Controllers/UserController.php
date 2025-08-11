@@ -11,8 +11,10 @@ use DB;
 use App\Models\User;
 use App\Models\role;
 use App\Models\Doctor;
-use App\Models\Laboratory;
+use App\Models\Modality;
 use App\Models\role_user;
+use App\Models\Laboratory;
+use App\Models\qualityControllerModality;
 
 class UserController extends Controller
 {
@@ -88,10 +90,14 @@ class UserController extends Controller
     public function viewUser(){
         $authUser = Auth::user();
         $users = User::with('roles')
-            // ->whereIn("access_type", array('Quality Controller', 'Manager', 'Assigner', 'Centre', 'Doctor'))
+            ->where("access_type", "!=", "Quality Controller")
             ->get();
         $pageName = $this->pageName;
-        return view("admin.viewUsers", compact("users", "pageName", "authUser"));
+
+        $qcUsers = User::with('roles', 'modalities')
+            ->where("access_type", "Quality Controller")
+            ->get();
+        return view("admin.viewUsers", compact("users", "pageName", "authUser", "qcUsers"));
     }
     
     /**
@@ -159,5 +165,29 @@ class UserController extends Controller
         $user->save();
         
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);
+    }
+
+    public function getQcModalities(Request $request){
+        $request->validate([
+            'user_id' => 'required|integer|exists:users,id'
+        ]);
+
+        $qcUser = User::with('modalities')->find($request->user_id);
+        $modalities = Modality::all();
+        $qcModalities = $qcUser->modalities->pluck('id')->toArray();
+
+        return view('admin.qcModalities', compact('qcUser', 'modalities', 'qcModalities'));
+    }
+
+    public function editQcModalities(Request $request){
+        $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'modalities' => 'required|array'
+        ]);
+
+        $qcUser = User::find($request->user_id);
+        $qcUser->modalities()->sync($request->modalities);
+
+        return response()->json(['status' => 'success', 'message' => [$this->getMessages('_UPSUMSG')]]);
     }
 }
