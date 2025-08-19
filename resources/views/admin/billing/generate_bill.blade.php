@@ -1,5 +1,9 @@
 @extends('layouts.admin_layout')
 @section('title', 'Generate Bill')
+@section('extra_css')
+<link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">
+<link rel="stylesheet" href="{{asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css')}}">
+@endsection
 @section('content')
 <div class="content-wrapper">
     <div class="content-header">
@@ -21,7 +25,7 @@
                     <form id="bill-filter-form" class="form-row align-items-end">
                         <div class="form-group col-md-3">
                             <label for="centre_select">Centre</label>
-                            <select id="centre_select" name="centre_id" class="form-control">
+                            <select id="centre_select" name="centre_id" class="form-control select2">
                                 <option value="">-- Select Centre --</option>
                                 @foreach($centres as $centre)
                                     <option value="{{ $centre->id }}">{{ $centre->lab_name }}</option>
@@ -101,6 +105,11 @@
 <script src="{{asset('/js/export-excel.js')}}"></script>
 <script>
 $(document).ready(function() {
+     $('.select2').select2({
+      theme: 'bootstrap4',
+      placeholder: '-- Select Centre --',
+      selectionCssClass: 'bg-purple'
+    });
     // Set min for end_date to start_date
     $('#start_date').on('change', function() {
         var startDate = $(this).val();

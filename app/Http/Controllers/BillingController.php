@@ -295,8 +295,7 @@ class BillingController extends Controller
     /**
      * Export bill as PDF using DomPDF
      */
-    public function exportPdf(Request $request)
-    {
+    public function exportPdf(Request $request){
         $centreId = $request->input('centre_id');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
@@ -359,7 +358,8 @@ class BillingController extends Controller
             'endDate' => $endDate,
             'invoice_number' => $invoice_number,
             'invoice_date' => $invoice_date,
-        ]);
+        ])
+        ->setPaper([0, 0, 595.28, 5000]);
         $centreName = $centre ? preg_replace('/[^A-Za-z0-9_\-]/', '_', $centre->lab_name) : 'Centre';
         $fileName = $centreName . '_Bill_' . $startDate . '_to_' . $endDate . '.pdf';
         $fileName = str_replace([' ', '__'], '_', $fileName);
@@ -465,8 +465,10 @@ class BillingController extends Controller
     }
 
     // Export doctor bill as PDF
-    public function generateDoctorBillPdf(Request $request)
-    {
+    public function generateDoctorBillPdf(Request $request){
+        ini_set('memory_limit', '512M'); // Increase memory just for this request
+        ini_set('max_execution_time', 300); // Optional: give more time (5 minutes)
+        
         $doctorId = $request->input('doctor_id');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
@@ -522,7 +524,11 @@ class BillingController extends Controller
             'startDate' => $startDate,
             'endDate' => $endDate,
             'bill_number' => $bill_number,
-        ]);
+        ])
+        ->setPaper([0, 0, 595.28, 5000])
+        ->set_option('isRemoteEnabled', true)
+        ->set_option('dpi', 72);
+
         $doctorName = $doctor ? preg_replace('/[^A-Za-z0-9_\-]/', '_', $doctor->name) : 'Doctor';
         $fileName = $doctorName . '_Bill_' . $startDate . '_to_' . $endDate . '.pdf';
         $fileName = str_replace([' ', '__'], '_', $fileName);

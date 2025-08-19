@@ -52,7 +52,7 @@
         </div>
 
         <div class="col-lg-4 col-6">
-          <div class="small-box bg-warning">
+          <div class="small-box bg-danger">
             <div class="inner">
               <h3>{{ $currentEmergencyCase }}</h3>
               <p>Current Emergency Case</p>

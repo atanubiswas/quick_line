@@ -10,11 +10,14 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Collection;
 
 use App\Models\User;
+use App\Models\study;
+use App\Models\Doctor;
 use App\Models\patient;
 use App\Models\caseStudy;
 use App\Models\DoctorLog;
 use App\Models\role_user;
 use App\Models\WalletUser;
+use App\Models\Laboratory;
 use App\Models\Transaction;
 use App\Models\LabModality;
 use App\Models\caseStudyLog;
@@ -625,8 +628,12 @@ trait GeneralFunctionTrait{
             $stDate = Carbon::parse($stDate)->startOfMonth();
             $endDate = Carbon::parse($endDate)->endOfDay();
         }
-        
-        $caseStudyList = caseStudy::when($roleName == 'Doctor', function ($query) use ($authUser) {
+
+        $caseStudyList = study::selectRaw("case_studies.case_study_id, studies.study_type_id, patients.name as patient_name, patients.age as patient_age, patients.gender as patient_gender, study_statuses.name as study_status")
+        ->leftJoin("case_studies", "case_studies.id", "=", "studies.case_study_id")
+        ->leftJoin("patients", "patients.id", "=", "case_studies.patient_id")
+        ->leftJoin("study_statuses", "study_statuses.id", "=", "case_studies.study_status_id")
+        ->when($roleName == 'Doctor', function ($query) use ($authUser) {
             $query->where('doctor_id', function($query) use ($authUser){
                 $query->select('id')
                     ->from('doctors')
@@ -638,13 +645,14 @@ trait GeneralFunctionTrait{
         })
         ->where(function($query) use ($stDate, $endDate){
             if($stDate && $endDate){
-                $query->whereBetween('created_at', [$stDate, $endDate]);
+                $query->whereBetween('case_studies.created_at', [$stDate, $endDate]);
             }
         })
         ->where("study_status_id", '=', 5)
-        ->with("patient")
-        ->orderBy('created_at', 'desc')
+        ->with('type')
+        ->orderBy('case_studies.created_at', 'desc')
         ->get();
+        
         return $caseStudyList;
     }
 
@@ -665,6 +673,11 @@ trait GeneralFunctionTrait{
             })
             ->when($roleName == 'Quality Controller', function ($query) use ($authUser) {
                 $query->where('study_status_id', 3);
+                $query->whereIn('modality_id', function($query) use ($authUser) {
+                    $query->select('modality_id')
+                        ->from('quality_controller_modalities')
+                        ->where('qc_user_id', $authUser->id);
+                });
             })
             ->when($isEmergency, function ($query) {
                 $query->where('is_emergency', 1);
@@ -683,8 +696,9 @@ trait GeneralFunctionTrait{
         
         $currentMonth = Carbon::now()->format('m');
         $currentYear = Carbon::now()->format('Y');
-        $totalCaseThisMonth = caseStudy::whereMonth('created_at', $currentMonth)
-            ->whereYear('created_at', $currentYear)
+        $totalCaseThisMonth = study::whereMonth('studies.created_at', $currentMonth)
+            ->whereYear('studies.created_at', $currentYear)
+            ->leftJoin("case_studies", "case_studies.id", "=", "studies.case_study_id")
             ->when($roleName == 'Doctor', function ($query) use ($authUser) {
                 $query->where('doctor_id', function($query) use ($authUser){
                     $query->select('id')
@@ -708,10 +722,10 @@ trait GeneralFunctionTrait{
     private function getTopCentreThisMonth(){
         $currentMonth = Carbon::now()->format('m');
         $currentYear = Carbon::now()->format('Y');
-        $topCentreThisMonth = caseStudy::selectRaw("laboratory_id, Count(*) as count")
-            ->with("laboratory")
-            ->whereMonth('created_at', $currentMonth)
-            ->whereYear('created_at', $currentYear)
+        $topCentreThisMonth = study::selectRaw("laboratory_id, Count(*) as count")
+            ->leftJoin("case_studies", "case_studies.id", "=", "studies.case_study_id")
+            ->whereMonth('case_studies.created_at', $currentMonth)
+            ->whereYear('case_studies.created_at', $currentYear)
             ->groupBy('laboratory_id')
             ->orderBy('count', 'desc')
             ->first();
@@ -721,7 +735,8 @@ trait GeneralFunctionTrait{
             "count" => 0
         );
         if($topCentreThisMonth){
-            $returnArray['name'] = $topCentreThisMonth->laboratory->lab_name;
+            $lab = Laboratory::find($topCentreThisMonth->laboratory_id);
+            $returnArray['name'] = $lab ? $lab->lab_name : "N/A";
             $returnArray['count'] = $topCentreThisMonth->count;
         }
         return $returnArray;
@@ -734,11 +749,11 @@ trait GeneralFunctionTrait{
     private function getTopQCThisMonth(){
         $currentMonth = Carbon::now()->format('m');
         $currentYear = Carbon::now()->format('Y');
-        $topQCThisMonth = caseStudy::selectRaw("qc_id, Count(*) as count")
-            ->with("qualityController")
+        $topQCThisMonth = study::selectRaw("qc_id, Count(*) as count")
+            ->leftJoin("case_studies", "case_studies.id", "=", "studies.case_study_id")
             ->whereNotNull('qc_id')
-            ->whereMonth('created_at', $currentMonth)
-            ->whereYear('created_at', $currentYear)
+            ->whereMonth('case_studies.created_at', $currentMonth)
+            ->whereYear('case_studies.created_at', $currentYear)
             ->groupBy('qc_id')
             ->orderBy('count', 'desc')
             ->first();
@@ -748,7 +763,8 @@ trait GeneralFunctionTrait{
             "count" => 0
         );
         if($topQCThisMonth){
-            $returnArray['name'] = $topQCThisMonth->qualityController->name;
+            $qc = user::find($topQCThisMonth->qc_id);
+            $returnArray['name'] = $qc ? $qc->name : "N/A";
             $returnArray['count'] = $topQCThisMonth->count;
         }
         return $returnArray;
@@ -761,11 +777,11 @@ trait GeneralFunctionTrait{
     private function getTopDoctorThisMonth(){
         $currentMonth = Carbon::now()->format('m');
         $currentYear = Carbon::now()->format('Y');
-        $topDoctorThisMonth = caseStudy::selectRaw("doctor_id, Count(*) as count")
-            ->with("doctor")
+        $topDoctorThisMonth = study::selectRaw("doctor_id, Count(*) as count")
+            ->leftJoin("case_studies", "case_studies.id", "=", "studies.case_study_id")
             ->whereNotNull('doctor_id')
-            ->whereMonth('created_at', $currentMonth)
-            ->whereYear('created_at', $currentYear)
+            ->whereMonth('case_studies.created_at', $currentMonth)
+            ->whereYear('case_studies.created_at', $currentYear)
             ->groupBy('doctor_id')
             ->orderBy('count', 'desc')
             ->first();
@@ -775,7 +791,8 @@ trait GeneralFunctionTrait{
             "count" => 0
         );
         if($topDoctorThisMonth){
-            $returnArray['name'] = $topDoctorThisMonth->doctor->name;
+            $doctor = doctor::find($topDoctorThisMonth->doctor_id);
+            $returnArray['name'] = $doctor ? $doctor->name : "N/A";
             $returnArray['count'] = $topDoctorThisMonth->count;
         }
         return $returnArray;

@@ -30,17 +30,15 @@
             @foreach($caseStudyList as $caseStudy)
             <tr>
             <td>{{ $caseStudy->case_study_id }}</td>
-            <td>{{ $caseStudy->patient->name ?? '-' }}</td>
+            <td>{{ $caseStudy->patient_name ?? '-' }}</td>
             <td>
-                {{ $caseStudy->patient->age ?? '-' }} / 
-                {{ $caseStudy->patient->gender}}
+                {{ $caseStudy->patient_age ?? '-' }} / 
+                {{ $caseStudy->patient_gender ?? '-' }}
             </td>
             <td data-order="{{ $caseStudy->created_at }}">{{ \Carbon\Carbon::parse($caseStudy->created_at)->format('jS M Y, g:i a') }}</td>
-            <td><span class="badge bg-gradient-info">{{ $caseStudy->status->name ?? '-' }}</span></td>
+            <td><span class="badge bg-gradient-info">{{ $caseStudy->study_status ?? '-' }}</span></td>
             <td>
-                @foreach($caseStudy->study as $study)
-                    {{ $study->type->name }}@if(!$loop->last), @endif
-                @endforeach
+                {{ $caseStudy->type->name ?? '-' }}
             </td>
             </tr>
             @endforeach
