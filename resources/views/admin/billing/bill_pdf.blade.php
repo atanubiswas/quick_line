@@ -18,9 +18,11 @@
         th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; }
         th { background: #e6f2ff; font-size: 13px; }
         .summary-row td { background: #e6f2ff; font-weight: bold; }
+        .page-break { page-break-after: always; }
     </style>
 </head>
 <body>
+    @if($isFirstChunk)
     <div class="header" style="margin-bottom: 20px;">
         <table style="width:100%; border:none;">
             <tr>
@@ -129,8 +131,10 @@
             </tr>
         </table>
     </div>
-    <table>
+    @endif
+    <table class="page-break">
         <thead>
+            @if($isFirstChunk)
             <tr>
                 <td colspan="9" style="text-align:left; font-size: 16px; font-weight: bold; background-color: #4469BB; color: #ffffff;">Itemized Bill</td>
             </tr>
@@ -145,11 +149,12 @@
                 <th>Reported On</th>
                 <th>Amount</th>
             </tr>
+            @endif
         </thead>
         <tbody>
-            @forelse($billData as $idx => $row)
+            @forelse($billData as $row)
                 <tr>
-                    <td>{{ $idx+1 }}</td>
+                    <td>{{ $serialOffset + $loop->iteration }}</td>
                     <td>{{ $row['patient_id'] }}</td>
                     <td>{{ $row['patient_name'] }}</td>
                     <td>{{ $row['gender_age'] }}</td>
@@ -162,17 +167,21 @@
             @empty
                 <tr><td colspan="9" style="text-align:center;">No data found.</td></tr>
             @endforelse
+            @if($isLastChunk)
             <tr class="summary-row">
                 <td colspan="3">Total Number of Study</td>
-                <td>{{ count($billData) }}</td>
+                <td>{{ $totalStudies }}</td>
                 <td colspan="2"></td>
                 <td colspan="2">Total Amount</td>
                 <td>{{ number_format($totalAmount, 2) }}</td>
             </tr>
+            @endif
         </tbody>
     </table>
+    @if($isLastChunk)
     <footer style="width:100%; text-align:center; margin-top:40px; font-size:14px; color:#4469BB; font-weight:bold;">
         Thanks for your contribution.
     </footer>
+    @endif
 </body>
 </html>

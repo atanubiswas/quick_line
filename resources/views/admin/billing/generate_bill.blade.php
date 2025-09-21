@@ -85,7 +85,7 @@
                         <button id="download-excel-btn" class="btn btn-success" style="background-color: #28a745; border-color: #28a745;">
                             Download Excel
                         </button>
-                        <form id="pdf-export-form" method="GET" action="{{ route('admin.billing.export_pdf') }}" style="display:inline;">
+                        <form id="pdf-export-form" method="GET" action="{{ route('admin.billing.export_pdf') }}" style="display:inline;" target="_blank">
                             <input type="hidden" name="centre_id" id="pdf_centre_id">
                             <input type="hidden" name="start_date" id="pdf_start_date">
                             <input type="hidden" name="end_date" id="pdf_end_date">

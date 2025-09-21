@@ -43,7 +43,7 @@
 
                             <div id="billPreview" class="mt-4" style="display: none;">
                                 <h4>Bill Preview</h4>
-                                <div class="table-responsive">
+                                <div class="table-responsive" id="bill_table_container">
                                     <table class="table table-bordered">
                                         <thead>
                                             <tr>
@@ -68,7 +68,7 @@
                                     <form id="developer-pdf-export-form" method="GET" action="{{ route('admin.billing.developer_generate_pdf') }}" style="display:inline;">
                                         <input type="hidden" name="start_date" id="pdf_start_date">
                                         <input type="hidden" name="end_date" id="pdf_end_date">
-                                        <button type="submit" id="download-developer-pdf-btn" class="btn btn-success ml-2" style="background-color: #28a745; border-color: #28a745;">
+                                        <button type="button" id="download-developer-pdf-btn" class="btn btn-success ml-2" style="background-color: #28a745; border-color: #28a745;">
                                             Download PDF
                                         </button>
                                     </form>
@@ -115,19 +115,8 @@ $(document).ready(function() {
                     alert(response.error);
                     return;
                 }
-                
-                response.data.forEach(function(item) {
-                    $('#billTable').append(`
-                        <tr>
-                            <td>${item.case_id}</td>
-                            <td>${item.patient_name}</td>
-                            <td>${item.gender_age}</td>
-                            <td>${item.date}</td>
-                            <td>₹${item.amount}</td>
-                        </tr>
-                    `);
-                });
-                $('#totalAmount').text('₹' + response.total_amount);
+
+                $("#bill_table_container").html(response);
                 $('#billPreview').show();
             },
             error: function(xhr, status, error) {
@@ -143,6 +132,7 @@ $(document).ready(function() {
         console.log('PDF Start Date:', startDate, 'PDF End Date:', endDate);
         $('#pdf_start_date').val(startDate);
         $('#pdf_end_date').val(endDate);
+        $('#developer-pdf-export-form').submit();
     });
 });
 </script>

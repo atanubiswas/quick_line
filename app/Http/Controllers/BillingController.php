@@ -1,20 +1,24 @@
 <?php
-// app/Http/Controllers/BillingController.php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+use Illuminate\Support\Facades\Validator;
+use App\Jobs\GenerateDoctorBillPdfJob;
+use Illuminate\Support\Facades\DB;
+
 use App\Models\Bill;
 use App\Models\Doctor;
+use App\Models\study;
 use App\Models\studyType;
 use App\Models\caseStudy;
 use App\Models\Laboratory;
 use App\Models\DoctorBill;
-use App\Models\DoctorPriceSetting;
+use App\Models\doctorBillPdfJob;
 use App\Models\StudyPriceGroup;
 use App\Models\StudyCenterPrice;
+use App\Models\DoctorPriceSetting;
 
 class BillingController extends Controller
 {
@@ -87,27 +91,31 @@ class BillingController extends Controller
     {
         $centerId = $request->input('center_id');
         $prices = $request->input('prices', []);
-        $countSuccess = $countFail = 0;
+        $countSuccess = $countFail = $wrongData = 0;
         foreach ($prices as $item) {
-            if (!isset($item['study_type_id']) || !isset($item['price']) || !isset($item['price_group_id'])) continue;
+            if (!isset($item['study_type_id']) || !isset($item['price']) || !isset($item['price_group_id'])) {
+                $wrongData++;
+                continue;
+            }
             $result = StudyCenterPrice::updateOrCreate(
                 [
                     'center_id' => $centerId,
                     'study_type_id' => $item['study_type_id'],
+                    'price_group_id' => $item['price_group_id']
                 ],
                 [
-                    'price' => $item['price'],
-                    'price_group_id' => $item['price_group_id']
+                    'price' => $item['price']
                 ]
             );
-
+            
             if ($result) {
                 $countSuccess++;
             } else {
                 $countFail++;
             }
+            
         }
-        return response()->json(['success' => true, 'count_success' => $countSuccess, 'count_fail' => $countFail]);
+        return response()->json(['success' => true, 'count_success' => $countSuccess, 'count_fail' => $countFail, 'wrong_data' => $wrongData]);
     }
 
     // Show the Generate Bill page
@@ -295,7 +303,8 @@ class BillingController extends Controller
     /**
      * Export bill as PDF using DomPDF
      */
-    public function exportPdf(Request $request){
+    public function exportPdfOld(Request $request)
+    {
         $centreId = $request->input('centre_id');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
@@ -364,6 +373,126 @@ class BillingController extends Controller
         $fileName = $centreName . '_Bill_' . $startDate . '_to_' . $endDate . '.pdf';
         $fileName = str_replace([' ', '__'], '_', $fileName);
         return $pdf->download($fileName);
+    }
+
+    /**
+     * Export bill as PDF using DomPDF
+     */
+    public function exportPdf(Request $request)
+    {
+    ini_set('memory_limit', '4096M');
+    ini_set('max_execution_time', 1800);
+
+        $centreId = $request->input('centre_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        // Get all cases first to calculate total studies correctly.
+        $allCases = caseStudy::where('laboratory_id', $centreId)
+            ->where('study_status_id', 5)
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->with('study') // Eager load studies
+            ->get();
+
+        $totalStudies = $allCases->reduce(function ($carry, $case) {
+            return $carry + $case->study->count();
+        }, 0);
+
+        $html = '';
+        $chunkNumber = 1;
+        $serialOffset = 0;
+        $processedStudies = 0;
+        $totalAmount = 0.00;
+        foreach ($allCases as $case) {
+             foreach ($case->study as $study) {
+                $amount = '-';
+                if ($study && $study->type) {
+                    $scp = StudyCenterPrice::where('center_id', $centreId)
+                        ->where('study_type_id', $study->type->id)
+                        ->first();
+                    if ($scp) {
+                        $amount = $scp->price;
+                        $totalAmount += floatval($scp->price);
+                    }
+                }
+            }
+        }
+        // Use the fetched collection for chunking
+        $allCases->chunk(500)->each(function ($cases) use (&$html, &$chunkNumber, $centreId, $startDate, $endDate, $totalStudies, &$serialOffset, &$processedStudies, &$totalAmount) {
+            $billDataArr = [];
+
+            foreach ($cases as $case) {
+                $patientName = $case->patient ? $case->patient->name : '-';
+                $patientId = $case->patient ? $case->patient->patient_id : '-';
+                $genderAge = $case->patient ? (ucfirst($case->patient->gender) . ' / ' . $case->patient->age) : '-';
+                $modality = $case->modality ? $case->modality->name : '-';
+                $reportedOn = $case->status_updated_on ? date('d-M-Y', strtotime($case->status_updated_on)) : '-';
+
+                foreach ($case->study as $study) {
+                    $amount = '-';
+                    if ($study && $study->type) {
+                        $scp = StudyCenterPrice::where('center_id', $centreId)
+                            ->where('study_type_id', $study->type->id)
+                            ->first();
+                        if ($scp) {
+                            $amount = $scp->price;
+                        }
+                    }
+                    $billDataArr[] = [
+                        'patient_id' => $patientId,
+                        'patient_name' => $patientName,
+                        'gender_age' => $genderAge,
+                        'modality' => $modality,
+                        'study_type' => $study && $study->type ? $study->type->name : '-',
+                        'date' => $case->created_at ? $case->created_at->format('d-M-Y') : '-',
+                        'reported_on' => $reportedOn,
+                        'amount' => $amount,
+                    ];
+                }
+            }
+
+            $processedStudies += count($billDataArr);
+
+            $centre = Laboratory::find($centreId);
+            $bill = Bill::where('centre_id', $centreId)
+                ->where('start_date', $startDate)
+                ->where('end_date', $endDate)
+                ->first();
+            $invoice_number = $bill ? $bill->invoice_number : null;
+            $invoice_date = $bill ? $bill->created_at : null;
+
+            $isFirstChunk = $chunkNumber === 1;
+            $isLastChunk = $processedStudies >= $totalStudies;
+
+            $html .= view('admin.billing.bill_pdf', [
+                'billData' => $billDataArr,
+                'totalAmount' => $totalAmount,
+                'centre' => $centre,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'invoice_number' => $invoice_number,
+                'invoice_date' => $invoice_date,
+                'isFirstChunk' => $isFirstChunk,
+                'isLastChunk' => $isLastChunk,
+                'totalStudies' => $totalStudies, // Pass correct total
+                'serialOffset' => $serialOffset, // Pass the offset
+                'chunkNumber' => $chunkNumber // Add chunk number
+            ])->render();
+
+            $serialOffset += count($billDataArr); // Increment offset for the next chunk
+            $chunkNumber++;
+        });
+
+        $pdf = Pdf::loadHtml($html);
+        $pdf->setPaper('A4', 'portrait');
+
+        $centre = Laboratory::find($centreId);
+        $centreName = $centre ? preg_replace('/[^A-Za-z0-9_\-]/', '_', $centre->lab_name) : 'Centre';
+        $fileName = $centreName . '_Bill_' . $startDate . '_to_' . $endDate . '.pdf';
+        $fileName = str_replace([' ', '__'], '_', $fileName);
+
+        return $pdf->stream($fileName);
     }
 
     // Show the doctor price management page
@@ -464,82 +593,193 @@ class BillingController extends Controller
         return response()->json(['data' => $data, 'total_amount' => $totalAmount]);
     }
 
-    // Export doctor bill as PDF
-    public function generateDoctorBillPdf(Request $request){
-        ini_set('memory_limit', '512M'); // Increase memory just for this request
-        ini_set('max_execution_time', 300); // Optional: give more time (5 minutes)
-        
+    // Export doctor bill as PDF Old --- IGNORE ---
+    public function generateDoctorBillPdfOld(Request $request){
+        ini_set('memory_limit', '4096M');
+        ini_set('max_execution_time', 1800);
+
         $doctorId = $request->input('doctor_id');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $doctor = Doctor::find($doctorId);
-        $cases = caseStudy::where('doctor_id', $doctorId)
+
+        $totalCases = caseStudy::where('doctor_id', $doctorId)
+            ->where('study_status_id', 5)
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->count();
+
+        $html = '';
+        $chunkNumber = 1;
+        $processedCases = 0;
+        $missingPrice = false;
+        $serialOffset = 0;
+
+        // Pre-calculate overall totalAmount and cache doctor's price settings to avoid repeated queries
+        $priceSettings = DoctorPriceSetting::where('doctor_id', $doctorId)->get()->keyBy('price_group_id');
+        $overallTotalAmount = 0.0;
+
+        // Compute overall total using chunking to avoid loading all cases into memory
+        caseStudy::where('doctor_id', $doctorId)
+            ->where('study_status_id', 5)
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->with(['study.type'])
+            ->chunk(500, function ($casesChunk) use (&$overallTotalAmount, $priceSettings, &$missingPrice) {
+                foreach ($casesChunk as $case) {
+                    foreach ($case->study as $study) {
+                        if ($study && $study->type) {
+                            $ps = $priceSettings->get($study->type->price_group_id);
+                            if ($ps) {
+                                $overallTotalAmount += floatval($ps->price);
+                            } else {
+                                $missingPrice = true;
+                            }
+                        }
+                    }
+                }
+            });
+
+        if ($missingPrice) {
+            return back()->with('error', 'Some studies do not have a price set for this doctor. Please update prices in the doctor billing section.');
+        }
+
+        caseStudy::where('doctor_id', $doctorId)
             ->where('study_status_id', 5)
             ->whereDate('created_at', '>=', $startDate)
             ->whereDate('created_at', '<=', $endDate)
             ->with(['patient', 'study.type'])
-            ->get();
-        $missingPrice = false;
-        $totalAmount = 0;
-        $billDataArr = [];
-        foreach ($cases as $case) {
-            $patientName = $case->patient ? $case->patient->name : '-';
-            $genderAge = $case->patient ? (ucfirst($case->patient->gender) . ' / ' . $case->patient->age) : '-';
-            foreach ($case->study as $study) {
-                $amount = '-';
-                if ($study && $study->type) {
-                    $priceSetting = DoctorPriceSetting::where('doctor_id', $doctorId)
-                        ->where('price_group_id', $study->type->price_group_id)
-                        ->first();
-                    if ($priceSetting) {
-                        $amount = $priceSetting->price;
-                        $totalAmount += floatval($priceSetting->price);
-                    } else {
-                        $missingPrice = true;
+            ->chunk(500, function ($cases) use (&$html, &$chunkNumber, &$missingPrice, $doctor, $startDate, $endDate, $totalCases, &$processedCases, &$serialOffset, $overallTotalAmount, $priceSettings) {
+                $billDataArr = [];
+                $processedCases += $cases->count();
+
+                foreach ($cases as $case) {
+                    $patientName = $case->patient ? $case->patient->name : '-';
+                    $genderAge = $case->patient ? (ucfirst($case->patient->gender) . ' / ' . $case->patient->age) : '-';
+                    foreach ($case->study as $study) {
+                        $amount = '-';
+                        if ($study && $study->type) {
+                            $ps = $priceSettings->get($study->type->price_group_id);
+                            if ($ps) {
+                                $amount = $ps->price;
+                            } else {
+                                $missingPrice = true;
+                            }
+                        }
+                        $billDataArr[] = [
+                            'case_id' => $case->case_study_id,
+                            'patient_name' => $patientName,
+                            'gender_age' => $genderAge,
+                            'study_type' => $study && $study->type ? $study->type->name : '-',
+                            'date' => $case->created_at ? $case->created_at->format('d-M-Y') : '-',
+                            'amount' => $amount,
+                        ];
                     }
                 }
-                $billDataArr[] = [
-                    'case_id' => $case->case_study_id,
-                    'patient_name' => $patientName,
-                    'gender_age' => $genderAge,
-                    'study_type' => $study && $study->type ? $study->type->name : '-',
-                    'date' => $case->created_at ? $case->created_at->format('d-M-Y') : '-',
-                    'amount' => $amount,
-                ];
-            }
-        }
+
+                $doctorBill = DoctorBill::where('doctor_id', $doctor->id)
+                    ->where('start_date', $startDate)
+                    ->where('end_date', $endDate)
+                    ->first();
+                $bill_number = $doctorBill ? $doctorBill->bill_number : null;
+
+                $isFirstChunk = $chunkNumber === 1;
+                $isLastChunk = $processedCases >= $totalCases;
+
+                $html .= view('admin.billing.doctor_bill_pdf', [
+                    'billData' => $billDataArr,
+                    'totalAmount' => $overallTotalAmount,
+                    'doctor' => $doctor,
+                    'startDate' => $startDate,
+                    'endDate' => $endDate,
+                    'bill_number' => $bill_number,
+                    'isFirstChunk' => $isFirstChunk,
+                    'isLastChunk' => $isLastChunk,
+                    'serialOffset' => $serialOffset,
+                    'chunkNumber' => $chunkNumber,
+                    'totalCases' => $totalCases,
+                ])->render();
+
+                // increment serial offset for the next chunk
+                $serialOffset += count($billDataArr);
+
+                $chunkNumber++;
+            });
+
         if ($missingPrice) {
             return back()->with('error', 'Some studies do not have a price set for this doctor. Please update prices in the doctor billing section.');
         }
-        // Fetch bill number from doctor_bills table if exists
-        $doctorBill = DoctorBill::where('doctor_id', $doctorId)
-            ->where('start_date', $startDate)
-            ->where('end_date', $endDate)
-            ->first();
-        $bill_number = $doctorBill ? $doctorBill->bill_number : null;
-        $pdf = Pdf::loadView('admin.billing.doctor_bill_pdf', [
-            'billData' => $billDataArr,
-            'totalAmount' => $totalAmount,
-            'doctor' => $doctor,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'bill_number' => $bill_number,
-        ])
-        ->setPaper([0, 0, 595.28, 5000])
-        ->set_option('isRemoteEnabled', true)
-        ->set_option('dpi', 72);
+
+        $pdf = Pdf::loadHtml($html);
+        $pdf->setPaper('A4', 'portrait');
 
         $doctorName = $doctor ? preg_replace('/[^A-Za-z0-9_\-]/', '_', $doctor->name) : 'Doctor';
         $fileName = $doctorName . '_Bill_' . $startDate . '_to_' . $endDate . '.pdf';
         $fileName = str_replace([' ', '__'], '_', $fileName);
-        return $pdf->download($fileName);
+
+        return $pdf->stream($fileName);
+    }
+
+    // Export doctor bill as PDF
+    public function generateDoctorBillPdf(Request $request){
+        $doctorId = $request->input('doctor_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $priceSettings = DoctorPriceSetting::where('doctor_id', $doctorId)->get()->keyBy('price_group_id');
+
+        caseStudy::where('doctor_id', $doctorId)
+            ->where('study_status_id', 5)
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->with(['study.type'])
+            ->chunk(500, function ($casesChunk) use (&$overallTotalAmount, $priceSettings, &$missingPrice) {
+                foreach ($casesChunk as $case) {
+                    foreach ($case->study as $study) {
+                        if ($study && $study->type) {
+                            $ps = $priceSettings->get($study->type->price_group_id);
+                            if (!$ps) {
+                                $missingPrice = true;
+                            }
+                        }
+                    }
+                }
+            });
+        
+        if ($missingPrice) {
+            return response()->json(['error' => true, 'message' => 'Some studies do not have a price set for this doctor. Please update prices in the doctor billing section.']);
+        }
+
+        $doctorBillJobData = doctorBillPdfJob::updateOrCreate(
+            [
+                'doctor_id' => $doctorId,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'status' => 'pending',
+            ],
+            [
+                'requested_by' => auth()->id(),
+                'status' => 'pending',
+                'file_path' => null,
+            ]
+        );
+
+        $data = [
+            'doctor_id' => $doctorId,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'requested_by' => auth()->id(),
+            'job_id' => $doctorBillJobData->id,
+        ];
+
+        GenerateDoctorBillPdfJob::dispatch($doctorId, $startDate, $endDate, auth()->id());
+        return response()->json(['success' => true, 'data' => $data ,'message' => 'Doctor bill PDF generation has been queued. You will be notified once it is ready for download.']);
     }
 
     // Save Doctor Bill
     public function saveDoctorBill(Request $request)
     {
         $data = $request->isJson() ? $request->json()->all() : $request->all();
-        $validator = \Validator::make($data, [
+        $validator = Validator::make($data, [
             'doctor_id' => 'required|exists:doctors,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
@@ -645,44 +885,22 @@ class BillingController extends Controller
         $endDate = $request->input('end_date');
 
         // Get all completed cases in the date range with only required columns
-        $cases = caseStudy::where('study_status_id', 5)
-            ->whereDate('case_studies.created_at', '>=', $startDate)
-            ->whereDate('case_studies.created_at', '<=', $endDate)
-            ->select([
-                'case_studies.case_study_id',
-                'case_studies.created_at',
-                'patients.name as patient_name',
-                'patients.gender',
-                'patients.age'
-            ])
+        $totalCase = study::where('study_status_id', 5)
+            ->whereDate('studies.created_at', '>=', $startDate)
+            ->whereDate('studies.created_at', '<=', $endDate)
+            ->join("case_studies", "case_studies.id", "=", "studies.case_study_id")
             ->join('patients', 'case_studies.patient_id', '=', 'patients.id')
-            ->get();
-
-        $totalAmount = 0;
-        $data = collect();
+            ->count();
 
         // Fixed price per case
         $pricePerCase = 1;
-
-        foreach ($cases as $case) {
-            $totalAmount += $pricePerCase;
-            
-            $data->push([
-                'case_id' => $case->case_study_id,
-                'patient_name' => $case->patient_name ?? '-',
-                'gender_age' => ucfirst($case->gender) . ' / ' . $case->age,
-                'date' => $case->created_at ? date('d-M-Y', strtotime($case->created_at)) : '-',
-                'amount' => $pricePerCase,
-            ]);
-        }
-
-        return response()->json(['data' => $data, 'total_amount' => $totalAmount]);
+        $totalAmount = $totalCase * $pricePerCase;
+        return view('admin.billing.developer_bill_preview', compact('totalCase', 'totalAmount', 'pricePerCase', 'startDate', 'endDate'));
     }
 
     // Export developer bill as PDF
     public function generateDeveloperBillPdf(Request $request)
     {
-        \Log::info('Starting PDF generation');
         try {
             $startDate = $request->input('start_date');
             $endDate = $request->input('end_date');
@@ -694,48 +912,28 @@ class BillingController extends Controller
             // Developer details (static)
             $developer = [
                 'name' => 'Pampa Biswas Karmakar',
-                'email' => 'pampaBiswasKarmakar@quickline.com',
+                'email' => 'pampaBiswasKarmakar@quickline.in',
                 'phone' => '+91 9432102777'
             ];
 
             // Get all completed cases with optimized query
-            $cases = caseStudy::where('study_status_id', 5)
-                ->whereDate('case_studies.created_at', '>=', $startDate)
-                ->whereDate('case_studies.created_at', '<=', $endDate)
-                ->select([
-                    'case_studies.case_study_id',
-                    'case_studies.created_at',
-                    'patients.name as patient_name',
-                    'patients.gender',
-                    'patients.age'
-                ])
-                ->join('patients', 'case_studies.patient_id', '=', 'patients.id')
-                ->get();
+            $totalCase = study::where('study_status_id', 5)
+            ->whereDate('studies.created_at', '>=', $startDate)
+            ->whereDate('studies.created_at', '<=', $endDate)
+            ->join("case_studies", "case_studies.id", "=", "studies.case_study_id")
+            ->join('patients', 'case_studies.patient_id', '=', 'patients.id')
+            ->count();
 
-            if ($cases->isEmpty()) {
-                return back()->with('error', 'No data found for the selected date range.');
-            }
-
-            $totalAmount = 0;
-            $billDataArr = [];
-            $pricePerCase = 1;
-
-            foreach ($cases as $case) {
-                $totalAmount += $pricePerCase;
-                $billDataArr[] = [
-                    'case_id' => $case->case_study_id,
-                    'patient_name' => $case->patient_name ?? '-',
-                    'gender_age' => ucfirst($case->gender) . ' / ' . $case->age,
-                    'date' => $case->created_at ? date('d-M-Y', strtotime($case->created_at)) : '-',
-                    'amount' => $pricePerCase,
-                ];
-            }
+        // Fixed price per case
+        $pricePerCase = 1;
+        $totalAmount = $totalCase * $pricePerCase;
 
             $bill_number = 'DEV_' . date('Ymd') . '_' . strtoupper(uniqid());
             $pdf = Pdf::loadView('admin.billing.developer_bill_pdf', [
-                'billData' => $billDataArr,
-                'totalAmount' => $totalAmount,
                 'developer' => $developer,
+                'totalCase' => $totalCase,
+                'totalAmount' => $totalAmount,
+                'pricePerCase' => $pricePerCase,
                 'startDate' => $startDate,
                 'endDate' => $endDate,
                 'bill_number' => $bill_number,
@@ -744,8 +942,6 @@ class BillingController extends Controller
             $fileName = 'Developer_Bill_' . str_replace([' ', '-'], '_', $startDate) . '_to_' . str_replace([' ', '-'], '_', $endDate) . '.pdf';
             return $pdf->download($fileName);
         } catch (\Exception $e) {
-            \Log::error('PDF Generation Error: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
             return back()->with('error', 'Error generating PDF: ' . $e->getMessage());
         }
     }
@@ -759,9 +955,9 @@ class BillingController extends Controller
     // AJAX: Get list of Quality Controllers
     public function getQualityControllersList()
     {
-        $qcRoleId = \DB::table('roles')->where('name', 'Quality Controller')->value('id');
-        $qcIds = \DB::table('role_users')->where('role_id', $qcRoleId)->pluck('user_id');
-        $qcs = \DB::table('users')->whereIn('id', $qcIds)->select('id', 'name')->orderBy('name')->get();
+        $qcRoleId = DB::table('roles')->where('name', 'Quality Controller')->value('id');
+        $qcIds = DB::table('role_users')->where('role_id', $qcRoleId)->pluck('user_id');
+        $qcs = DB::table('users')->whereIn('id', $qcIds)->select('id', 'name')->orderBy('name')->get();
         return response()->json($qcs);
     }
 
@@ -770,7 +966,7 @@ class BillingController extends Controller
     {
         $userId = $request->input('user_id');
         $groups = StudyPriceGroup::orderBy('name', 'asc')->get();
-        $prices = \DB::table('quality_controller_pricings')
+        $prices = DB::table('quality_controller_pricings')
             ->where('user_id', $userId)
             ->get()->keyBy('price_group_id');
         $result = [];
@@ -791,7 +987,7 @@ class BillingController extends Controller
         $userId = $request->input('user_id');
         $prices = $request->input('prices', []);
         foreach ($prices as $groupId => $price) {
-            \DB::table('quality_controller_pricings')->updateOrInsert(
+            DB::table('quality_controller_pricings')->updateOrInsert(
                 [
                     'user_id' => $userId,
                     'price_group_id' => $groupId,
@@ -804,5 +1000,14 @@ class BillingController extends Controller
             );
         }
         return response()->json(['success' => true]);
+    }
+
+    public function checkPdfStatus($id){
+        $job = doctorBillPdfJob::findOrFail($id);
+        return response()->json([
+            'success' => true,
+            'status' => $job->status,
+            'file_path' => $job->file_path
+        ]);
     }
 }

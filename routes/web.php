@@ -140,7 +140,7 @@ Route::group(['prefix' => 'admin'], function () {
             Route::post('/update-case-study-image', [CaseStudyController::class, 'updateCaseStudyImage'])->name('admin.updateCaseStudyImage');
             Route::get('/download-images-zip/{id}', [CaseStudyController::class, 'downloadImagesZip'])->name('admin.downloadImagesZip');
             Route::post('/insert-attachments', [CaseStudyController::class, 'insertAttachments'])->name('admin.insertAttachments');
-            Route::get('/download-word/{id}', [CaseStudyController::class, 'downloadWord'])->name('admin.downloadWord');
+            Route::get('/download-word/{id}/{fileType?}', [CaseStudyController::class, 'downloadWord'])->name('admin.downloadWord');
         });
 
         Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {
@@ -164,6 +164,7 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('/get-case-comments', [CaseStudyController::class, 'getCaseComments'])->name('admin.getCaseComments');
         Route::post('/save-case-comment', [CaseStudyController::class, 'saveCaseComment'])->name('admin.saveCaseComment');
         Route::post('/get-case-study-data-dashboard', [caseStudyController::class, 'getCaseStudyDataDashboard'])->name('admin.getCaseStudyDataDashboard');
+        Route::get('/remove-images-from-old-cases', [CaseStudyController::class, 'removeImagesFromOldCases'])->name('admin.removeImagesFromOldCases');
 
    /*============== TIMELINE CONTROLLER =================*/
    Route::middleware(['role:Admin,Manager,Assigner', '2fa'])->group(function () {
@@ -272,12 +273,12 @@ Route::group(['prefix' => 'admin'], function () {
             Route::post('/billing/update-doctor-prices', [BillingController::class, 'updateDoctorPrices'])->name('admin.billing.update_doctor_prices');
             Route::get('/billing/doctor-generate-bill', [BillingController::class, 'generateDoctorBill'])->name('admin.billing.doctor_generate_bill');
             Route::get('/billing/doctor-generate-bill-data', [BillingController::class, 'generateDoctorBillData'])->name('admin.billing.doctor_generate_bill_data');
-            Route::get('/billing/doctor-generate-bill-pdf', [BillingController::class, 'generateDoctorBillPdf'])->name('admin.billing.doctor_generate_bill_pdf');
+            Route::post('/billing/doctor-generate-bill-pdf', [BillingController::class, 'generateDoctorBillPdf'])->name('admin.billing.doctor_generate_bill_pdf');
             Route::post('/billing/save-doctor-bill', [BillingController::class, 'saveDoctorBill'])->name('admin.billing.save_doctor_bill');
             Route::get('/billing/saved-doctor-bills', [BillingController::class, 'savedDoctorBills'])->name('admin.billing.saved_doctor_bills');
             Route::post('/billing/mark-doctor-bill-paid', [BillingController::class, 'markDoctorBillPaid'])->name('admin.billing.mark_doctor_bill_paid');
             Route::post('/billing/delete-doctor-bill', [BillingController::class, 'deleteDoctorBill'])->name('admin.billing.delete_doctor_bill');
-
+            Route::get('/billing/doctor-bill-pdf/status/{id}', [BillingController::class, 'checkPdfStatus'])->name('doctor_bill_pdf.status');
             /* ================ DEVELOPER BILLING =============== */
             Route::get('/billing/developer-generate-bill', [BillingController::class, 'generateDeveloperBill'])->name('admin.billing.developer_generate');
             Route::post('/billing/developer-generate-bill-data', [BillingController::class, 'generateDeveloperBillData'])->name('admin.billing.developer_generate_data');

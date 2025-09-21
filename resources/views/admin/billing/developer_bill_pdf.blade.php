@@ -57,31 +57,29 @@
         <p><strong>Contact:</strong> {{ $developer['phone'] }}</p>
     </div>
 
-    <table>
+    <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Case ID</th>
-                <th>Patient Name</th>
-                <th>Gender/Age</th>
-                <th>Date</th>
-                <th>Amount (₹)</th>
+                <th>Sl. No.</th>
+                <th>Bill Period</th>
+                <th>Total Cases</th>
+                <th>Per Case</th>
+                <th>Total Amount</th>
             </tr>
         </thead>
-        <tbody>
-            @foreach($billData as $item)
+        <tbody id="billTable">
             <tr>
-                <td>{{ $item['case_id'] }}</td>
-                <td>{{ $item['patient_name'] }}</td>
-                <td>{{ $item['gender_age'] }}</td>
-                <td>{{ $item['date'] }}</td>
-                <td>₹{{ $item['amount'] }}</td>
+                <td>1</td>
+                <td>{{\Carbon\Carbon::parse($startDate)->format('d-M-Y')}} To {{\Carbon\Carbon::parse($endDate)->format('d-M-Y')}}</td>
+                <td>{{number_format($totalCase)}}</td>
+                <td>{{number_format($pricePerCase, 2)}}</td>
+                <td>{{number_format($totalAmount, 2)}}</td>
             </tr>
-            @endforeach
         </tbody>
         <tfoot>
-            <tr class="total-row">
-                <td colspan="4" style="text-align: right;"><strong>Total Amount:</strong></td>
-                <td>₹{{ $totalAmount }}</td>
+            <tr>
+                <td colspan="4" class="text-right"><strong>Total</strong></td>
+                <td>{{number_format($totalAmount, 2)}}</td>
             </tr>
         </tfoot>
     </table>

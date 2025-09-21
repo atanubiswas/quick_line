@@ -9,9 +9,11 @@
         th, td { border: 1px solid #333; padding: 6px; text-align: left; }
         th { background: #e6f2ff; }
         .summary { font-weight: bold; background: #e6f2ff; }
+        .page-break { page-break-after: always; }
     </style>
 </head>
 <body>
+    @if($isFirstChunk)
     <div class="header" style="margin-bottom: 20px; display: flex; align-items: flex-start;">
         <table style="width:100%; border:none;">
             <tr>
@@ -71,7 +73,7 @@
                     <div><strong>Email:</strong> {{ $doctor && isset($doctor->email) ? $doctor->email : '-' }}</div>
                     <div><strong>Phone:</strong> {{ $doctor && isset($doctor->phone) ? $doctor->phone : '-' }}</div>
                 </td>
-                <td style="wvertical-align:top; border:none;">
+                <td style="vertical-align:top; border:none;">
                     <div><strong>Bill Number:</strong> {{ isset($bill_number) ? $bill_number : '-' }}</div>
                     <div><strong>Total Amount:</strong> {{ number_format($totalAmount, 2) }}</div>
                     <div><strong>Period:</strong> {{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }} to {{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }}</div>
@@ -79,7 +81,9 @@
             </tr>
         </table>
     </div>
-    <table>
+    @endif
+    <table class="page-break">
+        <!-- Chunk: {{ $chunkNumber ?? '?' }}, Offset: {{ $serialOffset ?? 0 }} -->
         <thead>
             <tr>
                 <th>#</th>
@@ -94,7 +98,7 @@
         <tbody>
             @foreach($billData as $idx => $row)
             <tr>
-                <td>{{ $idx+1 }}</td>
+                <td>{{ ($serialOffset ?? 0) + $loop->iteration }}</td>
                 <td>{{ $row['case_id'] }}</td>
                 <td>{{ $row['patient_name'] }}</td>
                 <td>{{ $row['gender_age'] }}</td>
@@ -103,12 +107,14 @@
                 <td>{{ number_format($row['amount'], 2) }}</td>
             </tr>
             @endforeach
+            @if($isLastChunk)
             <tr class="summary">
                 <td colspan="3">Total Number of Cases</td>
-                <td>{{ count($billData) }}</td>
+                <td>{{ $totalCases }}</td>
                 <td colspan="2">Total Amount</td>
                 <td>{{ number_format($totalAmount, 2) }}</td>
             </tr>
+            @endif
         </tbody>
     </table>
 </body>

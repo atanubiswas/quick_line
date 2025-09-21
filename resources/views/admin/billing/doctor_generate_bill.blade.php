@@ -74,15 +74,18 @@
                             </tbody>
                         </table>
                     </div>
-                    <div id="doctor-pdf-btn-container" style="margin-top: 20px; display: none;">
-                        <form id="doctor-pdf-export-form" method="GET" action="{{ route('admin.billing.doctor_generate_bill_pdf') }}" style="display:inline;">
+                        <div id="doctor-pdf-btn-container" style="margin-top: 20px; display: none;">
+                        {{-- <form id="doctor-pdf-export-form" method="GET" action="{{ route('admin.billing.doctor_generate_bill_pdf') }}" style="display:inline;" target="_blank">
                             <input type="hidden" name="doctor_id" id="pdf_doctor_id">
                             <input type="hidden" name="start_date" id="pdf_start_date">
                             <input type="hidden" name="end_date" id="pdf_end_date">
                             <button type="submit" id="download-doctor-pdf-btn" class="btn btn-success ml-2" style="background-color: #28a745; border-color: #28a745;">
                                 Download PDF
                             </button>
-                        </form>
+                        </form> --}}
+                        <button type="button" id="generate-doctor-pdf-btn" class="btn btn-success ml-2" style="background-color: #28a745; border-color: #28a745;">
+                            Generate PDF
+                        </button>
                     </div>
                 </div>
             </div>
@@ -102,6 +105,80 @@
 <script src="{{ asset('/js/doctor-bill-pdf.js') }}"></script>
 <script>
 $(document).ready(function() {
+    var jobId = null;
+    var pollInterval = null;
+
+    $("#generate-doctor-pdf-btn").off('click').on('click', function() {
+        var doctorId = $('#doctor_select').val();
+        var startDate = $('#start_date').val();
+        var endDate = $('#end_date').val();
+        const thisButton = $(this);
+
+        if (!doctorId) {
+            Swal.fire({ icon: 'warning', title: 'Validation Error', text: 'Please select a doctor.' });
+            return;
+        }
+        if (!startDate || !endDate) {
+            Swal.fire({ icon: 'warning', title: 'Validation Error', text: 'Please select both start and end dates.' });
+            return;
+        }
+        if (startDate > endDate) {
+            Swal.fire({ icon: 'warning', title: 'Validation Error', text: 'Start date cannot be after end date.' });
+            return;
+        }
+        thisButton.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generating...');
+
+        $.ajax({
+            url: "{{ route('admin.billing.doctor_generate_bill_pdf') }}",
+            type: 'POST',
+            data: {
+                doctor_id: doctorId,
+                start_date: startDate,
+                end_date: endDate,
+                _token: "{{ csrf_token() }}"
+            },
+            success: function(resp) {
+                if (resp.success){
+                    jobId = resp.data.job_id;
+                    pollInterval = setInterval(function() {
+                        $.get("{{ url('/admin/billing/doctor-bill-pdf/status') }}/" + jobId, function(data) {
+                            console.log(data);
+                            if (data.status === 'completed') {
+                                clearInterval(pollInterval);
+                                // Ensure file path is served from the public storage symlink
+                                var filePath = data.file_path || '';
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Bill Ready',
+                                    html: '<a href="'+filePath+'" target="_blank" class="btn btn-success">Download PDF</a>'
+                                });
+                                thisButton.prop('disabled', false).html('Generate PDF');
+                            } else if (data.status === 'failed') {
+                                clearInterval(pollInterval);
+                                Swal.fire({ icon: 'error', title: 'Error', text: 'Bill generation failed. Please try again.' });
+                                thisButton.prop('disabled', false).html('Generate PDF');
+                            }
+                        });
+                    }, 15000); // poll every 15s
+                }
+                else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: res.message || 'Failed to initiate PDF generation.'});
+                    thisButton.prop('disabled', false).html('Generate PDF');
+                }
+            },
+            error: function(xhr) {
+                if (xhr.status === 409 && xhr.responseJSON && xhr.responseJSON.error) {
+                    Swal.fire({ icon: 'warning', title: 'Duplicate', text: xhr.responseJSON.error });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to generate PDF.' });
+                }
+                thisButton.prop('disabled', false).html('Generate PDF');
+            }
+        });
+    });
+
+
+
     $('#doctor_select').select2({ width: '100%', placeholder: '-- Select Doctor --', allowClear: true });
     // Save Doctor Bill button click (moved from JS file)
     $('#save-doctor-bill-btn').off('click').on('click', function() {

@@ -2,32 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpWord\Shared\Html;
 use Barryvdh\DomPDF\Facade\Pdf;
 use PhpOffice\PhpWord\PhpWord;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use ZipArchive;
-use Validator;
-use Auth;
-use Str;
-use DB;
 
-
+use App\Models\User;
 use App\Models\study;
 use App\Models\Doctor;
 use App\Models\patient;
+use App\Models\Modality;
 use App\Models\caseStudy;
 use App\Models\studyType;
 use App\Models\Laboratory;
 use App\Models\studyImages;
 use App\Models\studyStatus;
 use App\Models\caseComment;
-use App\Models\Modality;
 use App\Models\caseAttachment;
 
 use App\Traits\GeneralFunctionTrait;
@@ -519,7 +518,11 @@ class CaseStudyController extends Controller
         $caseStudy = caseStudy::with("modality", "study.type", "images", "patient", "laboratory", "doctor.doctorFormFieldValue")
             ->where("id", $request->case_study_id)
             ->first();
-    
+        
+        foreach ($caseStudy->study as $study) {
+            $study->report = $this->cleanReportHtml($study->report);
+        }
+
         $doctorQualification = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "9")->first();
         $registrationNumber = $caseStudy->doctor->doctorFormFieldValue->where("form_field_id", "11")->first();
     
@@ -614,6 +617,32 @@ class CaseStudyController extends Controller
         return view('admin.caseStudyReport', compact(
             'caseStudy', 'doctorQualification', 'registrationNumber', 'top', 'right', 'bottom', 'left', 'studyNames', 'pdfPublicUrl', 'isPdf', 'qrLocalPath'
         ));
+    }
+
+    private function cleanReportHtml($html){
+        libxml_use_internal_errors(true);
+
+        $doc = new \DOMDocument();
+        $doc->loadHTML('<?xml encoding="utf-8" ?>' . $html);
+
+        $xpath = new \DOMXPath($doc);
+
+        // Remove empty <p>
+        foreach ($xpath->query('//p[not(normalize-space())]') as $p) {
+            $p->parentNode->removeChild($p);
+        }
+
+        // Remove consecutive <br>
+        $brs = $xpath->query('//br');
+        $prev = null;
+        foreach ($brs as $br) {
+            if ($prev && $prev->nodeName === 'br') {
+                $br->parentNode->removeChild($br);
+            }
+            $prev = $br;
+        }
+
+        return $doc->saveHTML($doc->getElementsByTagName('body')->item(0));
     }
 
     public function generatePdf($case_study_id) {
@@ -1054,7 +1083,7 @@ class CaseStudyController extends Controller
             $validator = Validator::make($request->all(), [
                 'case_study_id' => 'required|numeric|exists:case_studies,id',
                 'status_id' => 'required|numeric|exists:study_statuses,id',
-                'second_opnion_doctor_id' => 'sometimes|nullable|numeric|exists:doctors,id'
+                'second_opnion_doctor_id' => 'sometimes|nullable|requiredIf:status_id,2|numeric|exists:doctors,id'
             ]);
             if (!$validator->passes()) {
                 return response()->json(['error'=>$validator->errors()]);
@@ -1078,6 +1107,11 @@ class CaseStudyController extends Controller
                 ]);
 
                 $caseStudy->comments()->delete();
+                $fileName = 'case-study-report-' . $caseStudy->case_study_id . '-' . str_replace([" ", "/"], ["-", "-"], $caseStudy->patient->name) . '.pdf';
+                $filePath = 'pdfs'.DIRECTORY_SEPARATOR. $fileName;
+                if(Storage::disk('public')->exists($filePath)){
+                    Storage::disk('public')->delete($filePath);
+                }
                 $msg = $this->generateLoggedMessage("secondOpenion", 'Case Study', $doctor->name);
             }
             /*===== REMOVE THE PREVIOUS CASE REPORT AND CASE COMMENTS IF STATUS IS 2ND OPENION ======= */
@@ -1105,10 +1139,13 @@ class CaseStudyController extends Controller
         }
     }
 
-    public function downloadWord($id){
+    public function downloadWord($id, $fileType = 'docx'){
         try{
             if(empty($id)){
                 abort(404, 'Case Study not found.');
+            }
+            if(empty($fileType)){
+                $fileType = 'docx';
             }
             $caseStudy = caseStudy::with("modality", "study.type", "images", "patient", "laboratory", "doctor.doctorFormFieldValue")
                 ->where("id", $id)
@@ -1173,15 +1210,22 @@ class CaseStudyController extends Controller
             ]);
             Html::addHtml($section, $html, false, false);
 
-            $fileName = str_replace(" ", "_", $caseStudy->patient->name).'_'.$caseStudy->case_study_id.'_report.docx';
+            $fileName = str_replace(" ", "_", $caseStudy->patient->name).'_'.$caseStudy->case_study_id.'_report.'.$fileType;
             $tempPath = storage_path('app/' . $fileName);
-            $phpWord->save($tempPath, 'Word2007');
+            if($fileType == 'docx'){
+                $phpWord->save($tempPath, 'Word2007');
+            }
+            else{
+                $phpWord->save($tempPath, 'RTF');
+            }
         }
         catch (\Exception $e){
-            return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
+            return response()->json(['error'=>[$e->getMessage()]]);
+            // return response()->json(['error'=>[$this->getMessages('_GNERROR')]]);
         }
         catch(\Illuminate\Database\QueryException $ex){
-            return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
+            return response()->json(['error'=>[$ex->getMessage()]]);
+            // return response()->json(['error'=>[$this->getMessages('_DBERROR')]]);
         }
 
         return response()->download($tempPath)->deleteFileAfterSend(true);
@@ -1230,5 +1274,129 @@ class CaseStudyController extends Controller
             ->get();
 
             return view('admin.doctorCSTableDashboard', compact('caseStudyList', 'startDate', 'endDate'));
+    }
+
+    public function removeImagesFromOldCasesExect(){
+        $studies = study::with('images')
+            ->whereHas('caseStudy', function($query){
+                $query->whereIn('study_status_id', [5, 6]); // Completed and Deleted status
+            })
+            ->where('created_at', '<', Carbon::now()->subDays(25))
+            ->where('is_image_deleted', 0)
+            ->orderBy('id', 'asc')
+            ->limit(1000) // Limit to 1 study at a time to avoid long processing times
+            ->get();
+        $deleteImage = 'uploads'.DIRECTORY_SEPARATOR.'deleted_image.png';
+        
+        foreach($studies as $study){
+            try{
+                if(count($study->images) > 0){
+                    foreach($study->images as $image){
+                        $imagePath = public_path('storage/'.$image->image);
+                        if (File::exists($imagePath)) {
+                            $result = File::delete($imagePath);
+                            $image->image = $deleteImage;
+                            $image->save();
+                        }
+                    }
+                    $study->is_image_deleted = 1;
+                    $study->save();
+                }
+                else{
+                    $study->is_image_deleted = 2; // Mark as error
+                    $study->save();
+                }
+            }catch (\Exception $e){
+                $study->is_image_deleted = 2; // Mark as error
+                $study->save();
+                return "error";
+            }
+            catch(\Illuminate\Database\QueryException $ex){
+                $study->is_image_deleted = 2; // Mark as error
+                $study->save();
+                return "dberror";
+            }
+        }
+        return "success";
+    }
+
+    public function removeImagesFromOldCases(){
+        echo "<div style='font-family: monospace; white-space: pre-wrap;'>";
+        echo "<hr>";
+        echo "Starting removeImagesFromOldCases process<br>";
+        
+        $studies = study::with('images', 'caseStudy')
+            ->whereHas('caseStudy', function($query){
+                $query->whereIn('study_status_id', [5, 6]); // Completed and Deleted status
+            })
+            ->where('created_at', '<', Carbon::now()->subDays(15))
+            ->where('is_image_deleted', 0)
+            ->orderBy('id', 'asc')
+            ->limit(1000) // Limit to 1 study at a time to avoid long processing times
+            ->get();
+
+        echo "\n\nFound " . $studies->count() . " studies to process (before " . Carbon::now()->subMonths(1)->format('Y-m-d H:i:s') . ")\n";
+
+        $deleteImage = 'uploads'.DIRECTORY_SEPARATOR.'deleted_image.png';
+        $successCount = 0;
+        $errorCount = 0;
+        
+        foreach($studies as $study){
+            echo "<br><br>Processing study ID: {$study->id}, Case Study ID: {$study->caseStudy->id}, Total Images: " . count($study->images) . "<br><br>";
+
+            $patient_name = str_replace(" ", "_", $study->caseStudy->patient->name);
+            $labName = str_replace(" ", "_", $study->caseStudy->laboratory->lab_name);
+
+            $labName = str_replace(["ALPANA_POLYCLINIC_(BAKULTALA)"], ["ALPANA_POLY._(BAKULTALA)"], $labName);
+
+            try{
+                if(count($study->images) > 0){
+                    foreach($study->images as $image){
+                        $folderPath = public_path('storage'.DIRECTORY_SEPARATOR.'uploads'.DIRECTORY_SEPARATOR.$labName.DIRECTORY_SEPARATOR.$patient_name);
+                        $folderPaths[] = $folderPath;
+                        
+                        echo "\n\nProcessing folder: {$folderPath} (Study ID: {$study->id}, Image ID: {$image->id})\n";
+
+                        if (File::exists($folderPath)) {
+                            echo "\n\nDeleting folder: {$folderPath}\n";
+                            // dd($folderPath); // Removed debug code
+                            File::cleanDirectory($folderPath);
+                            $successCount++;
+                            echo "\n\nSuccessfully deleted folder: {$folderPath}\n";
+                            $study->is_image_deleted = 1;
+                            $study->save();
+                        } else {
+                            $study->is_image_deleted = 3; // Folder Not Found
+                            $study->save();
+                            echo "\n\nWarning: Folder not found, Status updated in Database: {$folderPath}\n";
+                        }
+                    }
+                } else {
+                    echo "\n\nNo images found for study ID: {$study->id}\n";
+                }
+            }catch (\Exception $e){
+                $errorCount++;
+                echo "<br><br>Error processing study ID: {$study->id}<br>";
+                echo "<br><br>Error message: " . $e->getMessage() . "<br>";
+                echo "<br><br>Stack trace:<br>" . nl2br($e->getTraceAsString()) . "<br>";
+                return "error";
+            }
+            catch(\Illuminate\Database\QueryException $ex){
+                $errorCount++;
+                echo "<br><br>Database error while processing study ID: {$study->id}<br>";
+                echo "<br><br>Error message: " . $ex->getMessage() . "<br>";
+                echo "<br><br>SQL: " . ($ex->getSql() ?? 'N/A') . "<br>";
+                echo "<br><br>Bindings: " . json_encode($ex->getBindings() ?? []) . "<br>";
+                return "dberror";
+            }
+        }
+
+        echo "<br><br>Completed removeImagesFromOldCases process<br>";
+        echo "<br><br>Total processed: " . $studies->count() . "<br>";
+        echo "<br><br>Successful deletions: " . $successCount . "<br>";
+        echo "<br><br>Errors: " . $errorCount . "<br>";
+        echo "</div>"; // Close the monospace div
+
+        return "success";
     }
 }

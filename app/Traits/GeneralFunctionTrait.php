@@ -711,6 +711,9 @@ trait GeneralFunctionTrait{
                 $query->where('qc_id',  $authUser->id);
                 $query->where('study_status_id', '=', 5);
             })
+            ->when($roleName == 'Admin' || $roleName == 'Manager' || $roleName == 'Assigner', function ($query) use ($authUser) {
+                $query->where('study_status_id', '!=', 6);
+            })
             ->count();
         return $totalCaseThisMonth;
     }
