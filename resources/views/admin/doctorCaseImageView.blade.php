@@ -25,9 +25,33 @@
     <div id="tabs-images">
         <div class="row" style="padding: 10px; margin-bottom: 5px;">
             <div class="col-md-12" style="padding: 5px; margin-bottom: 10px; background-color: #e1e2e3; border: 1px solid #cacbcd;">
-                <div style="width: 100%;  overflow-x: auto; white-space: nowrap;">
+                <div style="width: 100%;  overflow-x: auto; white-space: nowrap;" class="existing-image-contener-doctor">
+                    @php $i = 0; @endphp
                     @foreach($caseStudy->images as $image)
-                        <img src="{{ asset('storage/' . $image->image) }}" height="160px" style="padding:5px; cursor:pointer" class="image-thumb-doctor" />
+                        @php $ext = strtolower(pathinfo($image->image, PATHINFO_EXTENSION)); @endphp
+                        @if($ext === 'pdf')
+                            @php
+                                $previewTextWidth = 90;
+                                $avgCharWidth = 6.5;
+                                $maxChars = max(6, (int) floor($previewTextWidth / $avgCharWidth));
+                            @endphp
+                            <div class="m-2 position-relative d-inline-block">
+                                <a href="{{ asset('storage/' . $image->image) }}" data-pdf="{{ asset('storage/' . $image->image) }}" class="pdf-preview-link-doctor" style="text-decoration:none;color:inherit;">
+                                    <div class="pdf-preview d-flex align-items-center justify-content-center bg-light border" style="width:160px;height:160px;cursor: pointer;padding:5px;">
+                                        <div class="text-center">
+                                            <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                                            <div style="font-size:11px;word-break:break-word;max-width:90px;">{{ \Illuminate\Support\Str::limit(basename($image->image), $maxChars) }}</div>
+                                        </div>
+                                    </div>
+                                </a>
+                                @if($caseStudy->study_status_id <=2)
+                                    <button type="button" class="existing-img-close-btn btn btn-danger btn-sm" data-index="{{ $i }}" style="position: absolute; top: 5px; right: 5px; border-radius: 30px; height: 20px; width: 20px; display: flex; justify-content: center; align-items: center; padding: 0; font-size: 14px;"> × </button>
+                                @endif
+                            </div>
+                        @else
+                            <img src="{{ asset('storage/' . $image->image) }}" data-file-index="{{ $i }}" id="existing_image_doctor_{{ $i }}" height="160px" style="padding:5px; cursor:pointer" class="image-thumb-doctor" />
+                        @endif
+                        @php $i++; @endphp
                     @endforeach
                 </div>
             </div>
@@ -79,8 +103,18 @@
             <div class="col-md-10">
                 <div class="card card-purple card-outline">
                     <div class="card-body box-profile">
-                        <img src="{{ asset('storage/' . $caseStudy->images[0]->image) }}" id="cropImage-doctor" style="max-width: 100%; width: 100%; padding:5px" />
-                        <div class="crop-toolbar">
+                        @php
+                            $firstFile = $caseStudy->images[0]->image ?? null;
+                            $firstExt = $firstFile ? strtolower(pathinfo($firstFile, PATHINFO_EXTENSION)) : null;
+                        @endphp
+                        @if($firstExt === 'pdf')
+                            <iframe id="doctor-pdf-iframe" src="{{ asset('storage/' . $firstFile) }}" style="width:100%;height:600px;border:none;" allow="fullscreen"></iframe>
+                            <img id="cropImage-doctor" src="" style="display:none;max-width: 100%; width: 100%; padding:5px" />
+                            <div class="crop-toolbar" style="display:none;">
+                        @else
+                            <img src="{{ asset('storage/' . $caseStudy->images[0]->image) }}" id="cropImage-doctor" style="max-width: 100%; width: 100%; padding:5px" />
+                            <div class="crop-toolbar">
+                        @endif
                             <button class="toolbar-btn" id="flipHorizontal-doctor" title="Flip Horizontal">
                                 <i class="fas fa-arrows-alt-h"></i>
                             </button>
@@ -185,6 +219,61 @@
                 active.blur();
                 console.log('[Modal Blur] Removed focus from element inside modal before closing.');
             }
+        });
+        // Doctor view: open PDF in iframe when clicking PDF preview
+        $('.existing-image-contener-doctor').on('click', 'a.pdf-preview-link-doctor', function (e) {
+            if (e.ctrlKey || e.metaKey) {
+                return true;
+            }
+            e.preventDefault();
+            var url = $(this).data('pdf');
+            var $cardBody = $('.card-body.box-profile');
+
+            try {
+                if (typeof cropper !== 'undefined' && cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+            } catch (err) {}
+            $('.cropper-container').remove();
+            $('#cropImage-doctor').hide();
+            $('.crop-toolbar').hide();
+
+            $('#doctor-pdf-iframe').remove();
+            var $iframe = $('<iframe>', { id: 'doctor-pdf-iframe', src: url, allow: 'fullscreen' }).css({ width: '100%', height: '600px', border: 'none' });
+            $cardBody.prepend($iframe);
+            if ($cardBody.length) {
+                $('html, body').animate({ scrollTop: $cardBody.offset().top - 50 }, 300);
+            }
+        });
+
+        // Doctor view: clicking an image thumbnail should remove iframe and show image
+        $(document).on('click', '.image-thumb-doctor', function () {
+            $('#doctor-pdf-iframe').remove();
+            let imgSrc = $(this).attr('src');
+            $('#cropImage-doctor').attr('src', imgSrc).show();
+            $('.crop-toolbar').show();
+
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+
+            // initialize cropper for doctor image
+            let image = document.getElementById('cropImage-doctor');
+            cropper = new Cropper(image, {
+                aspectRatio: NaN,
+                viewMode: 2,
+                autoCropArea: 1,
+                responsive: true,
+                restore: false,
+                scalable: true,
+                zoomable: true,
+                rotatable: true,
+                movable: true,
+                autoCrop: false
+            });
+            setTimeout(() => { if (cropper && typeof cropper.resize === 'function') cropper.resize(); }, 300);
         });
         var caseId = $('#unique_case_study_id').val();
         // Initialize tabs FIRST

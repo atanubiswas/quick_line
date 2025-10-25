@@ -525,7 +525,6 @@ class LaboratoryController extends Controller
 
     public function updatePreferredDoctors(Request $request){
         $labId = $request->lab_id;
-        $labOldData = Laboratory::find($labId);
         foreach($request->all() as $key => $value){
             $mArray = explode("modality_", $key);
             if(!isset($mArray[1])){continue;}
@@ -541,9 +540,11 @@ class LaboratoryController extends Controller
             else{
                 lab_preferred_doctor::updateOrCreate([
                     "laboratorie_id" => $labId,
-                    "doctor_id" => $value,
                     "modality_id" => $modalityId
-                ], []);
+                ], 
+                [
+                    "doctor_id" => $value
+                ]);
             }
         }
         return response()->json(['success' => [$this->getMessages('_UPSUMSG')]]);

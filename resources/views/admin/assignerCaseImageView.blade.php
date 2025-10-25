@@ -37,7 +37,7 @@
                         <label for="existingUploadImages" class="upload-btn">
                             <i class="fas fa-folder-open"></i> Add More Image
                         </label>
-                        <input type="file" id="existingUploadImages" multiple="multiple" accept="image/*" hidden>
+                        <input type="file" id="existingUploadImages" multiple="multiple" accept="image/*,application/pdf,.pdf" hidden>
                     </div>
                 </div>
             </div>
@@ -48,9 +48,30 @@
                 <div class="existing-image-contener" style="width: 100%;  overflow-x: auto; white-space: nowrap;">
                     @php $existingImageCount = 0; @endphp
                     @foreach($caseStudy->images as $image)
-                        <div class="m-2 position-relative d-inline-block" id="existing-img-preview-{{ $existingImageCount }}">
-                            <img src="{{ asset('storage/' . $image->image) }}" data-file-index="{{ $existingImageCount }}" id="existing_image_{{ $existingImageCount }}" height="160px" style="padding:5px; cursor:pointer" class="image-thumb-assigner" />
-                            <button type="button"class="existing-img-close-btn btn btn-danger btn-sm" data-index="{{ $existingImageCount++ }}" style="position: absolute; top: 5px; right: 5px; border-radius: 30px; height: 20px; width: 20px; display: flex; justify-content: center; align-items: center; padding: 0; font-size: 14px; "> × </button>
+                        <?php $idx = $existingImageCount++; $filePath = $image->image; $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION)); ?>
+                        <div class="m-2 position-relative d-inline-block" id="existing-img-preview-{{ $idx }}">
+                            @if($ext === 'pdf')
+                                @php
+                                    // Preview box is 160px wide; reserve padding and icon space and estimate
+                                    // the number of characters that can fit using the preview font-size (11px).
+                                    // Approximate character width for this font-size: 6.5px per character.
+                                    // Available width for text ~ 90px (same as inline style used previously).
+                                    $previewTextWidth = 90; // px available for text inside preview
+                                    $avgCharWidth = 6.5; // estimated average character width in px at font-size 11px
+                                    $maxChars = max(6, (int) floor($previewTextWidth / $avgCharWidth)); // at least 6 chars
+                                @endphp
+                                <a href="{{ asset('storage/' . $filePath) }}" data-pdf="{{ asset('storage/' . $filePath) }}" class="pdf-preview-link" style="text-decoration:none;color:inherit;">
+                                    <div class="pdf-preview d-flex align-items-center justify-content-center bg-light border" style="width:160px;height:160px;cursor: pointer;padding:5px;">
+                                        <div class="text-center">
+                                            <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                                            <div style="font-size:11px;word-break:break-word;max-width:90px;">{{ \Illuminate\Support\Str::limit(basename($filePath), $maxChars) }}</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            @else
+                                <img src="{{ asset('storage/' . $filePath) }}" data-file-index="{{ $idx }}" id="existing_image_{{ $idx }}" height="160px" style="padding:5px; cursor:pointer" class="image-thumb-assigner" />
+                            @endif
+                            <button type="button" class="existing-img-close-btn btn btn-danger btn-sm" data-index="{{ $idx }}" style="position: absolute; top: 5px; right: 5px; border-radius: 30px; height: 20px; width: 20px; display: flex; justify-content: center; align-items: center; padding: 0; font-size: 14px; "> × </button>
                         </div>
                     @endforeach
                 </div>
@@ -60,8 +81,18 @@
             <div class="col-md-12">
                 <div class="card card-purple card-outline">
                     <div class="card-body box-profile">
-                        <img src="{{ asset('storage'.DIRECTORY_SEPARATOR . $caseStudy->images[0]->image) }}" id="cropImage-assigner" style="max-width: 100%; width: 100%; padding:5px" />
-                        <div class="crop-toolbar">
+                        @php
+                            $firstFilePath = $caseStudy->images[0]->image ?? null;
+                            $firstExt = $firstFilePath ? strtolower(pathinfo($firstFilePath, PATHINFO_EXTENSION)) : null;
+                        @endphp
+                        @if($firstExt === 'pdf')
+                            <iframe id="assigner-pdf-iframe" src="{{ asset('storage/' . $firstFilePath) }}" style="width:100%;height:600px;border:none;" allow="fullscreen"></iframe>
+                            <img id="cropImage-assigner" src="" style="display:none;max-width: 100%; width: 100%; padding:5px" />
+                            <div class="crop-toolbar" style="display:none;">
+                        @else
+                            <img src="{{ asset('storage'.DIRECTORY_SEPARATOR . $caseStudy->images[0]->image) }}" id="cropImage-assigner" style="max-width: 100%; width: 100%; padding:5px" />
+                            <div class="crop-toolbar">
+                        @endif
                             <!-- <div id="rotation-wheel" class="rotation-wheel-class">
                                 <div class="main-line"></div>
                                 <div class="small-lines"></div>
@@ -549,4 +580,83 @@
         });
 
     });
+
+    // Open PDF in an iframe inside the card-body when clicking the PDF preview.
+        // If user holds Ctrl/Cmd, allow opening in a new tab instead.
+        $('.existing-image-contener').on('click', 'a.pdf-preview-link', function (e) {
+            if (e.ctrlKey || e.metaKey) {
+                // allow default behavior (open in new tab)
+                return true;
+            }
+            e.preventDefault();
+            var url = $(this).data('pdf');
+            var $cardBody = $('.card-body.box-profile');
+
+            // Destroy any active cropper and remove its UI, then hide the main image if present
+            try {
+                if (typeof cropper !== 'undefined' && cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+            } catch (err) {
+                // ignore
+            }
+            // Remove any leftover cropper UI elements
+            $('.cropper-container').remove();
+            $('#cropImage-assigner').hide();
+            // Hide crop toolbar when showing PDF
+            $('.crop-toolbar').hide();
+
+            // Remove previous PDF iframe if any
+            $('#assigner-pdf-iframe').remove();
+
+            // Create and prepend iframe
+            var $iframe = $('<iframe>', {
+                id: 'assigner-pdf-iframe',
+                src: url,
+                allow: 'fullscreen'
+            }).css({ width: '100%', height: '600px', border: 'none' });
+
+            $cardBody.prepend($iframe);
+
+            // Scroll to card body for visibility
+            if ($cardBody.length) {
+                $('html, body').animate({ scrollTop: $cardBody.offset().top - 50 }, 300);
+            }
+        });
+
+        // When clicking an existing image thumbnail, remove any iframe first and then show the image
+        $(document).on('click', '.image-thumb-assigner', function () {
+            // Remove any existing PDF iframe
+            $('#assigner-pdf-iframe').remove();
+
+            let imgSrc = $(this).attr('src');
+            $('#cropImage-assigner').attr('src', imgSrc).show();
+            // Show crop toolbar for image
+            $('.crop-toolbar').show();
+
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+
+            currentFile = $(this).data('file-index');
+            let image = document.getElementById('cropImage-assigner');
+            cropper = new Cropper(image, {
+                aspectRatio: NaN,
+                viewMode: 2,
+                autoCropArea: 1,
+                responsive: true,
+                restore: false,
+                scalable: true,
+                zoomable: true,
+                rotatable: true,
+                movable: true,
+                autoCrop: false
+            });
+
+            setTimeout(() => {
+                cropper.resize();
+            }, 300);
+        });
 </script>

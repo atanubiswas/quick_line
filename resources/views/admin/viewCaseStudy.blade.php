@@ -847,7 +847,7 @@
                                                 <label for="uploadImages" class="upload-btn">
                                                     <i class="fas fa-folder-open"></i> Browse
                                                 </label>
-                                                <input type="file" id="uploadImages" multiple="multiple" accept="image/*" hidden>
+                                                <input type="file" id="uploadImages" multiple="multiple" accept="image/*,application/pdf" hidden>
 
                                                 <!-- Camera Button (Shown Only on Mobile) -->
                                                 <label for="cameraUpload" class="camera-btn">
@@ -859,6 +859,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                <input type="hidden" id="default_doctor" name="default_doctor" value="">
                             </form>
                         </div>
                         <div class="modal-footer justify-content-between">
@@ -1244,18 +1245,55 @@
                             keyboard: false
                         });
 
+                        // Keep track of any object URLs we create for PDFs so we can revoke them later
+                        let assignerPreviewUrls = [];
+
                         $(".image-thumb-assigner").each(function() {
                             let imgSrc = $(this).attr("src");
                             fetch(imgSrc)
                                 .then(response => response.blob())
                                 .then(blob => {
                                     let filename = imgSrc.split('/').pop(); // extract filename from URL
-                                    let file = new File([blob], filename, { type: blob.type });
-                                    allFiles.push(file);
+                                    // If the fetched blob is a PDF, display it in the modal body
+                                    if (blob.type === 'application/pdf' || (filename && filename.toLowerCase().endsWith('.pdf'))) {
+                                        try {
+                                            let objectUrl = URL.createObjectURL(blob);
+                                            assignerPreviewUrls.push(objectUrl);
+                                            // Insert PDF viewer at the top of the assigner modal body
+                                            $(".assigner_image_view_body").prepend(`
+                                                <div class="pdf-display mb-2">
+                                                    <iframe src="${objectUrl}" style="width:100%;height:600px;border:0;" allowfullscreen></iframe>
+                                                </div>
+                                            `);
+                                        } catch (e) {
+                                            console.error('Error creating object URL for PDF', e);
+                                        }
+
+                                        // Still create a File object and add to allFiles for consistency
+                                        try {
+                                            let file = new File([blob], filename, { type: blob.type });
+                                            allFiles.push(file);
+                                        } catch (e) {
+                                            // Fallback: push the blob as-is wrapped in a File-like object
+                                            allFiles.push(new Blob([blob], { type: blob.type }));
+                                        }
+                                    } else {
+                                        // Non-PDF (image) - create File and add to allFiles as before
+                                        let file = new File([blob], filename, { type: blob.type });
+                                        allFiles.push(file);
+                                    }
                                 })
                                 .catch(error => {
                                     console.error("Error fetching image:", error);
                                 });
+                        });
+
+                        // Revoke any PDF object URLs when the assigner modal is closed to free memory
+                        $('#assigner_image_view').off('hidden.assignerPreview').on('hidden.assignerPreview.bs.modal', function () {
+                            assignerPreviewUrls.forEach(url => {
+                                try { URL.revokeObjectURL(url); } catch (e) { /* ignore */ }
+                            });
+                            assignerPreviewUrls = [];
                         });
                         currentFile = 0;
                         if (cropper) {
@@ -1590,30 +1628,69 @@
                 $("#previewImages").html("");
             });
 
+            // Map to store preview object URLs for non-image files (PDFs)
+            let previewUrls = [];
+
+            // Helper to shorten long filenames while preserving the extension
+            function truncateFileName(name, maxLen = 20) {
+                if (!name) return '';
+                if (name.length <= maxLen) return name;
+                const parts = name.split('.');
+                const ext = parts.length > 1 ? '.' + parts.pop() : '';
+                const base = parts.join('.');
+                const keep = Math.max(6, maxLen - ext.length - 3); // leave room for ellipsis
+                return base.substring(0, keep) + '...' + ext;
+            }
+
             $("#uploadImages, #cameraUpload").on("change", function (event) {
                 let files = event.target.files;
 
                 $.each(files, function (index, file) {
                     const fileSizeMB = file.size / (1024 * 1024); // Convert bytes to MB
 
-                    const processFile = function (finalFile) {
+                    const processFile = function (finalFile, isPdfPreview) {
                         let fileIndex = allFiles.length;
                         allFiles.push(finalFile);
 
-                        const reader = new FileReader();
-                        reader.onload = function (e) {
+                        if (isPdfPreview) {
+                            // For PDFs, create an object URL and show a clickable PDF icon + filename
+                            let fileName = finalFile.name || file.name;
+                            let shortName = truncateFileName(fileName, 18);
+                            let objectUrl = URL.createObjectURL(finalFile);
+                            previewUrls[fileIndex] = objectUrl;
                             $("#previewImages").append(`
                                 <div class="m-2 position-relative d-inline-block" id="preview-${fileIndex}">
-                                    <img src="${e.target.result}" id="img-${fileIndex}" class="img-thumbnail preview-img" width="100" data-file-index="${fileIndex}" height="100" style="cursor: pointer;">
+                                    <a href="${objectUrl}" target="_blank" class="pdf-preview-link" style="text-decoration:none;color:inherit;">
+                                        <div class="pdf-preview d-flex align-items-center justify-content-center bg-light border" style="width:100px;height:100px;cursor: pointer;">
+                                            <div class="text-center">
+                                                <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                                                <div style="font-size:11px;word-break:break-word;max-width:90px;">${shortName}</div>
+                                            </div>
+                                        </div>
+                                    </a>
                                     <button type="button" class="close-btn btn btn-danger btn-sm" data-index="${fileIndex}" style="position: absolute; top: 5px; right: 5px;">×</button>
                                 </div>
                             `);
-                        };
-                        reader.readAsDataURL(finalFile);
+                        } else {
+                            const reader = new FileReader();
+                            reader.onload = function (e) {
+                                $("#previewImages").append(`
+                                    <div class="m-2 position-relative d-inline-block" id="preview-${fileIndex}">
+                                        <img src="${e.target.result}" id="img-${fileIndex}" class="img-thumbnail preview-img" width="100" data-file-index="${fileIndex}" height="100" style="cursor: pointer;">
+                                        <button type="button" class="close-btn btn btn-danger btn-sm" data-index="${fileIndex}" style="position: absolute; top: 5px; right: 5px;">×</button>
+                                    </div>
+                                `);
+                            };
+                            reader.readAsDataURL(finalFile);
+                        }
                     };
 
-                    if (fileSizeMB > 1) {
-                        // Compress only if > 1MB
+                    // If file is a PDF, skip compression and show PDF preview
+                    if (file.type === 'application/pdf' || (file.name && file.name.toLowerCase().endsWith('.pdf'))) {
+                        // Simply add the file and render PDF icon preview
+                        processFile(file, true);
+                    } else if (fileSizeMB > 1) {
+                        // Compress only if > 1MB for non-PDFs
                         new Compressor(file, {
                             quality: 0.6,
                             maxWidth: 1200,
@@ -1622,20 +1699,34 @@
                                     type: compressedBlob.type,
                                     lastModified: Date.now(),
                                 });
-                                processFile(compressedFile);
+                                processFile(compressedFile, false);
                             },
                             error: function (err) {
                                 console.error("Compression error:", err.message);
-                                processFile(file); // fallback to original
+                                processFile(file, false); // fallback to original
                             },
                         });
                     } else {
                         // No compression needed
-                        processFile(file);
+                        processFile(file, false);
                     }
                 });
 
                 $(this).val(""); // Allow re-selection of same files
+            });
+
+            // When removing a preview, if it had an object URL (PDF), revoke it to free memory
+            $("#previewImages").on("click", ".close-btn", function () {
+                let index = $(this).data("index");
+                // Remove preview DOM
+                $("#preview-" + index).remove();
+                // Revoke object URL if present
+                if (previewUrls[index]) {
+                    try { URL.revokeObjectURL(previewUrls[index]); } catch (e) { /* ignore */ }
+                    previewUrls[index] = null;
+                }
+                // Mark file removed
+                allFiles[index] = null; // Mark file as removed
             });
 
             $("#previewImages").on("click", ".close-btn", function () {
@@ -1758,11 +1849,17 @@
             });
 
         $(document).on("click", ".image-thumb-assigner", function () {
+            // Remove any existing PDF iframe before switching to an image
+            $('#assigner-pdf-iframe').remove();
+
             let imgSrc = $(this).attr("src");
-            $("#cropImage-assigner").attr("src", imgSrc);
+            $("#cropImage-assigner").attr("src", imgSrc).show();
+            // Show crop toolbar when image is displayed
+            $('.crop-toolbar').show();
 
             if (cropper) {
                 cropper.destroy();
+                cropper = null;
             }
             currentFile = $(this).data("file-index");
             
@@ -1782,7 +1879,7 @@
 
             // Resize Cropper to fit within the modal
             setTimeout(() => {
-                cropper.resize();
+                if (cropper && typeof cropper.resize === 'function') cropper.resize();
             }, 300);
         });
 
@@ -2129,7 +2226,8 @@
                         "modality_id": modality
                     },
                     success: function (response) {
-                        $('.study_id').html(response);
+                        $('.study_id').html(response.case_study_html);
+                        $("#default_doctor").val(response.default_doctor_id);
                     }
                 });
             }
@@ -2365,20 +2463,44 @@
             $.each(files, function (index, file) {
                 const fileSizeMB = file.size / (1024 * 1024); // Convert bytes to MB
 
-                const processFile = function (finalFile) {
+                    const processFile = function (finalFile) {
                     let fileIndex = allFiles.length;
                     allFiles.push(finalFile); // Add to global array
 
-                    let reader = new FileReader();
-                    reader.onload = function (e) {
+                    // Detect PDF by MIME type or filename extension
+                    const isPdf = finalFile.type === 'application/pdf' || (finalFile.name && finalFile.name.toLowerCase().endsWith('.pdf'));
+
+                    if (isPdf) {
+                        const fileName = finalFile.name || `file-${fileIndex}.pdf`;
+                        const shortName = truncateFileName(fileName, 18);
+                        let objectUrl = null;
+                        try { objectUrl = URL.createObjectURL(finalFile); } catch (e) { objectUrl = null; }
+
                         $(".existing-image-contener").append(`
                             <div class="m-2 position-relative d-inline-block" id="existing-img-preview-${fileIndex}">
-                                <img src="${e.target.result}" data-file-index="${fileIndex}" id="existing_image_${fileIndex}" height="160px" style="padding:5px; cursor:pointer" class="image-thumb-assigner" />
+                                ${objectUrl ? `<a href="${objectUrl}" target="_blank" style="text-decoration:none;color:inherit;">` : ''}
+                                    <div class="pdf-preview d-flex align-items-center justify-content-center bg-light border" style="width:100px;height:100px;cursor: pointer;">
+                                        <div class="text-center">
+                                            <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                                            <div style="font-size:11px;word-break:break-word;max-width:90px;">${shortName}</div>
+                                        </div>
+                                    </div>
+                                ${objectUrl ? `</a>` : ''}
                                 <button type="button" class="existing-img-close-btn btn btn-danger btn-sm" data-index="${fileIndex}" style="position: absolute; top: 5px; right: 5px; border-radius: 30px; height: 20px; width: 20px; display: flex; justify-content: center; align-items: center; padding: 0; font-size: 14px;">×</button>
                             </div>
                         `);
-                    };
-                    reader.readAsDataURL(finalFile);
+                    } else {
+                        let reader = new FileReader();
+                        reader.onload = function (e) {
+                            $(".existing-image-contener").append(`
+                                <div class="m-2 position-relative d-inline-block" id="existing-img-preview-${fileIndex}">
+                                    <img src="${e.target.result}" data-file-index="${fileIndex}" id="existing_image_${fileIndex}" height="160px" style="padding:5px; cursor:pointer" class="image-thumb-assigner" />
+                                    <button type="button" class="existing-img-close-btn btn btn-danger btn-sm" data-index="${fileIndex}" style="position: absolute; top: 5px; right: 5px; border-radius: 30px; height: 20px; width: 20px; display: flex; justify-content: center; align-items: center; padding: 0; font-size: 14px;">×</button>
+                                </div>
+                            `);
+                        };
+                        reader.readAsDataURL(finalFile);
+                    }
                 };
 
                 if (fileSizeMB > 1) {

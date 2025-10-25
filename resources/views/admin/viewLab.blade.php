@@ -71,7 +71,7 @@
                                     <tr>
                                         <td>{{$labratorye->lab_name}}</td>
                                         <td>{{$labratorye->lab_primary_location}}</td>
-                                        <td><a href="mailto:{{$labratorye->lab_login_email}}">{{$labratorye->lab_login_email}}</a></td>
+                                        <td><a href="mailto:{{$labratorye->user->email}}">{{$labratorye->user->email}}</a></td>
                                         <td><a href="tel:+91{{$labratorye->lab_phone_number}}">{{$labratorye->lab_phone_number}}</a></td>
                                         <td>
                                             @foreach($labratorye->labModality as $labModality)

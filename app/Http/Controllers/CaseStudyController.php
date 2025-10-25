@@ -28,6 +28,7 @@ use App\Models\studyImages;
 use App\Models\studyStatus;
 use App\Models\caseComment;
 use App\Models\caseAttachment;
+use App\Models\lab_preferred_doctor;
 
 use App\Traits\GeneralFunctionTrait;
 
@@ -48,6 +49,7 @@ class CaseStudyController extends Controller
         $qc_id = !isset($request->qid)?'':$request->qid;
         $status_id = !isset($request->st)?'':$request->st;
         $type = !isset($request->ty)?'':$request->ty;
+        $doctors = array();
         
         $pageName = $this->pageName;
         $centre_name = "";
@@ -201,8 +203,31 @@ class CaseStudyController extends Controller
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
     public function getStudyType(Request $request){
+        /* ============ CODE FOR CALCULATING CASE STUDY HTML ============ */
         $studyTypes = studyType::where("modality_id", $request->modality_id)->orderBy("name")->get();
-        return view('admin.getStudyTypes', compact('studyTypes'));
+        $caseStudyhtml = '<option value="">Select Study Type</option>';
+        foreach($studyTypes as $studyType) {
+            $caseStudyhtml .= '<option value="'.$studyType->id.'">'.$studyType->name.'</option>';
+        }
+
+        /* ============ CODE FOR CALCULATING THE DEFAULT DOCTOR ============ */
+        $lab_id = Auth::user()->getLab()->first()->id?? null;
+        
+        $isDefaultDoctorFound = false;
+        $defaultDoctor = lab_preferred_doctor::where("modality_id", $request->modality_id)
+            ->where("laboratorie_id", $lab_id)
+            ->orderBy('id', 'desc')
+            ->first();
+        $defaultDoctorId = null;
+        if($defaultDoctor){
+            $isDefaultDoctorFound = true;
+            $defaultDoctorId = $defaultDoctor->doctor_id;
+        }
+        return response()->json([
+            'case_study_html' => $caseStudyhtml, 
+            'default_doctor_id' => $defaultDoctorId,
+            'is_default_doctor_found' => $isDefaultDoctorFound
+        ]);
     }
     
     public function insertCaseStudy(Request $request){
@@ -219,6 +244,7 @@ class CaseStudyController extends Controller
                 'study_id.*' => 'required|exists:study_types,id',
                 'clinical_history' => 'required',
                 'ref_by' => 'nullable|sometimes|string',
+                'default_doctor' => 'nullable|sometimes|exists:doctors,id',
             ];
             $customMessages = [
                 'patient_id.required_if' => 'The Patient ID is required when Existing Patient is selected.',
@@ -248,17 +274,30 @@ class CaseStudyController extends Controller
                 ]
             );
             $addedBy = Auth::user()->id;
+            $doctorId = null;
+            $studyStatusId = 1;
+            $assignerId = null;
+            $addCaseStudy = 'addCaseStudy';
+            if(!empty($request->default_doctor)){
+                $doctorId = $request->default_doctor;
+                $studyStatusId = 2;
+                $assignerId = 501; // Default Assigner ID
+                //$assignerId = 237; // For Local Testing
+                $addCaseStudy = 'addCaseStudyAndAssignDoctor';
+            }
             $isEmergency = $request->emergency===null?false:true;
             $caseStudy = new CaseStudy();
             $caseStudy->laboratory_id = $request->centre_id;
             $caseStudy->patient_id = $patient->id;
+            $caseStudy->doctor_id = $doctorId;
             $caseStudy->clinical_history = $request->clinical_history;
             $caseStudy->is_emergency = $request->emergency===null?0:1;
             $caseStudy->is_post_operative = $request->post_operative===null?0:1;
             $caseStudy->is_follow_up = $request->follow_up===null?0:1;
             $caseStudy->is_subspecialty = $request->subspecialty===null?0:1;
             $caseStudy->is_callback = $request->callback===null?0:1;
-            $caseStudy->study_status_id = 1;
+            $caseStudy->study_status_id = $studyStatusId;
+            $caseStudy->assigner_id = $assignerId;
             $caseStudy->status_updated_on = Carbon::now();
             $caseStudy->case_study_id = $this->generateCaseStudyId();
             $caseStudy->modality_id = $request->modality;
@@ -300,7 +339,7 @@ class CaseStudyController extends Controller
                 }
             }
 
-            $msg = $this->generateLoggedMessage("addCaseStudy", 'Case Study', "", "", "", "", $labName, $patient->name, $studyTypeArray, $isEmergency);
+            $msg = $this->generateLoggedMessage($addCaseStudy, 'Case Study', "", "", "", "", $labName, $patient->name, $studyTypeArray, $isEmergency);
             $this->addLog('case_study', 'case_study_id', $caseStudy->id, 'add', $msg);
             DB::commit();
         }catch(\Exception $ex) {

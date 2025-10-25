@@ -19,7 +19,7 @@
                 </div>
                 <div class="form-group">
                     <label for="exampleInputEmail1">Centre Login Email <em>*</em></label>
-                    <input type="text" value="{{$labratory->lab_login_email}}" class="form-control" required="required" name="lab_login_email" id="lab_login_email" placeholder="Lab Login Email" disabled>
+                    <input type="text" value="{{$labratory->user->email}}" class="form-control" required="required" name="lab_login_email" id="lab_login_email" placeholder="Lab Login Email" disabled>
                 </div>
                 <div class="form-group">
                     <label for="exampleInputEmail1">Centre Primary Location <em>*</em></label>
