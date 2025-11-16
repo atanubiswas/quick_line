@@ -91,11 +91,13 @@ class UserController extends Controller
         $authUser = Auth::user();
         $users = User::with('roles')
             ->where("access_type", "!=", "Quality Controller")
+            ->orderBy('status', 'desc')
             ->get();
         $pageName = $this->pageName;
 
         $qcUsers = User::with('roles', 'modalities')
             ->where("access_type", "Quality Controller")
+            ->orderBy('status', 'desc')
             ->get();
         return view("admin.viewUsers", compact("users", "pageName", "authUser", "qcUsers"));
     }

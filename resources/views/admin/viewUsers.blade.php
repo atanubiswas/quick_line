@@ -56,6 +56,7 @@
                             <table id="manager_table" class="table table-bordered table-hover">
                                 <thead>
                                     <tr>
+                                        <th>#</th>
                                         <th>User Name</th>
                                         <th>Email</th>
                                         <th>Mobile Number</th>
@@ -66,9 +67,11 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php $counter = 1; @endphp
                                     @foreach($users as $user)
                                     @if($user->roles[0]->name == 'Manager')
                                     <tr>
+                                        <td>{{ $counter++ }}</td>
                                         <td>
                                             @php
                                                 $isOnline = false;
@@ -121,6 +124,7 @@
                             <table id="assigner_table" class="table table-bordered table-hover">
                                 <thead>
                                     <tr>
+                                        <th>#</th>
                                         <th>User Name</th>
                                         <th>Email</th>
                                         <th>Mobile Number</th>
@@ -131,9 +135,11 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php $counter = 1; @endphp
                                     @foreach($users as $user)
                                     @if($user->roles[0]->name == 'Assigner')
                                     <tr>
+                                        <td>{{ $counter++ }}</td>
                                         <td>
                                             @php
                                                 $isOnline = false;
@@ -186,6 +192,7 @@
                             <table id="quality_controller_table" class="table table-bordered table-hover">
                                 <thead>
                                     <tr>
+                                        <th>#</th>
                                         <th>User Name</th>
                                         <th>Email</th>
                                         <th>Mobile Number</th>
@@ -197,9 +204,11 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php $counter = 1; @endphp
                                     @foreach($qcUsers as $user)
                                     @if($user->roles[0]->name == 'Quality Controller')
                                     <tr>
+                                        <td>{{ $counter++ }}</td>
                                         <td>
                                             @php
                                                 $isOnline = false;
@@ -258,6 +267,7 @@
                             <table id="centre_table" class="table table-bordered table-hover">
                                 <thead>
                                     <tr>
+                                        <th>#</th>
                                         <th>User Name</th>
                                         <th>Email</th>
                                         <th>Mobile Number</th>
@@ -268,9 +278,11 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php $counter = 1; @endphp
                                     @foreach($users as $user)
                                     @if($user->roles[0]->name == 'Centre')
                                     <tr>
+                                        <td>{{ $counter++ }}</td>
                                         <td>
                                             @php
                                                 $isOnline = false;
@@ -323,6 +335,7 @@
                             <table id="doctor_table" class="table table-bordered table-hover">
                                 <thead>
                                     <tr>
+                                        <th>#</th>
                                         <th>User Name</th>
                                         <th>Email</th>
                                         <th>Mobile Number</th>
@@ -333,9 +346,11 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php $counter = 1; @endphp
                                     @foreach($users as $user)
                                     @if($user->roles[0]->name == 'Doctor')
                                     <tr>
+                                        <td>{{ $counter++ }}</td>
                                         <td>
                                             @php
                                                 $isOnline = false;

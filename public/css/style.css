@@ -88,13 +88,11 @@ h3 {
   margin-bottom: 21px; }
   .form-holder span {
     position: absolute;
-    left: 0;
+    left: 10px;
     top: 50%;
     transform: translateY(-50%);
     font-size: 15px;
     color: #333; }
-    .form-holder span.lnr-lock {
-      left: 2px; }
 
 .form-control {
   border: none;
