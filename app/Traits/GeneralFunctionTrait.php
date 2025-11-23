@@ -661,6 +661,29 @@ trait GeneralFunctionTrait{
         return $caseStudyList;
     }
 
+    private function getTodayCaseCount(){
+        $authUser = Auth::user();
+        $roleName = $authUser->roles[0]->name;
+
+        $todayDate = Carbon::now()->format('Y-m-d');
+        $todayCaseCount = caseStudy::whereDate('created_at', $todayDate)
+        ->when($roleName == 'Doctor', function ($query) use ($authUser) {
+            $query->where('doctor_id', function($query) use ($authUser){
+                $query->select('id')
+                    ->from('doctors')
+                    ->where('user_id', $authUser->id);
+            });
+        })
+        ->when($roleName == 'Quality Controller', function ($query) use ($authUser) {
+            $query->where('qc_id', $authUser->id);
+        })
+        ->when($roleName == 'Assigner', function ($query) use ($authUser) {
+            $query->where('assigner_id', $authUser->id);
+        })
+        ->count();
+        return $todayCaseCount;
+    }
+
     private function getCurrentActiveCase($isEmergency = false){
         $authUser = Auth::user();
         $roleName = $authUser->roles[0]->name;
@@ -684,6 +707,9 @@ trait GeneralFunctionTrait{
                         ->where('qc_user_id', $authUser->id);
                 });
             })
+            ->when($roleName == 'Assigner', function ($query) use ($authUser) {
+                $query->where('study_status_id', '!=', 5);
+            })
             ->when($isEmergency, function ($query) {
                 $query->where('is_emergency', 1);
             })
@@ -695,7 +721,7 @@ trait GeneralFunctionTrait{
      * Summary of getTotalCaseThisMonth
      * @return int
      */
-    private function getTotalCaseThisMonth(){
+    private function getTotalCaseThisMonthDoctor(){
         $authUser = Auth::user();
         $roleName = $authUser->roles[0]->name;
         
@@ -716,7 +742,40 @@ trait GeneralFunctionTrait{
                 $query->where('qc_id',  $authUser->id);
                 $query->where('study_status_id', '=', 5);
             })
-            ->when($roleName == 'Admin' || $roleName == 'Manager' || $roleName == 'Assigner', function ($query) use ($authUser) {
+            ->when($roleName == 'Assigner', function ($query) use ($authUser) {
+                $query->where('assigner_id', $authUser->id);
+            })
+            ->when($roleName == 'Admin' || $roleName == 'Manager', function ($query) use ($authUser) {
+                $query->where('study_status_id', '!=', 6);
+            })
+            ->count();
+        return $totalCaseThisMonth;
+    }
+
+    private function getTotalCaseThisMonth(){
+        $authUser = Auth::user();
+        $roleName = $authUser->roles[0]->name;
+        
+        $currentMonth = Carbon::now()->format('m');
+        $currentYear = Carbon::now()->format('Y');
+        $totalCaseThisMonth = caseStudy::whereMonth('case_studies.created_at', $currentMonth)
+            ->whereYear('case_studies.created_at', $currentYear)
+            ->when($roleName == 'Doctor', function ($query) use ($authUser) {
+                $query->where('doctor_id', function($query) use ($authUser){
+                    $query->select('id')
+                        ->from('doctors')
+                        ->where('user_id', $authUser->id);
+                });
+                $query->where('study_status_id', '=', 5);
+            })
+            ->when($roleName == 'Quality Controller', function ($query) use ($authUser) {
+                $query->where('qc_id',  $authUser->id);
+                $query->where('study_status_id', '=', 5);
+            })
+            ->when($roleName == 'Assigner', function ($query) use ($authUser) {
+                $query->where('assigner_id', $authUser->id);
+            })
+            ->when($roleName == 'Admin' || $roleName == 'Manager', function ($query) use ($authUser) {
                 $query->where('study_status_id', '!=', 6);
             })
             ->count();

@@ -81,6 +81,7 @@ Route::group(['prefix' => 'admin'], function () {
     Route::get('/assigner-daily-counts', [DashboardController::class, 'assignerDailyCounts'])->name('admin.assignerDailyCounts');
     Route::get('/qc-daily-counts', [DashboardController::class, 'qcDailyCounts'])->name('admin.qcDailyCounts');
     Route::get('/doctor-daily-counts', [DashboardController::class, 'doctorDailyCounts'])->name('admin.doctorDailyCounts');
+    Route::get('/download-daily-report', [DashboardController::class, 'downloadDailyReport'])->name('admin.downloadDailyReport');
    /*================= USER CONTROLLER ===================*/
     Route::middleware(['role:Admin,Manager', '2fa'])->group(function(){
         Route::get('/add-user', [UserController::class, 'addUser'])->name('admin.addUser');

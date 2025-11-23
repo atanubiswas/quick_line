@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 use Illuminate\Http\Request;
 
@@ -35,13 +36,28 @@ class DashboardController extends Controller
                 return $this->doctorDashboard();
             // case 'Laboratory':
             //     return $this->laboratoryDashboard();
-            // case 'Assigner':
-            //     return $this->assignerDashboard();
+            case 'Assigner':
+                return $this->assignerDashboard();
             case 'Quality Controller':
                 return $this->qualityControllerDashboard();
             default:
                 return view ("admin.dashboard");
         }
+    }
+
+    /**
+     * Summary of assignerDashboard
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
+    private function assignerDashboard(){
+        $totalCaseThisMonth = $this->getTotalCaseThisMonth();
+        $todayCaseCount = $this->getTodayCaseCount();
+        $activeCaseCount = $this->getCurrentActiveCase();
+        $currentEmergencyCase = $this->getCurrentActiveCase(true);
+        $startDate = Carbon::now()->startOfMonth()->toDateString();
+        $endDate = Carbon::now()->endOfDay()->toDateString();
+        
+        return view ("admin.assignerDashboard", compact('totalCaseThisMonth', 'todayCaseCount', 'activeCaseCount', 'currentEmergencyCase', 'startDate', 'endDate'));
     }
 
     /**
@@ -119,7 +135,7 @@ class DashboardController extends Controller
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
     private function doctorDashboard(){
-        $totalCaseThisMonth = $this->getTotalCaseThisMonth();
+        $totalCaseThisMonth = $this->getTotalCaseThisMonthDoctor();
         $currentActiveCase = $this->getCurrentActiveCase();
         $currentEmergencyCase = $this->getCurrentActiveCase(true);
         $currentReworkCase = $this->getCurrentReWorkCase();
@@ -131,14 +147,15 @@ class DashboardController extends Controller
     }
 
     private function qualityControllerDashboard(){
-        $totalCaseThisMonth = $this->getTotalCaseThisMonth();
+        $totalCaseThisMonth = $this->getTotalCaseThisMonthDoctor();
+        $todayCaseCount = $this->getTodayCaseCount();
         $currentActiveCase = $this->getCurrentActiveCase();
         $currentEmergencyCase = $this->getCurrentActiveCase(true);
         $caseStudyList = $this->getCaseStudyList();
         $startDate = Carbon::now()->startOfMonth()->toDateString();
         $endDate = Carbon::now()->endOfDay()->toDateString();
 
-        return view ("admin.qualityControllerDashboard", compact('totalCaseThisMonth', 'currentActiveCase', 'currentEmergencyCase', 'caseStudyList', 'startDate', 'endDate'));
+        return view ("admin.qualityControllerDashboard", compact('totalCaseThisMonth', 'todayCaseCount', 'currentActiveCase', 'currentEmergencyCase', 'caseStudyList', 'startDate', 'endDate'));
     }
 
     // AJAX endpoint for assigner counts by date range
@@ -311,5 +328,113 @@ class DashboardController extends Controller
             'dates' => $dates,
             'series' => $result
         ]);
+    }
+
+    /**
+     * Download Daily Report PDF
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadDailyReport(Request $request) {
+        $startDate = $request->input('start_date', Carbon::now()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->toDateString());
+        
+        $authUser = auth()->user();
+        $roleNames = $authUser->roles->pluck('name')->toArray();
+        
+        $assignerData = [];
+        $qcData = [];
+        $doctorData = [];
+        
+        // Fetch data based on user role
+        if (in_array('Assigner', $roleNames)) {
+            $assignerData = $this->getAssignerDataByModality($authUser, $startDate, $endDate);
+        } elseif (in_array('Quality Controller', $roleNames)) {
+            $qcData = $this->getQCDataByModality($authUser, $startDate, $endDate);
+        } elseif (in_array('Doctor', $roleNames)) {
+            $doctorData = $this->getDoctorDataByModality($authUser, $startDate, $endDate);
+        }
+        
+        // Create PDF
+        $pdf = Pdf::loadView('admin.dailyReportPdf', [
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'authUser' => $authUser,
+            'assignerData' => $assignerData,
+            'qcData' => $qcData,
+            'doctorData' => $doctorData,
+            'userRole' => count($roleNames) > 0 ? $roleNames[0] : 'User'
+        ]);
+
+        $filename = 'daily_report_' . $startDate . '_to_' . $endDate . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Get Assigner data by modality
+     */
+    private function getAssignerDataByModality($user, $startDate, $endDate) {
+        $caseStudies = caseStudy::where('assigner_id', $user->id)
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->whereNull('deleted_at')
+            ->get();
+
+        $modalityData = [];
+        foreach ($caseStudies as $caseStudy) {
+            $modalityName = $caseStudy->modality->name;
+            if (!isset($modalityData[$modalityName])) {
+                $modalityData[$modalityName] = 0;
+            }
+            $modalityData[$modalityName]++;
+        }
+        return $modalityData;
+    }
+
+    /**
+     * Get Quality Controller data by modality
+     */
+    private function getQCDataByModality($user, $startDate, $endDate) {
+        $caseStudies = caseStudy::where('qc_id', $user->id)
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->whereNull('deleted_at')
+            ->get();
+
+        $modalityData = [];
+        foreach ($caseStudies as $caseStudy) {
+            $modalityName = $caseStudy->modality->name;
+            if (!isset($modalityData[$modalityName])) {
+                $modalityData[$modalityName] = 0;
+            }
+            $modalityData[$modalityName]++;
+        }
+        return $modalityData;
+    }
+
+    /**
+     * Get Doctor data by modality
+     */
+    private function getDoctorDataByModality($user, $startDate, $endDate) {
+        $caseStudies = $user->doctorCaseStudies()
+            ->whereDate('case_studies.created_at', '>=', $startDate)
+            ->whereDate('case_studies.created_at', '<=', $endDate)
+            ->where('case_studies.study_status_id', 5)
+            ->whereNull('case_studies.deleted_at')
+            ->get();
+
+        $modalityData = [];
+        foreach ($caseStudies as $caseStudy) {
+            foreach ($caseStudy->study as $study) {
+                if ($study->modality) {
+                    $modalityName = $study->modality->modality_name;
+                    if (!isset($modalityData[$modalityName])) {
+                        $modalityData[$modalityName] = 0;
+                    }
+                    $modalityData[$modalityName]++;
+                }
+            }
+        }
+        return $modalityData;
     }
 }
